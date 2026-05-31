@@ -1,0 +1,44 @@
+.toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  background: rgba(22, 33, 62, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  z-index: 10000;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+}
+
+.logo {
+  font-size: 15px;
+  font-weight: 700;
+  color: #e0e0e0;
+  letter-spacing: 0.5px;
+}
+
+.addBtn {
+  margin-left: auto;
+  padding: 8px 18px;
+  background: #e94560;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.addBtn:hover {
+  background: #ff2a48;
+}
+
+.addBtn:active {
+  transform: scale(0.97);
+}

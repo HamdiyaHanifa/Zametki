@@ -1,0 +1,132 @@
+.note {
+  position: fixed;
+  min-width: 220px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
+  backdrop-filter: blur(4px);
+}
+
+.note:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--header-color);
+  cursor: grab;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.header:active {
+  cursor: grabbing;
+}
+
+.titleInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: inherit;
+  min-width: 0;
+}
+
+.titleInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.titleInput:focus {
+  cursor: text;
+}
+
+.controls {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.btnMin,
+.btnClose {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  line-height: 1;
+  padding: 0;
+}
+
+.btnMin {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.btnMin:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.btnClose {
+  background: #e94560;
+  color: #fff;
+}
+
+.btnClose:hover {
+  background: #ff2a48;
+}
+
+.body {
+  background: var(--body-color);
+  position: relative;
+}
+
+.content {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e0e0e0;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: none;
+  display: block;
+  font-family: inherit;
+}
+
+.content::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.resizeHandle {
+  height: 8px;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+}
+
+.resizeHandle::after {
+  content: '';
+  width: 32px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.resizeHandle:hover {
+  opacity: 0.8;
+}
