@@ -4,7 +4,7 @@ import { Toolbar } from './components/Toolbar'
 import styles from './App.module.css'
 
 let nextId = 4
-const COLORS_COUNT = 5
+const COLORS_COUNT = 12
 const MIN_SCALE = 0.1
 const MAX_SCALE = 4
 
@@ -13,6 +13,7 @@ function createNote(id, colorIndex) {
     id,
     title: '',
     content: '',
+    imageUrl: null,
     x: 100 + (id % 4) * 240,
     y: 100 + (id % 3) * 220,
     colorIndex,
@@ -34,6 +35,7 @@ export default function App() {
   const vpRef = useRef(viewport)
   const gestureRef = useRef(null)
   const bgRef = useRef(null)
+  const [isDragOver, setIsDragOver] = useState(false)
 
   const setViewport = useCallback((vp) => {
     vpRef.current = vp
@@ -47,18 +49,42 @@ export default function App() {
     })
   }, [])
 
-  const addNote = useCallback(() => {
+  const spawnNote = useCallback((patch) => {
     const id = nextId++
     const vp = vpRef.current
-    const worldX = (window.innerWidth / 2 - vp.x) / vp.scale - 140
-    const worldY = (window.innerHeight / 2 - vp.y) / vp.scale - 75
+    const worldX = (window.innerWidth / 2 - vp.x) / vp.scale - 150
+    const worldY = (window.innerHeight / 2 - vp.y) / vp.scale - 100
     const note = {
       ...createNote(id, id % COLORS_COUNT),
       x: worldX + (Math.random() - 0.5) * 100,
       y: worldY + (Math.random() - 0.5) * 100,
+      ...patch,
     }
     setNotes((prev) => [...prev, note])
     setOrder((prev) => [...prev, id])
+  }, [])
+
+  const addNote = useCallback(() => spawnNote({}), [spawnNote])
+
+  const loadImageFile = useCallback((file, worldX, worldY) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const id = nextId++
+      const vp = vpRef.current
+      const x = worldX ?? (window.innerWidth / 2 - vp.x) / vp.scale - 150
+      const y = worldY ?? (window.innerHeight / 2 - vp.y) / vp.scale - 100
+      const note = {
+        ...createNote(id, id % COLORS_COUNT),
+        title: file.name.replace(/\.[^.]+$/, ''),
+        imageUrl: e.target.result,
+        height: 220,
+        x,
+        y,
+      }
+      setNotes((prev) => [...prev, note])
+      setOrder((prev) => [...prev, id])
+    }
+    reader.readAsDataURL(file)
   }, [])
 
   const updateNote = useCallback((id, patch) => {
@@ -113,6 +139,30 @@ export default function App() {
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
   }, [setViewport])
+
+  // Paste image from clipboard
+  useEffect(() => {
+    const onPaste = (e) => {
+      const items = Array.from(e.clipboardData?.items || [])
+      const imgItem = items.find((i) => i.type.startsWith('image/'))
+      if (imgItem) loadImageFile(imgItem.getAsFile())
+    }
+    window.addEventListener('paste', onPaste)
+    return () => window.removeEventListener('paste', onPaste)
+  }, [loadImageFile])
+
+  // Drop image onto canvas
+  const handleDrop = useCallback((e) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'))
+    files.forEach((file) => {
+      const vp = vpRef.current
+      const worldX = (e.clientX - vp.x) / vp.scale - 150
+      const worldY = (e.clientY - vp.y) / vp.scale - 20
+      loadImageFile(file, worldX, worldY)
+    })
+  }, [loadImageFile])
 
   // Touch pan + pinch zoom
   const handleBgTouchStart = useCallback((e) => {
@@ -177,12 +227,15 @@ export default function App() {
 
   return (
     <div className={styles.canvas}>
-      <Toolbar onAdd={addNote} scale={viewport.scale} />
+      <Toolbar onAdd={addNote} onUploadImage={loadImageFile} scale={viewport.scale} />
       <div
         ref={bgRef}
-        className={styles.background}
+        className={`${styles.background} ${isDragOver ? styles.dragOver : ''}`}
         onMouseDown={handleBgMouseDown}
         onTouchStart={handleBgTouchStart}
+        onDrop={handleDrop}
+        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
+        onDragLeave={() => setIsDragOver(false)}
       >
         <div
           className={styles.world}
@@ -200,8 +253,11 @@ export default function App() {
             />
           ))}
         </div>
-        {notes.length === 0 && (
-          <div className={styles.empty}>Нет заметок. Нажмите «+ Новая заметка».</div>
+        {isDragOver && (
+          <div className={styles.dropHint}>Отпустите чтобы добавить изображение</div>
+        )}
+        {notes.length === 0 && !isDragOver && (
+          <div className={styles.empty}>Нет заметок. Нажмите «+ Заметка» или перетащите фото.</div>
         )}
       </div>
     </div>

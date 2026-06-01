@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   padding: 0 20px;
-  gap: 16px;
+  gap: 10px;
   z-index: 10000;
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
 }
@@ -20,6 +20,7 @@
   font-weight: 700;
   color: #3a2828;
   letter-spacing: 0.3px;
+  margin-right: 4px;
 }
 
 .scale {
@@ -29,22 +30,45 @@
   min-width: 38px;
 }
 
-.addBtn {
+.fileInput {
+  display: none;
+}
+
+.photoBtn {
   margin-left: auto;
-  padding: 8px 18px;
-  background: #e8a4ae;
+  padding: 8px 16px;
+  background: #A8C4BC;
+  color: #1a3830;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.photoBtn:hover {
+  filter: brightness(0.92);
+}
+
+.photoBtn:active {
+  transform: scale(0.97);
+}
+
+.addBtn {
+  padding: 8px 16px;
+  background: #E8A4AE;
   color: #4a1f28;
   border: none;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition: filter 0.15s, transform 0.1s;
 }
 
 .addBtn:hover {
-  background: #dд8898;
-  filter: brightness(0.93);
+  filter: brightness(0.92);
 }
 
 .addBtn:active {

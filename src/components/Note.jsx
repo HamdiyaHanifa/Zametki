@@ -6,6 +6,8 @@ import styles from './Note.module.css'
 export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
   const [showPicker, setShowPicker] = useState(false)
   const color = PALETTE[note.colorIndex % PALETTE.length]
+  const isImage = Boolean(note.imageUrl)
+  const noteWidth = isImage ? (note.width || 300) : (note.minimized ? 220 : 280)
 
   const handlePositionChange = useCallback((dx, dy) => {
     onMove(note.id, dx, dy)
@@ -28,10 +30,11 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
   return (
     <div
       className={styles.note}
-      style={{ left: note.x, top: note.y, zIndex, width: note.minimized ? 220 : 280 }}
+      style={{ left: note.x, top: note.y, zIndex, width: noteWidth }}
       onMouseDown={(e) => { e.stopPropagation(); onFocus(note.id) }}
       onTouchStart={(e) => { e.stopPropagation(); onFocus(note.id) }}
     >
+      {/* Header */}
       <div
         className={styles.header}
         style={{ background: color.header }}
@@ -39,6 +42,9 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
         onTouchStart={handleHeaderTouchStart}
         onDoubleClick={() => onUpdate(note.id, { minimized: !note.minimized })}
       >
+        {note.minimized && isImage && (
+          <img src={note.imageUrl} className={styles.thumb} draggable={false} />
+        )}
         <input
           className={styles.titleInput}
           style={{ color: color.text }}
@@ -46,19 +52,21 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
           onChange={(e) => onUpdate(note.id, { title: e.target.value })}
           onMouseDown={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
-          placeholder="Заголовок..."
+          placeholder={isImage ? 'Подпись...' : 'Заголовок...'}
         />
         <div className={styles.controls}>
-          <button
-            className={styles.btnColor}
-            style={{ background: color.header, border: `2px solid ${color.text}22` }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-            onClick={() => setShowPicker((v) => !v)}
-            title="Цвет"
-          >
-            <span style={{ fontSize: 11 }}>🎨</span>
-          </button>
+          {!isImage && (
+            <button
+              className={styles.btnColor}
+              style={{ background: color.header, border: `2px solid ${color.text}22` }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onClick={() => setShowPicker((v) => !v)}
+              title="Цвет"
+            >
+              <span style={{ fontSize: 11 }}>🎨</span>
+            </button>
+          )}
           <button
             className={styles.btnMin}
             style={{ background: `${color.text}18`, color: color.text }}
@@ -81,7 +89,8 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
         </div>
       </div>
 
-      {showPicker && (
+      {/* Color picker */}
+      {showPicker && !isImage && (
         <div
           className={styles.picker}
           style={{ background: color.body, borderColor: `${color.header}88` }}
@@ -98,32 +107,43 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
                 outlineOffset: 2,
               }}
               onClick={() => { onUpdate(note.id, { colorIndex: i }); setShowPicker(false) }}
-              title=""
             />
           ))}
         </div>
       )}
 
+      {/* Body */}
       {!note.minimized && (
-        <div className={styles.body} style={{ background: color.body }}>
-          <textarea
-            className={styles.content}
-            style={{ color: color.text, height: note.height || 150 }}
-            value={note.content}
-            onChange={(e) => onUpdate(note.id, { content: e.target.value })}
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-            placeholder="Введите текст заметки..."
-          />
+        <div className={styles.body} style={{ background: isImage ? 'transparent' : color.body }}>
+          {isImage ? (
+            <img
+              src={note.imageUrl}
+              className={styles.image}
+              style={{ height: note.height || 220 }}
+              draggable={false}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <textarea
+              className={styles.content}
+              style={{ color: color.text, height: note.height || 150 }}
+              value={note.content}
+              onChange={(e) => onUpdate(note.id, { content: e.target.value })}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              placeholder="Введите текст заметки..."
+            />
+          )}
           <div
             className={styles.resizeHandle}
             style={{ '--handle-color': color.header }}
             onMouseDown={(e) => {
               e.stopPropagation()
               const startY = e.clientY
-              const startH = note.height || 150
+              const startH = note.height || (isImage ? 220 : 150)
               const onMove = (e) => {
-                onUpdate(note.id, { height: Math.max(80, startH + (e.clientY - startY)) })
+                onUpdate(note.id, { height: Math.max(60, startH + (e.clientY - startY)) })
               }
               const onUp = () => {
                 window.removeEventListener('mousemove', onMove)
@@ -135,10 +155,10 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
             onTouchStart={(e) => {
               e.stopPropagation()
               const startY = e.touches[0].clientY
-              const startH = note.height || 150
+              const startH = note.height || (isImage ? 220 : 150)
               const onMove = (e) => {
                 e.preventDefault()
-                onUpdate(note.id, { height: Math.max(80, startH + (e.touches[0].clientY - startY)) })
+                onUpdate(note.id, { height: Math.max(60, startH + (e.touches[0].clientY - startY)) })
               }
               const onUp = () => {
                 window.removeEventListener('touchmove', onMove)
