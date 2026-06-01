@@ -21,12 +21,17 @@ export function Note({ note, onUpdate, onDelete, onFocus, zIndex }) {
     })
   }, [note.id, note.x, note.y, onUpdate])
 
-  const onHeaderMouseDown = useDrag(handlePositionChange)
+  const { onMouseDown: dragMouseDown, onTouchStart: dragTouchStart } = useDrag(handlePositionChange)
 
   const handleHeaderMouseDown = useCallback((e) => {
     onFocus(note.id)
-    onHeaderMouseDown(e)
-  }, [note.id, onFocus, onHeaderMouseDown])
+    dragMouseDown(e)
+  }, [note.id, onFocus, dragMouseDown])
+
+  const handleHeaderTouchStart = useCallback((e) => {
+    onFocus(note.id)
+    dragTouchStart(e)
+  }, [note.id, onFocus, dragTouchStart])
 
   return (
     <div
@@ -40,10 +45,12 @@ export function Note({ note, onUpdate, onDelete, onFocus, zIndex }) {
         width: note.minimized ? 220 : 280,
       }}
       onMouseDown={() => onFocus(note.id)}
+      onTouchStart={() => onFocus(note.id)}
     >
       <div
         className={styles.header}
         onMouseDown={handleHeaderMouseDown}
+        onTouchStart={handleHeaderTouchStart}
         onDoubleClick={() => onUpdate(note.id, { minimized: !note.minimized })}
       >
         <input
@@ -51,12 +58,14 @@ export function Note({ note, onUpdate, onDelete, onFocus, zIndex }) {
           value={note.title}
           onChange={(e) => onUpdate(note.id, { title: e.target.value })}
           onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
           placeholder="Заголовок..."
         />
         <div className={styles.controls}>
           <button
             className={styles.btnMin}
             onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             onClick={() => onUpdate(note.id, { minimized: !note.minimized })}
             title={note.minimized ? 'Развернуть' : 'Свернуть'}
           >
@@ -65,6 +74,7 @@ export function Note({ note, onUpdate, onDelete, onFocus, zIndex }) {
           <button
             className={styles.btnClose}
             onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             onClick={() => onDelete(note.id)}
             title="Удалить"
           >
@@ -80,6 +90,7 @@ export function Note({ note, onUpdate, onDelete, onFocus, zIndex }) {
             value={note.content}
             onChange={(e) => onUpdate(note.id, { content: e.target.value })}
             onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             onFocus={() => setIsEditing(true)}
             onBlur={() => setIsEditing(false)}
             placeholder="Введите текст заметки..."
@@ -101,6 +112,22 @@ export function Note({ note, onUpdate, onDelete, onFocus, zIndex }) {
               }
               window.addEventListener('mousemove', onMove)
               window.addEventListener('mouseup', onUp)
+            }}
+            onTouchStart={(e) => {
+              e.stopPropagation()
+              const startY = e.touches[0].clientY
+              const startH = note.height || 150
+              const onMove = (e) => {
+                e.preventDefault()
+                const newH = Math.max(80, startH + (e.touches[0].clientY - startY))
+                onUpdate(note.id, { height: newH })
+              }
+              const onUp = () => {
+                window.removeEventListener('touchmove', onMove)
+                window.removeEventListener('touchend', onUp)
+              }
+              window.addEventListener('touchmove', onMove, { passive: false })
+              window.addEventListener('touchend', onUp)
             }}
           />
         </div>
