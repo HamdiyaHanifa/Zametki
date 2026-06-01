@@ -107,21 +107,50 @@
   position: relative;
 }
 
-.content {
+.editor {
   width: 100%;
-  padding: 12px;
+  padding: 10px 12px;
   background: transparent;
-  border: none;
   outline: none;
   font-size: 13px;
   line-height: 1.65;
-  resize: none;
-  display: block;
   font-family: inherit;
+  overflow-y: auto;
+  word-break: break-word;
+  cursor: text;
+  display: block;
 }
 
-.content::placeholder {
+.editor:empty::before {
+  content: attr(data-placeholder);
   color: rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+.editor h3 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 4px 0 2px;
+  line-height: 1.35;
+}
+
+.editor b,
+.editor strong {
+  font-weight: 700;
+}
+
+.editor i,
+.editor em {
+  font-style: italic;
+}
+
+.editor u {
+  text-decoration: underline;
+}
+
+.editor s,
+.editor strike {
+  text-decoration: line-through;
 }
 
 .resizeHandle {

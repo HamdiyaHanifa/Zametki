@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 import { useDrag } from '../hooks/useDrag'
 import { PALETTE } from '../palette'
+import { FormatBar } from './FormatBar'
 import styles from './Note.module.css'
 
 export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
@@ -8,6 +9,30 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isImage = Boolean(note.imageUrl)
   const noteWidth = isImage ? (note.width || 300) : (note.minimized ? 220 : 280)
+
+  const editorRef = useRef(null)
+  const savedRangeRef = useRef(null)
+  const noteIdRef = useRef(note.id)
+
+  // Init / re-init editor HTML when note id changes
+  useEffect(() => {
+    if (!editorRef.current) return
+    if (noteIdRef.current !== note.id) {
+      noteIdRef.current = note.id
+    }
+    editorRef.current.innerHTML = note.htmlContent || ''
+  }, [note.id]) // eslint-disable-line
+
+  const saveRange = useCallback(() => {
+    const sel = window.getSelection()
+    if (sel && sel.rangeCount > 0) {
+      savedRangeRef.current = sel.getRangeAt(0).cloneRange()
+    }
+  }, [])
+
+  const handleInput = useCallback(() => {
+    onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
+  }, [note.id, onUpdate])
 
   const handlePositionChange = useCallback((dx, dy) => {
     onMove(note.id, dx, dy)
@@ -62,7 +87,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
               onClick={() => setShowPicker((v) => !v)}
-              title="Цвет"
+              title="Цвет заметки"
             >
               <span style={{ fontSize: 11 }}>🎨</span>
             </button>
@@ -89,7 +114,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
         </div>
       </div>
 
-      {/* Color picker */}
+      {/* Palette picker */}
       {showPicker && !isImage && (
         <div
           className={styles.picker}
@@ -125,15 +150,29 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
               onTouchStart={(e) => e.stopPropagation()}
             />
           ) : (
-            <textarea
-              className={styles.content}
-              style={{ color: color.text, height: note.height || 150 }}
-              value={note.content}
-              onChange={(e) => onUpdate(note.id, { content: e.target.value })}
-              onMouseDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-              placeholder="Введите текст заметки..."
-            />
+            <>
+              <FormatBar
+                editorRef={editorRef}
+                savedRangeRef={savedRangeRef}
+                textColor={color.text}
+                bodyColor={color.body}
+              />
+              <div
+                ref={editorRef}
+                className={styles.editor}
+                style={{ color: color.text, height: note.height || 150 }}
+                contentEditable
+                suppressContentEditableWarning
+                onInput={handleInput}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onMouseUp={saveRange}
+                onKeyUp={saveRange}
+                onTouchEnd={saveRange}
+                onBlur={saveRange}
+                data-placeholder="Введите текст заметки..."
+              />
+            </>
           )}
           <div
             className={styles.resizeHandle}
@@ -142,9 +181,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
               e.stopPropagation()
               const startY = e.clientY
               const startH = note.height || (isImage ? 220 : 150)
-              const onMove = (e) => {
-                onUpdate(note.id, { height: Math.max(60, startH + (e.clientY - startY)) })
-              }
+              const onMove = (e) => onUpdate(note.id, { height: Math.max(60, startH + (e.clientY - startY)) })
               const onUp = () => {
                 window.removeEventListener('mousemove', onMove)
                 window.removeEventListener('mouseup', onUp)

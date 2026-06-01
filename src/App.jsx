@@ -12,7 +12,7 @@ function createNote(id, colorIndex) {
   return {
     id,
     title: '',
-    content: '',
+    htmlContent: '',
     imageUrl: null,
     x: 100 + (id % 4) * 240,
     y: 100 + (id % 3) * 220,
@@ -23,9 +23,9 @@ function createNote(id, colorIndex) {
 }
 
 const INITIAL_NOTES = [
-  { ...createNote(1, 0), title: 'Идеи', content: 'Записывай свои идеи здесь...' },
-  { ...createNote(2, 1), title: 'Задачи', content: '- Задача 1\n- Задача 2' },
-  { ...createNote(3, 2), title: 'Заметка', content: '' },
+  { ...createNote(1, 0), title: 'Идеи', htmlContent: '<p>Записывай свои <b>идеи</b> здесь...</p>' },
+  { ...createNote(2, 1), title: 'Задачи', htmlContent: '<p>- Задача 1</p><p>- Задача 2</p>' },
+  { ...createNote(3, 2), title: 'Заметка', htmlContent: '' },
 ]
 
 export default function App() {
