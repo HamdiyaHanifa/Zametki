@@ -1,18 +1,20 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { Note } from './components/Note'
 import { Toolbar } from './components/Toolbar'
 import styles from './App.module.css'
 
 let nextId = 4
 const COLORS_COUNT = 5
+const MIN_SCALE = 0.1
+const MAX_SCALE = 4
 
 function createNote(id, colorIndex) {
   return {
     id,
     title: '',
     content: '',
-    x: 80 + (id % 4) * 60,
-    y: 80 + (id % 3) * 60,
+    x: 100 + (id % 4) * 240,
+    y: 100 + (id % 3) * 220,
     colorIndex,
     minimized: false,
     height: 150,
@@ -21,13 +23,22 @@ function createNote(id, colorIndex) {
 
 const INITIAL_NOTES = [
   { ...createNote(1, 0), title: 'Идеи', content: 'Записывай свои идеи здесь...' },
-  { ...createNote(2, 1), x: 380, y: 100, title: 'Задачи', content: '- Задача 1\n- Задача 2' },
-  { ...createNote(3, 2), x: 680, y: 160, title: 'Заметка', content: '' },
+  { ...createNote(2, 1), title: 'Задачи', content: '- Задача 1\n- Задача 2' },
+  { ...createNote(3, 2), title: 'Заметка', content: '' },
 ]
 
 export default function App() {
   const [notes, setNotes] = useState(INITIAL_NOTES)
   const [order, setOrder] = useState(INITIAL_NOTES.map((n) => n.id))
+  const [viewport, setVpState] = useState({ x: 0, y: 0, scale: 1 })
+  const vpRef = useRef(viewport)
+  const gestureRef = useRef(null)
+  const bgRef = useRef(null)
+
+  const setViewport = useCallback((vp) => {
+    vpRef.current = vp
+    setVpState(vp)
+  }, [])
 
   const bringToFront = useCallback((id) => {
     setOrder((prev) => {
@@ -38,11 +49,13 @@ export default function App() {
 
   const addNote = useCallback(() => {
     const id = nextId++
-    const colorIndex = id % COLORS_COUNT
+    const vp = vpRef.current
+    const worldX = (window.innerWidth / 2 - vp.x) / vp.scale - 140
+    const worldY = (window.innerHeight / 2 - vp.y) / vp.scale - 75
     const note = {
-      ...createNote(id, colorIndex),
-      x: 100 + Math.random() * (window.innerWidth - 400),
-      y: 80 + Math.random() * (window.innerHeight - 300),
+      ...createNote(id, id % COLORS_COUNT),
+      x: worldX + (Math.random() - 0.5) * 100,
+      y: worldY + (Math.random() - 0.5) * 100,
     }
     setNotes((prev) => [...prev, note])
     setOrder((prev) => [...prev, id])
@@ -52,15 +65,14 @@ export default function App() {
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)))
   }, [])
 
-  const moveNote = useCallback((id, dx, dy) => {
-    setNotes((prev) => prev.map((n) => {
-      if (n.id !== id) return n
-      return {
-        ...n,
-        x: Math.max(0, Math.min(window.innerWidth - 280, n.x + dx)),
-        y: Math.max(0, Math.min(window.innerHeight - 60, n.y + dy)),
-      }
-    }))
+  const moveNote = useCallback((id, screenDx, screenDy) => {
+    setNotes((prev) =>
+      prev.map((n) => {
+        if (n.id !== id) return n
+        const s = vpRef.current.scale
+        return { ...n, x: n.x + screenDx / s, y: n.y + screenDy / s }
+      })
+    )
   }, [])
 
   const deleteNote = useCallback((id) => {
@@ -68,25 +80,128 @@ export default function App() {
     setOrder((prev) => prev.filter((x) => x !== id))
   }, [])
 
+  // Mouse pan on background
+  const handleBgMouseDown = useCallback((e) => {
+    if (e.button !== 0) return
+    const start = { x: e.clientX, y: e.clientY, vx: vpRef.current.x, vy: vpRef.current.y }
+    const onMove = (e) => {
+      setViewport({ ...vpRef.current, x: start.vx + e.clientX - start.x, y: start.vy + e.clientY - start.y })
+    }
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [setViewport])
+
+  // Wheel zoom
+  useEffect(() => {
+    const el = bgRef.current
+    if (!el) return
+    const onWheel = (e) => {
+      e.preventDefault()
+      const vp = vpRef.current
+      const factor = e.deltaY < 0 ? 1.1 : 0.9
+      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, vp.scale * factor))
+      setViewport({
+        x: e.clientX - (e.clientX - vp.x) * (newScale / vp.scale),
+        y: e.clientY - (e.clientY - vp.y) * (newScale / vp.scale),
+        scale: newScale,
+      })
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [setViewport])
+
+  // Touch pan + pinch zoom
+  const handleBgTouchStart = useCallback((e) => {
+    if (e.touches.length === 1) {
+      const t = e.touches[0]
+      gestureRef.current = {
+        type: 'pan',
+        sx: t.clientX, sy: t.clientY,
+        vx: vpRef.current.x, vy: vpRef.current.y,
+      }
+    } else if (e.touches.length >= 2) {
+      const t0 = e.touches[0], t1 = e.touches[1]
+      gestureRef.current = {
+        type: 'pinch',
+        startDist: Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY),
+        startScale: vpRef.current.scale,
+        cx: (t0.clientX + t1.clientX) / 2,
+        cy: (t0.clientY + t1.clientY) / 2,
+        vx: vpRef.current.x, vy: vpRef.current.y,
+      }
+    }
+
+    const onMove = (e) => {
+      const g = gestureRef.current
+      if (!g) return
+      e.preventDefault()
+      if (e.touches.length >= 2) {
+        const t0 = e.touches[0], t1 = e.touches[1]
+        const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY)
+        if (g.type === 'pan') {
+          gestureRef.current = {
+            type: 'pinch',
+            startDist: dist,
+            startScale: vpRef.current.scale,
+            cx: (t0.clientX + t1.clientX) / 2,
+            cy: (t0.clientY + t1.clientY) / 2,
+            vx: vpRef.current.x, vy: vpRef.current.y,
+          }
+          return
+        }
+        const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, g.startScale * dist / g.startDist))
+        setViewport({
+          x: g.cx - (g.cx - g.vx) * (newScale / g.startScale),
+          y: g.cy - (g.cy - g.vy) * (newScale / g.startScale),
+          scale: newScale,
+        })
+      } else if (e.touches.length === 1 && g.type === 'pan') {
+        const t = e.touches[0]
+        setViewport({ ...vpRef.current, x: g.vx + t.clientX - g.sx, y: g.vy + t.clientY - g.sy })
+      }
+    }
+
+    const onEnd = () => {
+      gestureRef.current = null
+      window.removeEventListener('touchmove', onMove)
+      window.removeEventListener('touchend', onEnd)
+    }
+
+    window.addEventListener('touchmove', onMove, { passive: false })
+    window.addEventListener('touchend', onEnd)
+  }, [setViewport])
+
   return (
     <div className={styles.canvas}>
-      <Toolbar onAdd={addNote} />
-      <div className={styles.board}>
-        {notes.map((note) => (
-          <Note
-            key={note.id}
-            note={note}
-            onUpdate={updateNote}
-            onMove={moveNote}
-            onDelete={deleteNote}
-            onFocus={bringToFront}
-            zIndex={order.indexOf(note.id) + 1}
-          />
-        ))}
+      <Toolbar onAdd={addNote} scale={viewport.scale} />
+      <div
+        ref={bgRef}
+        className={styles.background}
+        onMouseDown={handleBgMouseDown}
+        onTouchStart={handleBgTouchStart}
+      >
+        <div
+          className={styles.world}
+          style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})` }}
+        >
+          {notes.map((note) => (
+            <Note
+              key={note.id}
+              note={note}
+              onUpdate={updateNote}
+              onMove={moveNote}
+              onDelete={deleteNote}
+              onFocus={bringToFront}
+              zIndex={order.indexOf(note.id) + 1}
+            />
+          ))}
+        </div>
         {notes.length === 0 && (
-          <div className={styles.empty}>
-            Нет заметок. Нажмите «+ Новая заметка» чтобы добавить.
-          </div>
+          <div className={styles.empty}>Нет заметок. Нажмите «+ Новая заметка».</div>
         )}
       </div>
     </div>

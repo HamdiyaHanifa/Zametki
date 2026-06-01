@@ -21,11 +21,13 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
   const { onMouseDown: dragMouseDown, onTouchStart: dragTouchStart } = useDrag(handlePositionChange)
 
   const handleHeaderMouseDown = useCallback((e) => {
+    e.stopPropagation()
     onFocus(note.id)
     dragMouseDown(e)
   }, [note.id, onFocus, dragMouseDown])
 
   const handleHeaderTouchStart = useCallback((e) => {
+    e.stopPropagation()
     onFocus(note.id)
     dragTouchStart(e)
   }, [note.id, onFocus, dragTouchStart])
@@ -41,8 +43,8 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
         '--body-color': colors.body,
         width: note.minimized ? 220 : 280,
       }}
-      onMouseDown={() => onFocus(note.id)}
-      onTouchStart={() => onFocus(note.id)}
+      onMouseDown={(e) => { e.stopPropagation(); onFocus(note.id) }}
+      onTouchStart={(e) => { e.stopPropagation(); onFocus(note.id) }}
     >
       <div
         className={styles.header}
@@ -100,8 +102,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
               const startY = e.clientY
               const startH = note.height || 150
               const onMove = (e) => {
-                const newH = Math.max(80, startH + (e.clientY - startY))
-                onUpdate(note.id, { height: newH })
+                onUpdate(note.id, { height: Math.max(80, startH + (e.clientY - startY)) })
               }
               const onUp = () => {
                 window.removeEventListener('mousemove', onMove)
@@ -116,8 +117,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
               const startH = note.height || 150
               const onMove = (e) => {
                 e.preventDefault()
-                const newH = Math.max(80, startH + (e.touches[0].clientY - startY))
-                onUpdate(note.id, { height: newH })
+                onUpdate(note.id, { height: Math.max(80, startH + (e.touches[0].clientY - startY)) })
               }
               const onUp = () => {
                 window.removeEventListener('touchmove', onMove)
