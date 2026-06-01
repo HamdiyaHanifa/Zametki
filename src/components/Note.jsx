@@ -1,18 +1,11 @@
 import { useCallback, useState } from 'react'
 import { useDrag } from '../hooks/useDrag'
+import { PALETTE } from '../palette'
 import styles from './Note.module.css'
 
-const COLORS = [
-  { header: '#533483', body: '#0f3460' },
-  { header: '#1a472a', body: '#0d2b17' },
-  { header: '#7b2d00', body: '#3d1600' },
-  { header: '#1a3a5c', body: '#0a1f36' },
-  { header: '#4a1942', body: '#260d22' },
-]
-
 export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
-  const [isEditing, setIsEditing] = useState(false)
-  const colors = COLORS[note.colorIndex % COLORS.length]
+  const [showPicker, setShowPicker] = useState(false)
+  const color = PALETTE[note.colorIndex % PALETTE.length]
 
   const handlePositionChange = useCallback((dx, dy) => {
     onMove(note.id, dx, dy)
@@ -35,25 +28,20 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
   return (
     <div
       className={styles.note}
-      style={{
-        left: note.x,
-        top: note.y,
-        zIndex,
-        '--header-color': colors.header,
-        '--body-color': colors.body,
-        width: note.minimized ? 220 : 280,
-      }}
+      style={{ left: note.x, top: note.y, zIndex, width: note.minimized ? 220 : 280 }}
       onMouseDown={(e) => { e.stopPropagation(); onFocus(note.id) }}
       onTouchStart={(e) => { e.stopPropagation(); onFocus(note.id) }}
     >
       <div
         className={styles.header}
+        style={{ background: color.header }}
         onMouseDown={handleHeaderMouseDown}
         onTouchStart={handleHeaderTouchStart}
         onDoubleClick={() => onUpdate(note.id, { minimized: !note.minimized })}
       >
         <input
           className={styles.titleInput}
+          style={{ color: color.text }}
           value={note.title}
           onChange={(e) => onUpdate(note.id, { title: e.target.value })}
           onMouseDown={(e) => e.stopPropagation()}
@@ -62,7 +50,18 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
         />
         <div className={styles.controls}>
           <button
+            className={styles.btnColor}
+            style={{ background: color.header, border: `2px solid ${color.text}22` }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onClick={() => setShowPicker((v) => !v)}
+            title="Цвет"
+          >
+            <span style={{ fontSize: 11 }}>🎨</span>
+          </button>
+          <button
             className={styles.btnMin}
+            style={{ background: `${color.text}18`, color: color.text }}
             onMouseDown={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
             onClick={() => onUpdate(note.id, { minimized: !note.minimized })}
@@ -82,21 +81,43 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
         </div>
       </div>
 
+      {showPicker && (
+        <div
+          className={styles.picker}
+          style={{ background: color.body, borderColor: `${color.header}88` }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
+          {PALETTE.map((c, i) => (
+            <button
+              key={i}
+              className={styles.swatch}
+              style={{
+                background: c.header,
+                outline: note.colorIndex === i ? `2px solid ${c.text}` : 'none',
+                outlineOffset: 2,
+              }}
+              onClick={() => { onUpdate(note.id, { colorIndex: i }); setShowPicker(false) }}
+              title=""
+            />
+          ))}
+        </div>
+      )}
+
       {!note.minimized && (
-        <div className={styles.body}>
+        <div className={styles.body} style={{ background: color.body }}>
           <textarea
             className={styles.content}
+            style={{ color: color.text, height: note.height || 150 }}
             value={note.content}
             onChange={(e) => onUpdate(note.id, { content: e.target.value })}
             onMouseDown={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
-            onFocus={() => setIsEditing(true)}
-            onBlur={() => setIsEditing(false)}
             placeholder="Введите текст заметки..."
-            style={{ height: note.height || 150 }}
           />
           <div
             className={styles.resizeHandle}
+            style={{ '--handle-color': color.header }}
             onMouseDown={(e) => {
               e.stopPropagation()
               const startY = e.clientY
