@@ -95,19 +95,18 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
   // Save range from editor when bar is about to receive interaction (desktop)
   const handleBarMouseDown = useCallback((e) => {
     const sel = window.getSelection()
-    if (sel && sel.rangeCount > 0) {
+    if (sel && !sel.isCollapsed) {
       const range = sel.getRangeAt(0)
       if (editorRef.current?.contains(range.commonAncestorContainer)) {
         savedRangeRef.current = range.cloneRange()
       }
     }
-    e.preventDefault() // keep focus in editor
+    e.preventDefault()
   }, [savedRangeRef, editorRef])
 
-  // Also save when opening the color picker (critical on mobile)
   const handleOpenColors = useCallback(() => {
     const sel = window.getSelection()
-    if (sel && sel.rangeCount > 0) {
+    if (sel && !sel.isCollapsed) {
       const range = sel.getRangeAt(0)
       if (editorRef.current?.contains(range.commonAncestorContainer)) {
         savedRangeRef.current = range.cloneRange()

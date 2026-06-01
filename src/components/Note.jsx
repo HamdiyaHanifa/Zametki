@@ -39,13 +39,12 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
     if (sel && sel.rangeCount > 0) savedRangeRef.current = sel.getRangeAt(0).cloneRange()
   }, [])
 
-  // iOS fix: selectionchange fires BEFORE click, keeping savedRangeRef fresh
-  // so format buttons can restore the selection even after iOS clears it on tap
   useEffect(() => {
     if (isImage) return
     const onSel = () => {
       const sel = window.getSelection()
-      if (sel && sel.rangeCount > 0 && editorRef.current) {
+      // Only save when there's actual non-collapsed selection (not just cursor)
+      if (sel && !sel.isCollapsed && editorRef.current) {
         const range = sel.getRangeAt(0)
         if (editorRef.current.contains(range.commonAncestorContainer)) {
           savedRangeRef.current = range.cloneRange()

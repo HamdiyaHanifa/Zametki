@@ -33,7 +33,7 @@ export function FocusView({ note, onUpdate, onClose }) {
     if (isImage) return
     const onSel = () => {
       const sel = window.getSelection()
-      if (sel && sel.rangeCount > 0 && editorRef.current) {
+      if (sel && !sel.isCollapsed && editorRef.current) {
         const range = sel.getRangeAt(0)
         if (editorRef.current.contains(range.commonAncestorContainer)) {
           savedRangeRef.current = range.cloneRange()
