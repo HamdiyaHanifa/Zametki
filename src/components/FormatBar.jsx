@@ -20,7 +20,7 @@ const SIZES = [
 export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
   const [showColors, setShowColors] = useState(false)
 
-  // Core helper: focus editor → restore selection → run command
+  // Core helper: focus editor → restore selection → run command → keep selection
   // Focus MUST come before addRange — otherwise iOS ignores addRange
   const withSelection = useCallback((fn) => {
     if (!savedRangeRef.current) return
@@ -31,7 +31,11 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
       sel.addRange(savedRangeRef.current.cloneRange())
     }
     fn()
-    // Notify React of content change
+    // After fn(), save whatever selection is active (fn() may have set a new one)
+    const selAfter = window.getSelection()
+    if (selAfter && !selAfter.isCollapsed && selAfter.rangeCount > 0) {
+      savedRangeRef.current = selAfter.getRangeAt(0).cloneRange()
+    }
     setTimeout(() => {
       editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))
     }, 0)
@@ -52,18 +56,30 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
     })
   }, [withSelection])
 
-  // Font size — mark with font[size="7"] then replace with real span
+  // Font size — mark with font[size="7"] then replace with real span, then re-select
   const applyFontSize = useCallback((px) => {
     withSelection(() => {
       document.execCommand('fontSize', false, '7')
-      editorRef.current?.querySelectorAll('font[size="7"]').forEach(font => {
+      const fonts = [...(editorRef.current?.querySelectorAll('font[size="7"]') || [])]
+      const newSpans = fonts.map(font => {
         const span = document.createElement('span')
         span.style.fontSize = px + 'px'
         while (font.firstChild) span.appendChild(font.firstChild)
         font.parentNode?.replaceChild(span, font)
+        return span
       })
+      // Re-select the new spans so selection stays visible for repeated size changes
+      if (newSpans.length > 0) {
+        const range = document.createRange()
+        range.setStart(newSpans[0], 0)
+        const last = newSpans[newSpans.length - 1]
+        range.setEnd(last, last.childNodes.length)
+        const sel = window.getSelection()
+        if (sel) { sel.removeAllRanges(); sel.addRange(range) }
+        savedRangeRef.current = range.cloneRange()
+      }
     })
-  }, [withSelection, editorRef])
+  }, [withSelection, editorRef, savedRangeRef])
 
   // Highlight color
   const applyHighlight = useCallback((color) => {
