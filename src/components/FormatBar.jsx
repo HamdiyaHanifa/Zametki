@@ -20,79 +20,61 @@ const SIZES = [
 export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
   const [showColors, setShowColors] = useState(false)
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
-  const restoreSelection = useCallback(() => {
-    if (!savedRangeRef.current) return null
-    const sel = window.getSelection()
-    if (!sel) return null
-    sel.removeAllRanges()
-    sel.addRange(savedRangeRef.current.cloneRange())
-    return sel.getRangeAt(0)
-  }, [savedRangeRef])
-
-  const triggerInput = useCallback(() => {
-    editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))
-  }, [editorRef])
-
-  // execCommand-based (bold/italic/underline/strikethrough/heading)
-  const execCmd = useCallback((cmd, value) => {
-    const sel = window.getSelection()
-    if (savedRangeRef.current && sel) {
-      sel.removeAllRanges()
-      sel.addRange(savedRangeRef.current.cloneRange())
-    }
-    document.execCommand(cmd, false, value ?? null)
-    editorRef.current?.focus()
-    triggerInput()
-  }, [savedRangeRef, editorRef, triggerInput])
-
-  // Range-based — wraps selection in <span style={key: value}>
-  // Does NOT use sel.addRange() — Range API works directly on DOM without focus,
-  // which is critical on iOS where addRange() silently fails when element isn't focused
-  const applySpan = useCallback((styleKey, styleValue) => {
+  // Core helper: focus editor → restore selection → run command
+  // Focus MUST come before addRange — otherwise iOS ignores addRange
+  const withSelection = useCallback((fn) => {
     if (!savedRangeRef.current) return
-    const range = savedRangeRef.current.cloneRange()
-    if (range.collapsed) { editorRef.current?.focus(); return }
-
-    const span = document.createElement('span')
-    span.style[styleKey] = styleValue
-    try {
-      range.surroundContents(span)
-    } catch {
-      const contents = range.extractContents()
-      span.appendChild(contents)
-      range.insertNode(span)
-    }
     editorRef.current?.focus()
-    triggerInput()
-  }, [savedRangeRef, editorRef, triggerInput])
-
-  // ── Actions ────────────────────────────────────────────────────────────────
-
-  const toggleHeading = useCallback(() => {
     const sel = window.getSelection()
-    if (savedRangeRef.current && sel) {
+    if (sel) {
       sel.removeAllRanges()
       sel.addRange(savedRangeRef.current.cloneRange())
     }
-    let node = sel?.getRangeAt(0)?.commonAncestorContainer
-    if (node?.nodeType === Node.TEXT_NODE) node = node.parentNode
-    document.execCommand('formatBlock', false, node?.closest?.('h1,h2,h3') ? 'div' : 'h3')
-    editorRef.current?.focus()
-    triggerInput()
-  }, [savedRangeRef, editorRef, triggerInput])
+    fn()
+    // Notify React of content change
+    setTimeout(() => {
+      editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))
+    }, 0)
+  }, [savedRangeRef, editorRef])
 
-  const applyFontSize = useCallback((px) => applySpan('fontSize', px + 'px'), [applySpan])
+  // Bold / italic / underline / strikethrough
+  const exec = useCallback((cmd) => {
+    withSelection(() => document.execCommand(cmd, false, null))
+  }, [withSelection])
 
+  // Heading toggle
+  const toggleHeading = useCallback(() => {
+    withSelection(() => {
+      const sel = window.getSelection()
+      let node = sel?.getRangeAt(0)?.commonAncestorContainer
+      if (node?.nodeType === Node.TEXT_NODE) node = node.parentNode
+      document.execCommand('formatBlock', false, node?.closest?.('h1,h2,h3') ? 'div' : 'h3')
+    })
+  }, [withSelection])
+
+  // Font size — mark with font[size="7"] then replace with real span
+  const applyFontSize = useCallback((px) => {
+    withSelection(() => {
+      document.execCommand('fontSize', false, '7')
+      editorRef.current?.querySelectorAll('font[size="7"]').forEach(font => {
+        const span = document.createElement('span')
+        span.style.fontSize = px + 'px'
+        while (font.firstChild) span.appendChild(font.firstChild)
+        font.parentNode?.replaceChild(span, font)
+      })
+    })
+  }, [withSelection, editorRef])
+
+  // Highlight color
   const applyHighlight = useCallback((color) => {
-    applySpan('backgroundColor', color)
+    withSelection(() => {
+      document.execCommand('styleWithCSS', false, true)
+      document.execCommand('hiliteColor', false, color)
+    })
     setShowColors(false)
-  }, [applySpan])
+  }, [withSelection])
 
-  // ── Range saving ───────────────────────────────────────────────────────────
-
-  // Save range from editor when bar is about to receive interaction (desktop)
+  // Save selection on bar mousedown (desktop) — focus stays in editor
   const handleBarMouseDown = useCallback((e) => {
     const sel = window.getSelection()
     if (sel && !sel.isCollapsed) {
@@ -104,6 +86,7 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
     e.preventDefault()
   }, [savedRangeRef, editorRef])
 
+  // Save selection when opening color picker (before iOS dismisses it)
   const handleOpenColors = useCallback(() => {
     const sel = window.getSelection()
     if (sel && !sel.isCollapsed) {
@@ -115,8 +98,6 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
     setShowColors((v) => !v)
   }, [savedRangeRef, editorRef])
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-
   const s = { color: textColor }
 
   return (
@@ -125,10 +106,10 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
       style={{ borderColor: `${textColor}14`, background: `${textColor}07` }}
       onMouseDown={handleBarMouseDown}
     >
-      <button className={styles.btn} style={s} onClick={() => execCmd('bold')} title="Жирный"><b>B</b></button>
-      <button className={styles.btn} style={{ ...s, fontStyle: 'italic' }} onClick={() => execCmd('italic')} title="Курсив"><i>I</i></button>
-      <button className={styles.btn} style={{ ...s, textDecoration: 'underline' }} onClick={() => execCmd('underline')} title="Подчёркнутый">U</button>
-      <button className={styles.btn} style={{ ...s, textDecoration: 'line-through' }} onClick={() => execCmd('strikeThrough')} title="Зачёркнутый">S</button>
+      <button className={styles.btn} style={s} onClick={() => exec('bold')} title="Жирный"><b>B</b></button>
+      <button className={styles.btn} style={{ ...s, fontStyle: 'italic' }} onClick={() => exec('italic')} title="Курсив"><i>I</i></button>
+      <button className={styles.btn} style={{ ...s, textDecoration: 'underline' }} onClick={() => exec('underline')} title="Подчёркнутый">U</button>
+      <button className={styles.btn} style={{ ...s, textDecoration: 'line-through' }} onClick={() => exec('strikeThrough')} title="Зачёркнутый">S</button>
       <button className={styles.btn} style={{ ...s, fontWeight: 700, fontSize: 14 }} onClick={toggleHeading} title="Заголовок">H</button>
 
       <span className={styles.sep} />
@@ -136,7 +117,8 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
       {SIZES.map(({ px, label }, i) => (
         <button key={px} className={styles.sizeBtn}
           style={{ color: textColor, fontSize: 9 + i * 2.5 }}
-          onClick={() => applyFontSize(px)} title={`${px}px`}>
+          onClick={() => applyFontSize(px)}
+          title={`${px}px`}>
           {label}
         </button>
       ))}
