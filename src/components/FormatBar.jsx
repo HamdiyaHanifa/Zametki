@@ -48,9 +48,12 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
   }, [savedRangeRef, editorRef, triggerInput])
 
   // Range-based — wraps selection in <span style={key: value}>
+  // Does NOT use sel.addRange() — Range API works directly on DOM without focus,
+  // which is critical on iOS where addRange() silently fails when element isn't focused
   const applySpan = useCallback((styleKey, styleValue) => {
-    const range = restoreSelection()
-    if (!range || range.collapsed) { editorRef.current?.focus(); return }
+    if (!savedRangeRef.current) return
+    const range = savedRangeRef.current.cloneRange()
+    if (range.collapsed) { editorRef.current?.focus(); return }
 
     const span = document.createElement('span')
     span.style[styleKey] = styleValue
@@ -63,7 +66,7 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
     }
     editorRef.current?.focus()
     triggerInput()
-  }, [restoreSelection, editorRef, triggerInput])
+  }, [savedRangeRef, editorRef, triggerInput])
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
