@@ -1,6 +1,6 @@
 .note {
   position: absolute;
-  min-width: 220px;
+  min-width: 180px;
   border-radius: 14px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.06);
   overflow: hidden;
@@ -11,18 +11,17 @@
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.1);
 }
 
+/* ── Header ── */
 .header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
+  gap: 4px;
+  padding: 7px 8px;
   cursor: grab;
   border-bottom: 1px solid rgba(0, 0, 0, 0.07);
 }
 
-.header:active {
-  cursor: grabbing;
-}
+.header:active { cursor: grabbing; }
 
 .titleInput {
   flex: 1;
@@ -35,24 +34,16 @@
   min-width: 0;
 }
 
-.titleInput::placeholder {
-  color: rgba(0, 0, 0, 0.3);
-}
-
-.titleInput:focus {
-  cursor: text;
-}
+.titleInput::placeholder { color: rgba(0, 0, 0, 0.3); }
+.titleInput:focus { cursor: text; }
 
 .controls {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   flex-shrink: 0;
 }
 
-.btnColor,
-.btnExpand,
-.btnMin,
-.btnClose {
+.btn {
   width: 22px;
   height: 22px;
   border: none;
@@ -62,32 +53,26 @@
   justify-content: center;
   font-size: 11px;
   cursor: pointer;
-  transition: filter 0.15s;
+  transition: filter 0.12s;
   line-height: 1;
   padding: 0;
 }
 
-.btnColor:hover,
-.btnExpand:hover,
-.btnMin:hover {
-  filter: brightness(0.88);
-}
+.btnIcon:hover { filter: brightness(0.85); }
 
 .btnClose {
   background: #e05060;
   color: #fff;
 }
 
-.btnClose:hover {
-  background: #c03040;
-}
+.btnClose:hover { background: #c03040; }
 
-/* Color picker strip */
+/* ── Palette picker ── */
 .picker {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.07);
 }
 
@@ -101,14 +86,14 @@
   padding: 0;
 }
 
-.swatch:hover {
-  transform: scale(1.2);
-}
+.swatch:hover { transform: scale(1.2); }
 
+/* ── Body ── */
 .body {
   position: relative;
 }
 
+/* Text editor */
 .editor {
   width: 100%;
   padding: 10px 12px;
@@ -121,6 +106,7 @@
   word-break: break-word;
   cursor: text;
   display: block;
+  box-sizing: border-box;
 }
 
 .editor:empty::before {
@@ -129,68 +115,54 @@
   pointer-events: none;
 }
 
-.editor h3 {
-  font-size: 17px;
-  font-weight: 700;
-  margin: 4px 0 2px;
-  line-height: 1.35;
-}
+.editor h3 { font-size: 17px; font-weight: 700; margin: 4px 0 2px; line-height: 1.35; }
+.editor b, .editor strong { font-weight: 700; }
+.editor i,  .editor em    { font-style: italic; }
+.editor u                  { text-decoration: underline; }
+.editor s, .editor strike  { text-decoration: line-through; }
 
-.editor b,
-.editor strong {
-  font-weight: 700;
-}
-
-.editor i,
-.editor em {
-  font-style: italic;
-}
-
-.editor u {
-  text-decoration: underline;
-}
-
-.editor s,
-.editor strike {
-  text-decoration: line-through;
-}
-
-.resizeHandle {
-  height: 10px;
-  cursor: ns-resize;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.35;
-  transition: opacity 0.15s;
-}
-
-.resizeHandle::after {
-  content: '';
-  width: 32px;
-  height: 3px;
-  background: var(--handle-color, #aaa);
-  border-radius: 2px;
-}
-
-.resizeHandle:hover {
-  opacity: 0.7;
-}
-
-/* Image card */
+/* Image */
 .image {
   width: 100%;
   display: block;
   object-fit: cover;
   user-select: none;
-  border-radius: 0 0 14px 14px;
 }
 
+/* Thumbnail in header when minimized */
 .thumb {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 5px;
   flex-shrink: 0;
   pointer-events: none;
 }
+
+/* ── Corner resize handle ── */
+.resizeCorner {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  cursor: nwse-resize;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 4px;
+}
+
+.resizeCorner::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-right: 2.5px solid var(--rc, rgba(0, 0, 0, 0.25));
+  border-bottom: 2.5px solid var(--rc, rgba(0, 0, 0, 0.25));
+  border-radius: 0 0 3px 0;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.resizeCorner:hover::after { opacity: 1; }

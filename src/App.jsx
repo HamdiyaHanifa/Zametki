@@ -19,6 +19,7 @@ function createNote(id, colorIndex) {
     y: 100 + (id % 3) * 220,
     colorIndex,
     minimized: false,
+    width: 280,
     height: 150,
   }
 }
@@ -79,6 +80,7 @@ export default function App() {
         ...createNote(id, id % COLORS_COUNT),
         title: file.name.replace(/\.[^.]+$/, ''),
         imageUrl: e.target.result,
+        width: 300,
         height: 220,
         x,
         y,
@@ -261,6 +263,7 @@ export default function App() {
               onDelete={deleteNote}
               onFocus={bringToFront}
               onOpenFocus={setFocusedNoteId}
+              scale={viewport.scale}
               zIndex={order.indexOf(note.id) + 1}
             />
           ))}
