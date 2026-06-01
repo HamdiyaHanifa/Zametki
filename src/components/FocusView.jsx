@@ -29,6 +29,21 @@ export function FocusView({ note, onUpdate, onClose }) {
     }
   }, [])
 
+  useEffect(() => {
+    if (isImage) return
+    const onSel = () => {
+      const sel = window.getSelection()
+      if (sel && sel.rangeCount > 0 && editorRef.current) {
+        const range = sel.getRangeAt(0)
+        if (editorRef.current.contains(range.commonAncestorContainer)) {
+          savedRangeRef.current = range.cloneRange()
+        }
+      }
+    }
+    document.addEventListener('selectionchange', onSel)
+    return () => document.removeEventListener('selectionchange', onSel)
+  }, [isImage])
+
   const handleInput = useCallback(() => {
     onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
   }, [note.id, onUpdate])
