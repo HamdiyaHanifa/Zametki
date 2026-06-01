@@ -10,16 +10,13 @@ const COLORS = [
   { header: '#4a1942', body: '#260d22' },
 ]
 
-export function Note({ note, onUpdate, onDelete, onFocus, zIndex }) {
+export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
   const [isEditing, setIsEditing] = useState(false)
   const colors = COLORS[note.colorIndex % COLORS.length]
 
   const handlePositionChange = useCallback((dx, dy) => {
-    onUpdate(note.id, {
-      x: Math.max(0, Math.min(window.innerWidth - 280, note.x + dx)),
-      y: Math.max(0, Math.min(window.innerHeight - 60, note.y + dy)),
-    })
-  }, [note.id, note.x, note.y, onUpdate])
+    onMove(note.id, dx, dy)
+  }, [note.id, onMove])
 
   const { onMouseDown: dragMouseDown, onTouchStart: dragTouchStart } = useDrag(handlePositionChange)
 

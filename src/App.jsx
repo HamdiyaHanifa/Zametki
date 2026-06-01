@@ -52,6 +52,17 @@ export default function App() {
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)))
   }, [])
 
+  const moveNote = useCallback((id, dx, dy) => {
+    setNotes((prev) => prev.map((n) => {
+      if (n.id !== id) return n
+      return {
+        ...n,
+        x: Math.max(0, Math.min(window.innerWidth - 280, n.x + dx)),
+        y: Math.max(0, Math.min(window.innerHeight - 60, n.y + dy)),
+      }
+    }))
+  }, [])
+
   const deleteNote = useCallback((id) => {
     setNotes((prev) => prev.filter((n) => n.id !== id))
     setOrder((prev) => prev.filter((x) => x !== id))
@@ -66,6 +77,7 @@ export default function App() {
             key={note.id}
             note={note}
             onUpdate={updateNote}
+            onMove={moveNote}
             onDelete={deleteNote}
             onFocus={bringToFront}
             zIndex={order.indexOf(note.id) + 1}
