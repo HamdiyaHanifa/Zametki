@@ -8,6 +8,7 @@ let nextId = 4
 const COLORS_COUNT = 12
 const MIN_SCALE = 0.1
 const MAX_SCALE = 4
+const STORAGE_KEY = 'zametki_v1'
 
 function createNote(id, colorIndex) {
   return {
@@ -30,9 +31,20 @@ const INITIAL_NOTES = [
   { ...createNote(3, 2), title: 'Заметка', htmlContent: '' },
 ]
 
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return null
+    const { notes, order, nextId: savedId } = JSON.parse(raw)
+    if (savedId && savedId > nextId) nextId = savedId
+    return { notes, order }
+  } catch { return null }
+}
+
 export default function App() {
-  const [notes, setNotes] = useState(INITIAL_NOTES)
-  const [order, setOrder] = useState(INITIAL_NOTES.map((n) => n.id))
+  const saved = loadSaved()
+  const [notes, setNotes] = useState(saved?.notes ?? INITIAL_NOTES)
+  const [order, setOrder] = useState(saved?.order ?? INITIAL_NOTES.map((n) => n.id))
   const [focusedNoteId, setFocusedNoteId] = useState(null)
   const [viewport, setVpState] = useState({ x: 0, y: 0, scale: 1 })
   const vpRef = useRef(viewport)
@@ -44,6 +56,13 @@ export default function App() {
     vpRef.current = vp
     setVpState(vp)
   }, [])
+
+  // Auto-save to localStorage on every change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ notes, order, nextId }))
+    } catch { /* storage full — ignore */ }
+  }, [notes, order])
 
   const bringToFront = useCallback((id) => {
     setOrder((prev) => {
@@ -108,6 +127,34 @@ export default function App() {
   const deleteNote = useCallback((id) => {
     setNotes((prev) => prev.filter((n) => n.id !== id))
     setOrder((prev) => prev.filter((x) => x !== id))
+  }, [])
+
+  // Export all notes to a .json file
+  const exportNotes = useCallback(() => {
+    const data = JSON.stringify({ notes, order, nextId }, null, 2)
+    const blob = new Blob([data], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `заметки_${new Date().toLocaleDateString('ru')}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [notes, order])
+
+  // Import notes from a .json file
+  const importNotes = useCallback((file) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const { notes: n, order: o, nextId: id } = JSON.parse(e.target.result)
+        if (Array.isArray(n) && Array.isArray(o)) {
+          if (id && id > nextId) nextId = id
+          setNotes(n)
+          setOrder(o)
+        }
+      } catch { alert('Не удалось открыть файл заметок') }
+    }
+    reader.readAsText(file)
   }, [])
 
   // Mouse pan on background
@@ -233,7 +280,13 @@ export default function App() {
 
   return (
     <div className={styles.canvas}>
-      <Toolbar onAdd={addNote} onUploadImage={loadImageFile} scale={viewport.scale} />
+      <Toolbar
+        onAdd={addNote}
+        onUploadImage={loadImageFile}
+        scale={viewport.scale}
+        onExport={exportNotes}
+        onImport={importNotes}
+      />
       {focusedNote && (
         <FocusView
           note={focusedNote}

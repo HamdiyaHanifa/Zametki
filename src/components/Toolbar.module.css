@@ -34,6 +34,24 @@
   display: none;
 }
 
+.iconBtn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3a2828;
+  transition: background 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+
+.iconBtn:hover { background: rgba(0, 0, 0, 0.12); }
+.iconBtn:active { transform: scale(0.94); }
+
 .photoBtn {
   margin-left: auto;
   padding: 8px 16px;
