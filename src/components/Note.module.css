@@ -50,6 +50,7 @@
 }
 
 .btnColor,
+.btnExpand,
 .btnMin,
 .btnClose {
   width: 22px;
@@ -67,6 +68,7 @@
 }
 
 .btnColor:hover,
+.btnExpand:hover,
 .btnMin:hover {
   filter: brightness(0.88);
 }

@@ -4,7 +4,7 @@ import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
 import styles from './Note.module.css'
 
-export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
+export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex }) {
   const [showPicker, setShowPicker] = useState(false)
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isImage = Boolean(note.imageUrl)
@@ -12,16 +12,20 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
 
   const editorRef = useRef(null)
   const savedRangeRef = useRef(null)
-  const noteIdRef = useRef(note.id)
 
-  // Init / re-init editor HTML when note id changes
+  // Init editor HTML on mount and sync back after FocusView closes
   useEffect(() => {
     if (!editorRef.current) return
-    if (noteIdRef.current !== note.id) {
-      noteIdRef.current = note.id
-    }
     editorRef.current.innerHTML = note.htmlContent || ''
   }, [note.id]) // eslint-disable-line
+
+  // Sync when content changes externally (e.g. FocusView edits)
+  useEffect(() => {
+    if (!editorRef.current) return
+    if (document.activeElement !== editorRef.current) {
+      editorRef.current.innerHTML = note.htmlContent || ''
+    }
+  }, [note.htmlContent])
 
   const saveRange = useCallback(() => {
     const sel = window.getSelection()
@@ -92,6 +96,19 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, zIndex }) {
               <span style={{ fontSize: 11 }}>🎨</span>
             </button>
           )}
+          <button
+            className={styles.btnExpand}
+            style={{ background: `${color.text}18`, color: color.text }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onClick={() => onOpenFocus(note.id)}
+            title="На весь экран"
+          >
+            <svg width="11" height="11" viewBox="0 0 10 10" fill="none">
+              <path d="M1 3.5V1H3.5M6.5 1H9V3.5M9 6.5V9H6.5M3.5 9H1V6.5"
+                stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
           <button
             className={styles.btnMin}
             style={{ background: `${color.text}18`, color: color.text }}

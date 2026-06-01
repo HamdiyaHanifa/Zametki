@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Note } from './components/Note'
 import { Toolbar } from './components/Toolbar'
+import { FocusView } from './components/FocusView'
 import styles from './App.module.css'
 
 let nextId = 4
@@ -31,6 +32,7 @@ const INITIAL_NOTES = [
 export default function App() {
   const [notes, setNotes] = useState(INITIAL_NOTES)
   const [order, setOrder] = useState(INITIAL_NOTES.map((n) => n.id))
+  const [focusedNoteId, setFocusedNoteId] = useState(null)
   const [viewport, setVpState] = useState({ x: 0, y: 0, scale: 1 })
   const vpRef = useRef(viewport)
   const gestureRef = useRef(null)
@@ -225,9 +227,18 @@ export default function App() {
     window.addEventListener('touchend', onEnd)
   }, [setViewport])
 
+  const focusedNote = focusedNoteId ? notes.find((n) => n.id === focusedNoteId) : null
+
   return (
     <div className={styles.canvas}>
       <Toolbar onAdd={addNote} onUploadImage={loadImageFile} scale={viewport.scale} />
+      {focusedNote && (
+        <FocusView
+          note={focusedNote}
+          onUpdate={updateNote}
+          onClose={() => setFocusedNoteId(null)}
+        />
+      )}
       <div
         ref={bgRef}
         className={`${styles.background} ${isDragOver ? styles.dragOver : ''}`}
@@ -249,6 +260,7 @@ export default function App() {
               onMove={moveNote}
               onDelete={deleteNote}
               onFocus={bringToFront}
+              onOpenFocus={setFocusedNoteId}
               zIndex={order.indexOf(note.id) + 1}
             />
           ))}

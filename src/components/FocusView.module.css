@@ -1,0 +1,126 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50000;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.18s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 54px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  opacity: 0.75;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.backBtn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.titleInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 18px;
+  font-weight: 700;
+  min-width: 0;
+}
+
+.titleInput::placeholder {
+  color: rgba(0, 0, 0, 0.25);
+}
+
+/* Text editor */
+.editor {
+  flex: 1;
+  padding: 24px 28px;
+  outline: none;
+  font-size: 16px;
+  line-height: 1.75;
+  font-family: inherit;
+  overflow-y: auto;
+  word-break: break-word;
+  cursor: text;
+  max-width: 780px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.editor:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+}
+
+.editor h3 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 8px 0 4px;
+  line-height: 1.3;
+}
+
+.editor b,
+.editor strong {
+  font-weight: 700;
+}
+
+.editor i,
+.editor em {
+  font-style: italic;
+}
+
+.editor u {
+  text-decoration: underline;
+}
+
+.editor s,
+.editor strike {
+  text-decoration: line-through;
+}
+
+/* Image focus */
+.imageWrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: hidden;
+}
+
+.image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+}
