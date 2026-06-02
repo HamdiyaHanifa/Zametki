@@ -98,6 +98,8 @@ export default function App() {
   const [timerBlindMode, setTimerBlindMode] = useState('off')
 
   const focusedNoteRef = useRef(null)
+  const focusedNoteIdRef = useRef(null)
+  focusedNoteIdRef.current = focusedNoteId
   const notesRef = useRef([])
   const updateNoteRef = useRef(null)
   const timerDangerActiveRef = useRef(false)
@@ -562,14 +564,14 @@ export default function App() {
 
   useEffect(() => {
     const onPaste = (e) => {
-      if (focusedNoteId !== null) return // FocusView handles its own paste
+      if (focusedNoteIdRef.current !== null) return // FocusView handles its own paste
       const items = Array.from(e.clipboardData?.items || [])
       const imgItem = items.find((i) => i.type.startsWith('image/'))
       if (imgItem) loadImageFile(imgItem.getAsFile())
     }
     if (activeCanvasId) window.addEventListener('paste', onPaste)
     return () => window.removeEventListener('paste', onPaste)
-  }, [loadImageFile, activeCanvasId, focusedNoteId])
+  }, [loadImageFile, activeCanvasId])
 
   const handleDrop = useCallback((e) => {
     e.preventDefault()
