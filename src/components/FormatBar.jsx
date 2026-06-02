@@ -22,6 +22,7 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
   const sizeWrapRef = useRef(null)
   const listWrapRef = useRef(null)
   const highlightWrapRef = useRef(null)
+  const photoInputRef = useRef(null)
 
   useEffect(() => {
     if (!showSizes) return
@@ -179,6 +180,45 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
     applyFontSize(next)
   }, [stepSize, applyFontSize])
 
+  const insertImageFile = useCallback((file) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result
+      editorRef.current?.focus()
+      const img = document.createElement('img')
+      img.src = dataUrl
+      if (savedRangeRef.current) {
+        const sel = window.getSelection()
+        sel?.removeAllRanges()
+        sel?.addRange(savedRangeRef.current.cloneRange())
+      }
+      const sel = window.getSelection()
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0)
+        range.deleteContents()
+        range.insertNode(img)
+        const after = document.createRange()
+        after.setStartAfter(img)
+        after.collapse(true)
+        sel.removeAllRanges()
+        sel.addRange(after)
+        savedRangeRef.current = after.cloneRange()
+      } else {
+        editorRef.current?.appendChild(img)
+      }
+      setTimeout(() => {
+        editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))
+      }, 0)
+    }
+    reader.readAsDataURL(file)
+  }, [editorRef, savedRangeRef])
+
+  const handlePhotoClick = useCallback(() => {
+    saveSelectionNow()
+    photoInputRef.current?.click()
+  }, [saveSelectionNow])
+
   const s = { color: textColor }
 
   return (
@@ -305,6 +345,26 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
           </div>
         )}
       </div>
+
+      {/* Photo insert button */}
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => { insertImageFile(e.target.files?.[0]); e.target.value = '' }}
+      />
+      <button
+        className={styles.btn}
+        style={s}
+        onMouseDown={saveSelectionNow}
+        onClick={handlePhotoClick}
+        title="Вставить фото"
+      >
+        <svg width="14" height="12" viewBox="0 0 14 12" fill="currentColor">
+          <path fillRule="evenodd" clipRule="evenodd" d="M5 0.5h4l1 2H12.5A1.5 1.5 0 0 1 14 4v7A1.5 1.5 0 0 1 12.5 12.5h-11A1.5 1.5 0 0 1 0 11V4A1.5 1.5 0 0 1 1.5 2.5H3L4 0.5zM7 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+        </svg>
+      </button>
 
       <span className={styles.sep} />
 

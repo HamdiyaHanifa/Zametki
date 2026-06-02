@@ -218,6 +218,13 @@
   text-decoration: line-through;
 }
 
+.editor img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 4px 0;
+}
+
 /* Image */
 .image {
   width: 100%;
