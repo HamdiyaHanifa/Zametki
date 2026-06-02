@@ -184,11 +184,22 @@ export function FocusView({
                   placeholder="Поле"
                 />
                 <span className={styles.profileColon} style={{ color: color.text }}>:</span>
-                <input
+                <textarea
                   className={styles.profileValueInput}
                   style={{ color: color.text, borderBottomColor: `${color.text}28` }}
                   value={f.value}
-                  onChange={(e) => updateField(f.id, 'value', e.target.value)}
+                  rows={1}
+                  onChange={(e) => {
+                    const el = e.target
+                    el.style.height = 'auto'
+                    el.style.height = el.scrollHeight + 'px'
+                    updateField(f.id, 'value', e.target.value)
+                  }}
+                  onFocus={(e) => {
+                    const el = e.target
+                    el.style.height = 'auto'
+                    el.style.height = el.scrollHeight + 'px'
+                  }}
                   placeholder="—"
                 />
                 <button

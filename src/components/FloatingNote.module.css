@@ -160,7 +160,7 @@
 
 .profileFieldRow {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 3px;
   margin-bottom: 5px;
 }
@@ -194,6 +194,10 @@
   padding-bottom: 1px;
   font-family: inherit;
   min-width: 0;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.4;
+  align-self: flex-end;
 }
 
 .profileValueInput::placeholder { opacity: 0.3; }
