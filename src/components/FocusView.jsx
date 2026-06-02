@@ -2,6 +2,7 @@ import { useRef, useCallback, useEffect, useState } from 'react'
 import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
 import { FloatingNote } from './FloatingNote'
+import { ImageResizer } from './ImageResizer'
 import { countWords, wordForm } from '../utils/wordCount'
 import { TAGS, TAGS_MAP } from '../utils/tags'
 import styles from './FocusView.module.css'
@@ -555,6 +556,10 @@ export function FocusView({
             onTouchEnd={saveRange}
             onBlur={saveRange}
             data-placeholder="Начните писать..."
+          />
+          <ImageResizer
+            editorRef={editorRef}
+            onSave={() => editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))}
           />
           {blindMode !== 'off' && (
             <div className={styles.blindReveal} style={{ color: color.text, borderTopColor: `${color.text}15` }}>

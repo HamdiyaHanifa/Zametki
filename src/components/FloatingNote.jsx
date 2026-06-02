@@ -1,5 +1,6 @@
 import { useRef, useCallback, useEffect, useState } from 'react'
 import { FormatBar } from './FormatBar'
+import { ImageResizer } from './ImageResizer'
 import { PALETTE } from '../palette'
 import styles from './FloatingNote.module.css'
 
@@ -304,6 +305,10 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
             onTouchEnd={saveRange}
             onBlur={saveRange}
             data-placeholder="Введите текст..."
+          />
+          <ImageResizer
+            editorRef={editorRef}
+            onSave={() => editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))}
           />
         </>
       )}

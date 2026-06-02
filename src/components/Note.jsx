@@ -2,6 +2,7 @@ import { useCallback, useState, useRef, useEffect } from 'react'
 import { useDrag } from '../hooks/useDrag'
 import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
+import { ImageResizer } from './ImageResizer'
 import { countWords, wordForm, noteWordCount } from '../utils/wordCount'
 import { TAGS, TAGS_MAP } from '../utils/tags'
 import styles from './Note.module.css'
@@ -338,6 +339,10 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
                 onTouchStart={handleEditorTouchStart}
                 onMouseUp={saveRange} onKeyUp={saveRange} onTouchEnd={saveRange} onBlur={saveRange}
                 data-placeholder="Введите текст заметки..." />
+              <ImageResizer
+                editorRef={editorRef}
+                onSave={() => editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))}
+              />
               {blindMode !== 'off' && (
                 <div className={styles.blindReveal} style={{ color: color.text, borderTopColor: `${color.text}25` }}>
                   {blindMode === 'all'

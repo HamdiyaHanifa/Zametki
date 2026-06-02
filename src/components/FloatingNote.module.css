@@ -75,6 +75,8 @@
 .editor u { text-decoration: underline; }
 .editor s, .editor strike { text-decoration: line-through; }
 
+.editor img { max-width: 100%; height: auto; display: block; margin: 4px 0; }
+
 /* Profile layout inside floating window */
 .profileBody {
   overflow-y: auto;
