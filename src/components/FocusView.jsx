@@ -298,15 +298,15 @@ export function FocusView({
           {notes && <span className={styles.noteCount}>{notes.length}</span>}
         </button>
       </div>
-      {showFocusMode && (
-        <FocusMode
-          totalWords={totalWords ?? 0}
-          onClose={() => setShowFocusMode(false)}
-          onDangerStart={handleTimerDangerStart}
-          onDangerStop={handleTimerDangerStop}
-          dangerInactiveProgress={timerDangerProgress}
-        />
-      )}
+      <FocusMode
+        totalWords={totalWords ?? 0}
+        onClose={() => setShowFocusMode(false)}
+        onDangerStart={handleTimerDangerStart}
+        onDangerStop={handleTimerDangerStop}
+        dangerInactiveProgress={timerDangerProgress}
+        visible={showFocusMode}
+        onShow={() => setShowFocusMode(true)}
+      />
 
       {/* Danger mode setup panel */}
       {dangerPhase === 'setup' && (

@@ -7,7 +7,7 @@ const DANGER_PRESETS = [5, 10, 15, 20, 30]
 const R = 50
 const CIRC = 2 * Math.PI * R
 
-export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, dangerInactiveProgress = 0 }) {
+export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, dangerInactiveProgress = 0, visible = true, onShow }) {
   const [phase, setPhase] = useState('setup') // 'setup' | 'active' | 'done'
   const [duration, setDuration] = useState(25)
   const [customVal, setCustomVal] = useState('')
@@ -19,8 +19,11 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
   const [dangerEnabled, setDangerEnabled] = useState(false)
   const [dangerInactivitySec, setDangerInactivitySec] = useState(5)
   const [dangerFailed, setDangerFailed] = useState(false)
+  const [pos, setPos] = useState({ x: null, y: null })
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   const intervalRef = useRef(null)
+  const nodeRef = useRef(null)
   const durationRef = useRef(duration)
   const dangerEnabledRef = useRef(false)
   const dangerInactivitySecRef = useRef(5)
@@ -86,6 +89,23 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
     onClose()
   }, [phase, onClose])
 
+  const handleDragStart = useCallback((e) => {
+    if (e.button !== 0) return
+    e.preventDefault()
+    const node = nodeRef.current
+    if (!node) return
+    const rect = node.getBoundingClientRect()
+    const ox = e.clientX - rect.left
+    const oy = e.clientY - rect.top
+    const onMove = (ev) => setPos({ x: ev.clientX - ox, y: ev.clientY - oy })
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [])
+
   useEffect(() => {
     if (phase !== 'active' || paused) return
     intervalRef.current = setInterval(() => {
@@ -109,13 +129,47 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
 
   useEffect(() => () => clearInterval(intervalRef.current), [])
 
+  useEffect(() => { if (phase !== 'active') setIsCollapsed(false) }, [phase])
+
   const dangerBarColor = dangerInactiveProgress < 0.5 ? '#4caf50'
                         : dangerInactiveProgress < 0.8 ? '#ff9800'
                         : '#f44336'
 
+  const posStyle = pos.x !== null
+    ? { top: pos.y + 'px', left: pos.x + 'px', right: 'auto', bottom: 'auto' }
+    : {}
+
+  if (!visible && phase !== 'active') return null
+
+  if ((!visible || isCollapsed) && phase === 'active') {
+    return (
+      <div
+        ref={nodeRef}
+        className={`${styles.miniChip} ${dangerEnabled ? styles.miniChipDanger : ''}`}
+        style={posStyle}
+        onMouseDown={handleDragStart}
+        onClick={() => { setIsCollapsed(false); onShow?.() }}
+        title="Открыть таймер"
+      >
+        {dangerEnabled && <span className={styles.miniChipIcon}>⚡</span>}
+        <span className={styles.miniChipTime}>{mm}:{ss}</span>
+        <button
+          className={styles.miniChipStop}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); stopSession() }}
+          title="Остановить"
+        >■</button>
+      </div>
+    )
+  }
+
   return (
-    <div className={styles.panel}>
-      <button className={styles.closeBtn} onClick={handleClose}>✕</button>
+    <div ref={nodeRef} className={styles.panel} style={posStyle}>
+      <div className={styles.panelDragBar} onMouseDown={handleDragStart} />
+      <button className={styles.closeBtn} onClick={() => {
+        if (phase === 'active') setIsCollapsed(true)
+        else handleClose()
+      }}>✕</button>
 
       {phase === 'setup' && (
         <>
