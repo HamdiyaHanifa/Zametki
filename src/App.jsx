@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { Note } from './components/Note'
 import { Toolbar } from './components/Toolbar'
 import { FocusView } from './components/FocusView'
+import { NotesPanel } from './components/NotesPanel'
 import styles from './App.module.css'
 
 let nextId = 4
@@ -46,6 +47,7 @@ export default function App() {
   const [notes, setNotes] = useState(saved?.notes ?? INITIAL_NOTES)
   const [order, setOrder] = useState(saved?.order ?? INITIAL_NOTES.map((n) => n.id))
   const [focusedNoteId, setFocusedNoteId] = useState(null)
+  const [showPanel, setShowPanel] = useState(false)
   const [viewport, setVpState] = useState({ x: 0, y: 0, scale: 1 })
   const vpRef = useRef(viewport)
   const gestureRef = useRef(null)
@@ -286,7 +288,16 @@ export default function App() {
         scale={viewport.scale}
         onExport={exportNotes}
         onImport={importNotes}
+        onTogglePanel={() => setShowPanel((v) => !v)}
+        noteCount={notes.length}
       />
+      {showPanel && (
+        <NotesPanel
+          notes={notes}
+          onOpenFocus={(id) => { setFocusedNoteId(id); setShowPanel(false) }}
+          onClose={() => setShowPanel(false)}
+        />
+      )}
       {focusedNote && (
         <FocusView
           note={focusedNote}
