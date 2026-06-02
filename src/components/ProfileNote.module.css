@@ -312,6 +312,34 @@
 
 .descriptionInput::placeholder { opacity: 0.3; }
 
+.wordCountRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  margin-top: 4px;
+  font-size: 10px;
+  opacity: 0.45;
+  user-select: none;
+}
+
+.resetWordBtn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+  line-height: 1;
+  border-radius: 3px;
+  transition: opacity 0.12s, background 0.12s;
+  opacity: 0.6;
+}
+
+.resetWordBtn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.08);
+}
+
 /* Right-edge resize */
 .resizeEdge {
   position: absolute;

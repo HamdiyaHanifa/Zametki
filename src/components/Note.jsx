@@ -2,7 +2,7 @@ import { useCallback, useState, useRef, useEffect } from 'react'
 import { useDrag } from '../hooks/useDrag'
 import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
-import { countWords, wordForm } from '../utils/wordCount'
+import { countWords, wordForm, noteWordCount } from '../utils/wordCount'
 import styles from './Note.module.css'
 
 const DEFAULT_W_TEXT = 280
@@ -12,7 +12,7 @@ const DEFAULT_H_IMG  = 220
 const MIN_W = 180
 const MIN_H = 80
 
-export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale }) {
+export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale, onResetWordCount }) {
   const [showPicker, setShowPicker] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const color = PALETTE[note.colorIndex % PALETTE.length]
@@ -223,11 +223,23 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
                 onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}
                 onMouseUp={saveRange} onKeyUp={saveRange} onTouchEnd={saveRange} onBlur={saveRange}
                 data-placeholder="Введите текст заметки..." />
-              {(() => { const wc = countWords(note.htmlContent); return wc > 0 ? (
-                <div className={styles.wordCount} style={{ color: color.text }}>
-                  {wc} {wordForm(wc)}
-                </div>
-              ) : null })()}
+              {(() => {
+                const raw = countWords(note.htmlContent)
+                if (raw === 0) return null
+                const wc = noteWordCount(note)
+                return (
+                  <div className={styles.wordCountRow} style={{ color: color.text }}>
+                    <span>{wc} {wordForm(wc)}</span>
+                    <button
+                      className={styles.resetWordBtn}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation(); onResetWordCount?.(note.id) }}
+                      title="Сбросить счётчик слов"
+                    >↺</button>
+                  </div>
+                )
+              })()}
             </>
           )}
           {/* Corner resize handle */}

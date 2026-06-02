@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect } from 'react'
-import { countWords, wordForm } from '../utils/wordCount'
+import { noteWordCount, wordForm } from '../utils/wordCount'
 import styles from './Toolbar.module.css'
 
-export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onHome, canvasName }) {
+export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onHome, canvasName }) {
   const fileRef = useRef(null)
   const importRef = useRef(null)
   const panelRef = useRef(null)
@@ -35,7 +35,7 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
 
   const selectedWords = [...selectedIds].reduce((sum, id) => {
     const n = notes.find(x => x.id === id)
-    return sum + (n ? countWords(n.htmlContent) + countWords(n.description) : 0)
+    return sum + (n ? noteWordCount(n) : 0)
   }, 0)
 
   useEffect(() => {
@@ -59,7 +59,14 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
       </button>
       <span className={styles.scale}>{Math.round(scale * 100)}%</span>
       {totalWords > 0 && (
-        <span className={styles.totalWords}>{totalWords} {wordForm(totalWords)}</span>
+        <span className={styles.totalWordsWrap}>
+          <span className={styles.totalWords}>{totalWords} {wordForm(totalWords)}</span>
+          <button
+            className={styles.resetAllBtn}
+            onClick={onResetAllWordCounts}
+            title="Обнулить счётчик слов на всём холсте"
+          >↺</button>
+        </span>
       )}
       <div className={styles.wordBtnWrap} ref={panelRef}>
         <button
@@ -83,6 +90,11 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
               <div className={styles.wordPanelActions}>
                 <button className={styles.wordPanelActionBtn} onClick={selectAll}>Все</button>
                 <button className={styles.wordPanelActionBtn} onClick={clearAll}>Сброс</button>
+                <button
+                  className={styles.wordPanelActionBtn}
+                  onClick={onResetAllWordCounts}
+                  title="Обнулить счётчик для всех заметок"
+                >↺ Обнулить</button>
                 <button className={styles.wordPanelActionBtn} onClick={() => setShowWordPanel(false)}>✕</button>
               </div>
             </div>
@@ -91,7 +103,7 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
                 <div className={styles.wordPanelEmpty}>Нет заметок</div>
               )}
               {notes.map(note => {
-                const wc = countWords(note.htmlContent) + countWords(note.description)
+                const wc = noteWordCount(note)
                 const checked = selectedIds.has(note.id)
                 const isProfile = note.noteType === 'profile'
                 const isImg = !isProfile && Boolean(note.imageUrl)
@@ -107,6 +119,11 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
                     {isProfile && <span className={styles.wordPanelBadge}>анкета</span>}
                     {isImg && <span className={styles.wordPanelBadge}>фото</span>}
                     <span className={styles.wordPanelWc}>{wc > 0 ? `${wc} ${wordForm(wc)}` : '—'}</span>
+                    <button
+                      className={styles.wordPanelResetBtn}
+                      onClick={(e) => { e.preventDefault(); onResetNoteWordCount?.(note.id) }}
+                      title="Обнулить счётчик этой заметки"
+                    >↺</button>
                   </label>
                 )
               })}

@@ -13,3 +13,8 @@ export function wordForm(n) {
   if (last1 >= 2 && last1 <= 4) return 'слова'
   return 'слов'
 }
+
+export function noteWordCount(note) {
+  const raw = countWords(note.htmlContent) + countWords(note.description)
+  return Math.max(0, raw - (note.wordCountOffset || 0))
+}

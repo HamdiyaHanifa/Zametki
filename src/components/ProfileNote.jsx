@@ -1,6 +1,7 @@
 import { useCallback, useState, useRef } from 'react'
 import { useDrag } from '../hooks/useDrag'
 import { PALETTE } from '../palette'
+import { countWords, wordForm, noteWordCount } from '../utils/wordCount'
 import styles from './ProfileNote.module.css'
 
 const MIN_W = 220
@@ -12,7 +13,7 @@ const DEFAULT_FIELDS = [
   { id: 4, label: 'Роль', value: '' },
 ]
 
-export function ProfileNote({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale }) {
+export function ProfileNote({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale, onResetWordCount }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
   const color = PALETTE[note.colorIndex % PALETTE.length]
@@ -260,6 +261,21 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onFocus, onOpenF
               placeholder="Описание персонажа..."
               rows={2}
             />
+            {(() => {
+              const raw = countWords(note.description)
+              if (raw === 0) return null
+              const wc = noteWordCount(note)
+              return (
+                <div className={styles.wordCountRow} style={{ color: color.text }}>
+                  <span>{wc} {wordForm(wc)}</span>
+                  <button
+                    className={styles.resetWordBtn}
+                    onClick={() => onResetWordCount?.(note.id)}
+                    title="Сбросить счётчик слов"
+                  >↺</button>
+                </div>
+              )
+            })()}
           </div>
 
           {/* Right-edge resize */}

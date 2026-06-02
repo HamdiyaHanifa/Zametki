@@ -3,7 +3,7 @@ import { Note } from './components/Note'
 import { ProfileNote } from './components/ProfileNote'
 import { Toolbar } from './components/Toolbar'
 import { FocusView } from './components/FocusView'
-import { countWords } from './utils/wordCount'
+import { countWords, noteWordCount } from './utils/wordCount'
 import { NotesPanel } from './components/NotesPanel'
 import { HomeScreen } from './components/HomeScreen'
 import styles from './App.module.css'
@@ -259,6 +259,26 @@ export default function App() {
     }))
   }, [patchCanvas])
 
+  const resetNoteWordCount = useCallback((id) => {
+    patchCanvas((c) => ({
+      ...c,
+      notes: c.notes.map((n) => n.id === id
+        ? { ...n, wordCountOffset: countWords(n.htmlContent) + countWords(n.description) }
+        : n
+      ),
+    }))
+  }, [patchCanvas])
+
+  const resetAllWordCounts = useCallback(() => {
+    patchCanvas((c) => ({
+      ...c,
+      notes: c.notes.map((n) => ({
+        ...n,
+        wordCountOffset: countWords(n.htmlContent) + countWords(n.description),
+      })),
+    }))
+  }, [patchCanvas])
+
   const moveNote = useCallback((id, screenDx, screenDy) => {
     const s = vpRef.current.scale
     patchCanvas((c) => ({
@@ -509,8 +529,10 @@ export default function App() {
         onImport={importNotes}
         onTogglePanel={() => setShowPanel((v) => !v)}
         noteCount={notes.length}
-        totalWords={notes.reduce((sum, n) => sum + countWords(n.htmlContent) + countWords(n.description), 0)}
+        totalWords={notes.reduce((sum, n) => sum + noteWordCount(n), 0)}
         notes={notes}
+        onResetAllWordCounts={resetAllWordCounts}
+        onResetNoteWordCount={resetNoteWordCount}
         onHome={openHome}
         canvasName={activeCanvas?.name}
       />
@@ -571,6 +593,7 @@ export default function App() {
                 onOpenFocus={setFocusedNoteId}
                 scale={vpState.scale}
                 zIndex={order.indexOf(note.id) + 1}
+                onResetWordCount={resetNoteWordCount}
               />
             ) : (
               <Note
@@ -583,6 +606,7 @@ export default function App() {
                 onOpenFocus={setFocusedNoteId}
                 scale={vpState.scale}
                 zIndex={order.indexOf(note.id) + 1}
+                onResetWordCount={resetNoteWordCount}
               />
             )
           )}
