@@ -2,6 +2,7 @@ import { useRef, useCallback, useEffect, useState } from 'react'
 import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
 import { FloatingNote } from './FloatingNote'
+import { FocusMode } from './FocusMode'
 import { countWords, wordForm } from '../utils/wordCount'
 import styles from './FocusView.module.css'
 
@@ -17,6 +18,7 @@ export function FocusView({
   notes, onSwitchFocus,
   floatingNotes, onAddFloating, onRemoveFloating, onUpdateFloatPos,
   showPanel, onTogglePanel,
+  totalWords,
 }) {
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isProfile = note.noteType === 'profile'
@@ -25,6 +27,7 @@ export function FocusView({
   const savedRangeRef = useRef(null)
   const photoRef = useRef(null)
   const [isDragTarget, setIsDragTarget] = useState(false)
+  const [showFocusMode, setShowFocusMode] = useState(false)
 
   const fields = note.fields ?? DEFAULT_FIELDS
 
@@ -123,6 +126,15 @@ export function FocusView({
           placeholder={titlePlaceholder}
         />
         <button
+          className={styles.focusTimerBtn}
+          style={{
+            color: color.text,
+            background: showFocusMode ? `${color.text}22` : `${color.text}0e`,
+          }}
+          onClick={() => setShowFocusMode(v => !v)}
+          title="Режим фокуса"
+        >⏱</button>
+        <button
           className={styles.panelBtn}
           style={{ color: color.text, background: showPanel ? `${color.text}18` : 'transparent' }}
           onClick={onTogglePanel}
@@ -136,6 +148,12 @@ export function FocusView({
           {notes && <span className={styles.noteCount}>{notes.length}</span>}
         </button>
       </div>
+      {showFocusMode && (
+        <FocusMode
+          totalWords={totalWords ?? 0}
+          onClose={() => setShowFocusMode(false)}
+        />
+      )}
 
       {isProfile ? (
         <div className={styles.profileWrap}>

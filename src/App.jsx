@@ -573,6 +573,7 @@ export default function App() {
           onUpdateFloatPos={updateFloatPos}
           showPanel={showPanel}
           onTogglePanel={() => setShowPanel((v) => !v)}
+          totalWords={notes.reduce((sum, n) => sum + noteWordCount(n), 0)}
         />
       )}
       <div

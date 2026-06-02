@@ -79,6 +79,18 @@
 
 .panelBtn:hover { background: rgba(0, 0, 0, 0.1) !important; }
 
+.focusTimerBtn {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 15px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.focusTimerBtn:hover { background: rgba(0, 0, 0, 0.12) !important; }
+
 .noteCount {
   font-size: 12px;
   font-weight: 700;
