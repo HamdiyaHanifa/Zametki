@@ -100,7 +100,7 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
   return (
     <div
       className={styles.floatingNote}
-      style={{ left: pos.x, top: pos.y, width: size.w }}
+      style={{ left: pos.x, top: pos.y, width: size.w, background: color.body }}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
     >
