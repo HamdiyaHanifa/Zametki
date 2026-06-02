@@ -188,6 +188,35 @@
 .editor u                  { text-decoration: underline; }
 .editor s, .editor strike  { text-decoration: line-through; }
 
+.editor ol,
+.editor ul:not([data-todo]) { padding-left: 20px; margin: 2px 0; }
+
+.editor ul[data-todo] { list-style: none; padding-left: 4px; margin: 2px 0; }
+
+.editor ul[data-todo] > li { position: relative; padding-left: 20px; min-height: 1.4em; }
+
+.editor .todo-cb {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 18px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  line-height: inherit;
+  -webkit-user-modify: read-only;
+}
+
+.editor .todo-cb::before { content: '☐'; }
+
+.editor ul[data-todo] > li[data-checked="true"] .todo-cb::before { content: '☑'; }
+
+.editor ul[data-todo] > li[data-checked="true"] {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
 /* Image */
 .image {
   width: 100%;

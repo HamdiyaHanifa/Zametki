@@ -170,12 +170,32 @@ export function FocusView({
   }, [isImage, isProfile])
 
   const handleInput = useCallback(() => {
+    if (editorRef.current) {
+      editorRef.current.querySelectorAll('ul[data-todo] > li').forEach(li => {
+        if (!li.querySelector('.todo-cb')) {
+          const cb = document.createElement('span')
+          cb.className = 'todo-cb'
+          cb.setAttribute('contenteditable', 'false')
+          li.insertBefore(cb, li.firstChild)
+        }
+      })
+    }
     onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
     if (dangerPhaseRef.current === 'active') {
       dangerLastActivityRef.current = Date.now()
     }
     onTimerDangerActivity?.()
   }, [note.id, onUpdate, onTimerDangerActivity])
+
+  const handleTodoCbClick = useCallback((e) => {
+    if (e.target.classList.contains('todo-cb')) {
+      const li = e.target.closest('li')
+      if (li) {
+        li.dataset.checked = li.dataset.checked === 'true' ? 'false' : 'true'
+        onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
+      }
+    }
+  }, [note.id, onUpdate])
 
   const handleEditorKeyDown = useCallback(() => {
     if (dangerPhaseRef.current === 'active') {
@@ -497,6 +517,7 @@ export function FocusView({
             contentEditable={dangerPhase !== 'dying'}
             suppressContentEditableWarning
             onInput={handleInput}
+            onClick={handleTodoCbClick}
             onKeyDown={handleEditorKeyDown}
             onMouseUp={saveRange}
             onKeyUp={saveRange}

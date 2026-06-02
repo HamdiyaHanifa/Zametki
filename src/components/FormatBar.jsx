@@ -54,6 +54,46 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
     })
   }, [withSelection])
 
+  const insertTodoList = useCallback(() => {
+    editorRef.current?.focus()
+    if (savedRangeRef.current) {
+      const s = window.getSelection()
+      s?.removeAllRanges()
+      s?.addRange(savedRangeRef.current.cloneRange())
+    }
+    const sel = window.getSelection()
+    if (!sel?.rangeCount) return
+    let node = sel.getRangeAt(0).commonAncestorContainer
+    if (node?.nodeType === Node.TEXT_NODE) node = node.parentNode
+    const existingTodo = node?.closest?.('ul[data-todo]')
+    if (existingTodo) {
+      existingTodo.removeAttribute('data-todo')
+      existingTodo.querySelectorAll('.todo-cb').forEach(cb => cb.remove())
+      existingTodo.querySelectorAll('li[data-checked]').forEach(li => li.removeAttribute('data-checked'))
+    } else {
+      document.execCommand('insertUnorderedList', false, null)
+      const sel2 = window.getSelection()
+      if (!sel2?.rangeCount) return
+      let n = sel2.getRangeAt(0).commonAncestorContainer
+      if (n?.nodeType === Node.TEXT_NODE) n = n.parentNode
+      const ul = n?.closest?.('ul')
+      if (ul && !ul.dataset.todo) {
+        ul.dataset.todo = 'true'
+        ul.querySelectorAll(':scope > li').forEach(li => {
+          if (!li.querySelector('.todo-cb')) {
+            const cb = document.createElement('span')
+            cb.className = 'todo-cb'
+            cb.setAttribute('contenteditable', 'false')
+            li.insertBefore(cb, li.firstChild)
+          }
+        })
+      }
+    }
+    setTimeout(() => {
+      editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))
+    }, 0)
+  }, [editorRef, savedRangeRef])
+
   const applyFontSize = useCallback((px) => {
     withSelection(() => {
       document.execCommand('fontSize', false, '7')
@@ -123,6 +163,40 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
       <button className={styles.btn} style={{ ...s, textDecoration: 'underline' }} onClick={() => exec('underline')} title="Подчёркнутый">U</button>
       <button className={styles.btn} style={{ ...s, textDecoration: 'line-through' }} onClick={() => exec('strikeThrough')} title="Зачёркнутый">S</button>
       <button className={styles.btn} style={{ ...s, fontWeight: 700, fontSize: 14 }} onClick={toggleHeading} title="Заголовок">H</button>
+
+      <span className={styles.sep} />
+
+      <button className={styles.btn} style={s} onClick={() => exec('insertUnorderedList')} title="Список">
+        <svg width="13" height="11" viewBox="0 0 13 11" fill="currentColor">
+          <circle cx="1.5" cy="1.5" r="1.5"/>
+          <rect x="4" y="0.5" width="9" height="2" rx="1"/>
+          <circle cx="1.5" cy="5.5" r="1.5"/>
+          <rect x="4" y="4.5" width="9" height="2" rx="1"/>
+          <circle cx="1.5" cy="9.5" r="1.5"/>
+          <rect x="4" y="8.5" width="9" height="2" rx="1"/>
+        </svg>
+      </button>
+      <button className={styles.btn} style={s} onClick={() => exec('insertOrderedList')} title="Нумерованный список">
+        <svg width="13" height="11" viewBox="0 0 13 11" fill="currentColor">
+          <rect x="0.5" y="0" width="2" height="3" rx="0.7"/>
+          <rect x="4" y="0.5" width="9" height="2" rx="1"/>
+          <rect x="0.5" y="4" width="2" height="3" rx="0.7"/>
+          <rect x="4" y="4.5" width="9" height="2" rx="1"/>
+          <rect x="0.5" y="8" width="2" height="3" rx="0.7"/>
+          <rect x="4" y="8.5" width="9" height="2" rx="1"/>
+        </svg>
+      </button>
+      <button className={styles.btn} style={s} onClick={insertTodoList} title="Список с галочками">
+        <svg width="13" height="11" viewBox="0 0 13 11" fill="none">
+          <rect x="0.7" y="0.7" width="2.6" height="2.6" rx="0.6" stroke="currentColor" strokeWidth="1.2"/>
+          <rect x="4" y="0.5" width="9" height="2" rx="1" fill="currentColor"/>
+          <rect x="0.7" y="4.7" width="2.6" height="2.6" rx="0.6" stroke="currentColor" strokeWidth="1.2"/>
+          <path d="M1.3 6.1l0.75 0.75 1.3-1.3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+          <rect x="4" y="4.5" width="9" height="2" rx="1" fill="currentColor"/>
+          <rect x="0.7" y="8.7" width="2.6" height="2.6" rx="0.6" stroke="currentColor" strokeWidth="1.2"/>
+          <rect x="4" y="8.5" width="9" height="2" rx="1" fill="currentColor"/>
+        </svg>
+      </button>
 
       <span className={styles.sep} />
 

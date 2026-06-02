@@ -161,6 +161,35 @@
   text-decoration: line-through;
 }
 
+.editor ol,
+.editor ul:not([data-todo]) { padding-left: 24px; margin: 3px 0; }
+
+.editor ul[data-todo] { list-style: none; padding-left: 4px; margin: 3px 0; }
+
+.editor ul[data-todo] > li { position: relative; padding-left: 24px; min-height: 1.5em; }
+
+.editor .todo-cb {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 22px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  font-size: 15px;
+  line-height: inherit;
+  -webkit-user-modify: read-only;
+}
+
+.editor .todo-cb::before { content: '☐'; }
+
+.editor ul[data-todo] > li[data-checked="true"] .todo-cb::before { content: '☑'; }
+
+.editor ul[data-todo] > li[data-checked="true"] {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
 .wordCount {
   text-align: center;
   font-size: 12px;

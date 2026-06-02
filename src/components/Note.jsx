@@ -85,9 +85,29 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
   }, [isImage])
 
   const handleInput = useCallback(() => {
+    if (editorRef.current) {
+      editorRef.current.querySelectorAll('ul[data-todo] > li').forEach(li => {
+        if (!li.querySelector('.todo-cb')) {
+          const cb = document.createElement('span')
+          cb.className = 'todo-cb'
+          cb.setAttribute('contenteditable', 'false')
+          li.insertBefore(cb, li.firstChild)
+        }
+      })
+    }
     onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
     onTimerDangerActivity?.()
   }, [note.id, onUpdate, onTimerDangerActivity])
+
+  const handleTodoCbClick = useCallback((e) => {
+    if (e.target.classList.contains('todo-cb')) {
+      const li = e.target.closest('li')
+      if (li) {
+        li.dataset.checked = li.dataset.checked === 'true' ? 'false' : 'true'
+        onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
+      }
+    }
+  }, [note.id, onUpdate])
 
   const handlePositionChange = useCallback((dx, dy) => {
     onMove(note.id, dx, dy)
@@ -304,6 +324,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
                 style={{ color: blindMode !== 'off' ? 'transparent' : color.text, caretColor: color.text, height: h }}
                 contentEditable suppressContentEditableWarning
                 onInput={handleInput}
+                onClick={handleTodoCbClick}
                 onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}
                 onMouseUp={saveRange} onKeyUp={saveRange} onTouchEnd={saveRange} onBlur={saveRange}
                 data-placeholder="Введите текст заметки..." />
