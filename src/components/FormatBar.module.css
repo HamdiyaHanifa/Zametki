@@ -31,27 +31,6 @@
 
 .btn:hover { background: rgba(0, 0, 0, 0.09); }
 
-/* Font size buttons */
-.sizeBtn {
-  min-width: 22px;
-  height: 26px;
-  border: none;
-  background: transparent;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 700;
-  font-family: Georgia, serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 3px;
-  transition: background 0.12s;
-  flex-shrink: 0;
-  line-height: 1;
-}
-
-.sizeBtn:hover { background: rgba(0, 0, 0, 0.09); }
-
 .sep {
   width: 1px;
   height: 16px;
@@ -60,3 +39,93 @@
   flex-shrink: 0;
 }
 
+/* ── Size dropdown ── */
+.sizeWrap {
+  position: relative;
+}
+
+.sizeToggle {
+  width: 32px;
+  font-family: inherit;
+}
+
+.aaIcon {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: Georgia, serif;
+  letter-spacing: -0.5px;
+}
+
+.sizeDrop {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 8px;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.07);
+  z-index: 200;
+  min-width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sizePresets {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.presetBtn {
+  flex: 1;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: Georgia, serif;
+  transition: background 0.1s;
+  padding: 0;
+  line-height: 1;
+}
+
+.presetBtn:hover { background: rgba(0, 0, 0, 0.09); }
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 2px 0;
+}
+
+.stepBtn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(0, 0, 0, 0.07);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.stepBtn:hover { background: rgba(0, 0, 0, 0.14); }
+
+.stepDisplay {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}

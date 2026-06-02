@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import styles from './FormatBar.module.css'
 
 const SIZES = [
@@ -9,8 +9,20 @@ const SIZES = [
 ]
 
 export function FormatBar({ editorRef, savedRangeRef, textColor }) {
-  // Restore selection into editor and run a command, then keep selection
-  // focus() MUST come before addRange — iOS requirement
+  const [showSizes, setShowSizes] = useState(false)
+  const [stepSize, setStepSize] = useState(14)
+  const dropRef = useRef(null)
+
+  // Close size dropdown on outside click
+  useEffect(() => {
+    if (!showSizes) return
+    const onClose = (e) => {
+      if (!dropRef.current?.contains(e.target)) setShowSizes(false)
+    }
+    const id = setTimeout(() => window.addEventListener('pointerdown', onClose), 0)
+    return () => { clearTimeout(id); window.removeEventListener('pointerdown', onClose) }
+  }, [showSizes])
+
   const withSelection = useCallback((fn) => {
     if (!savedRangeRef.current) return
     editorRef.current?.focus()
@@ -65,9 +77,39 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
     })
   }, [withSelection, editorRef, savedRangeRef])
 
+  const saveSelectionNow = useCallback(() => {
+    const sel = window.getSelection()
+    if (sel && !sel.isCollapsed) {
+      const range = sel.getRangeAt(0)
+      if (editorRef.current?.contains(range.commonAncestorContainer)) {
+        savedRangeRef.current = range.cloneRange()
+      }
+    }
+  }, [savedRangeRef, editorRef])
+
   const handleBarMouseDown = useCallback((e) => {
+    saveSelectionNow()
     e.preventDefault()
-  }, [])
+  }, [saveSelectionNow])
+
+  const handleOpenSizes = useCallback(() => {
+    saveSelectionNow()
+    // Read current font size from selection
+    const sel = window.getSelection()
+    if (sel?.rangeCount > 0) {
+      const node = sel.getRangeAt(0).commonAncestorContainer
+      const el = node?.nodeType === Node.TEXT_NODE ? node.parentElement : node
+      const computed = el ? parseInt(window.getComputedStyle(el).fontSize) : 14
+      if (computed && computed > 0) setStepSize(computed)
+    }
+    setShowSizes((v) => !v)
+  }, [saveSelectionNow])
+
+  const applyStep = useCallback((delta) => {
+    const next = Math.max(6, Math.min(72, stepSize + delta))
+    setStepSize(next)
+    applyFontSize(next)
+  }, [stepSize, applyFontSize])
 
   const s = { color: textColor }
 
@@ -85,14 +127,52 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
 
       <span className={styles.sep} />
 
-      {SIZES.map(({ px, label }, i) => (
-        <button key={px} className={styles.sizeBtn}
-          style={{ color: textColor, fontSize: 9 + i * 2.5 }}
-          onClick={() => applyFontSize(px)}
-          title={`${px}px`}>
-          {label}
+      <div className={styles.sizeWrap} ref={dropRef}>
+        <button
+          className={`${styles.btn} ${styles.sizeToggle}`}
+          style={s}
+          onClick={handleOpenSizes}
+          title="Размер текста"
+        >
+          <span className={styles.aaIcon}>Аа</span>
         </button>
-      ))}
+
+        {showSizes && (
+          <div
+            className={styles.sizeDrop}
+            style={{ background: `color-mix(in srgb, ${textColor}08, white 92%)` }}
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <div className={styles.sizePresets}>
+              {SIZES.map(({ px, label }, i) => (
+                <button
+                  key={px}
+                  className={styles.presetBtn}
+                  style={{ color: textColor, fontSize: 9 + i * 2.5 }}
+                  onClick={() => { applyFontSize(px); setStepSize(px) }}
+                  title={`${px}px`}
+                >{label}</button>
+              ))}
+            </div>
+            <div className={styles.sep} style={{ width: '100%', height: 1, margin: '4px 0' }} />
+            <div className={styles.stepper}>
+              <button
+                className={styles.stepBtn}
+                style={{ color: textColor }}
+                onClick={() => applyStep(-1)}
+                title="-1px"
+              >−</button>
+              <span className={styles.stepDisplay} style={{ color: textColor }}>{stepSize}px</span>
+              <button
+                className={styles.stepBtn}
+                style={{ color: textColor }}
+                onClick={() => applyStep(+1)}
+                title="+1px"
+              >+</button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
