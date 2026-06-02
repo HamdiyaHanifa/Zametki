@@ -256,6 +256,22 @@
 
 .profileDescriptionInput::placeholder { opacity: 0.3; }
 
+/* Image note inside floating window */
+.imageBody {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.imageDisplay {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
 .resizeHandle {
   position: absolute;
   bottom: 0;

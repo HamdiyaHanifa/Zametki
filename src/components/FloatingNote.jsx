@@ -16,6 +16,7 @@ const DEFAULT_FIELDS = [
 export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, initialW, initialH, onPosChange }) {
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isProfile = note.noteType === 'profile'
+  const isImage = !isProfile && Boolean(note.imageUrl)
   const editorRef = useRef(null)
   const savedRangeRef = useRef(null)
   const photoRef = useRef(null)
@@ -30,14 +31,14 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
   useEffect(() => { sizeRef.current = size }, [size])
 
   useEffect(() => {
-    if (!isProfile && editorRef.current) editorRef.current.innerHTML = note.htmlContent || ''
+    if (!isProfile && !isImage && editorRef.current) editorRef.current.innerHTML = note.htmlContent || ''
   }, []) // eslint-disable-line
 
   useEffect(() => {
-    if (!isProfile && editorRef.current && document.activeElement !== editorRef.current) {
+    if (!isProfile && !isImage && editorRef.current && document.activeElement !== editorRef.current) {
       editorRef.current.innerHTML = note.htmlContent || ''
     }
-  }, [note.htmlContent, isProfile])
+  }, [note.htmlContent, isProfile, isImage])
 
   const saveRange = useCallback(() => {
     const sel = window.getSelection()
@@ -45,7 +46,7 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
   }, [])
 
   useEffect(() => {
-    if (isProfile) return
+    if (isProfile || isImage) return
     const onSel = () => {
       const sel = window.getSelection()
       if (sel && !sel.isCollapsed && editorRef.current) {
@@ -180,7 +181,11 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
         >✕</button>
       </div>
 
-      {isProfile ? (
+      {isImage ? (
+        <div className={styles.imageBody} style={{ height: size.h }}>
+          <img src={note.imageUrl} className={styles.imageDisplay} draggable={false} />
+        </div>
+      ) : isProfile ? (
         <div className={styles.profileBody} style={{ height: size.h }}>
           <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
           {/* Photo */}
