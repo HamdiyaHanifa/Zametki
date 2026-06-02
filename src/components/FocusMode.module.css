@@ -4,6 +4,7 @@
   right: 20px;
   width: 230px;
   user-select: none;
+  cursor: grab;
   background: rgba(255, 250, 246, 0.97);
   backdrop-filter: blur(18px);
   border: 1px solid rgba(0, 0, 0, 0.09);
@@ -17,18 +18,7 @@
   gap: 14px;
 }
 
-/* Drag handle — covers the top of the panel, leaves room for close button */
-.panelDragBar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 44px;
-  height: 38px;
-  cursor: grab;
-  border-radius: 20px 0 0 0;
-}
-
-.panelDragBar:active { cursor: grabbing; }
+.panel:active { cursor: grabbing; }
 
 .closeBtn {
   position: absolute;

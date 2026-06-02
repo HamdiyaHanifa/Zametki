@@ -97,14 +97,21 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
     const rect = node.getBoundingClientRect()
     const ox = e.clientX - rect.left
     const oy = e.clientY - rect.top
+    document.body.style.cursor = 'grabbing'
     const onMove = (ev) => setPos({ x: ev.clientX - ox, y: ev.clientY - oy })
     const onUp = () => {
+      document.body.style.cursor = ''
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
   }, [])
+
+  const handlePanelMouseDown = useCallback((e) => {
+    if (e.target.closest('button, input, textarea, select, label')) return
+    handleDragStart(e)
+  }, [handleDragStart])
 
   useEffect(() => {
     if (phase !== 'active' || paused) return
@@ -164,8 +171,7 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
   }
 
   return (
-    <div ref={nodeRef} className={styles.panel} style={posStyle}>
-      <div className={styles.panelDragBar} onMouseDown={handleDragStart} />
+    <div ref={nodeRef} className={styles.panel} style={posStyle} onMouseDown={handlePanelMouseDown}>
       <button className={styles.closeBtn} onClick={() => {
         if (phase === 'active') setIsCollapsed(true)
         else handleClose()
