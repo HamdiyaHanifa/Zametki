@@ -234,6 +234,78 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
+/* ── Tags ── */
+.tagRow {
+  display: flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-bottom: 1px solid;
+  min-height: 24px;
+}
+
+.tagChip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.6;
+  transition: filter 0.1s, opacity 0.15s;
+}
+
+.tagChip:hover { filter: brightness(0.88); }
+
+.tagChipEmpty {
+  opacity: 0;
+  color: rgba(0,0,0,0.4) !important;
+  border-color: rgba(0,0,0,0.14) !important;
+  background: transparent !important;
+}
+
+.note:hover .tagChipEmpty,
+.note:focus-within .tagChipEmpty {
+  opacity: 1;
+}
+
+.tagPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 7px 8px;
+  border-bottom: 1px solid;
+}
+
+.tagPickerBtn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1.5px solid;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: filter 0.1s;
+}
+
+.tagPickerBtn:hover { filter: brightness(0.88); }
+
+.tagRemoveBtn {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: transparent;
+  color: rgba(0,0,0,0.35);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.tagRemoveBtn:hover { background: rgba(0,0,0,0.06); }
+
 /* ── Blind mode reveal ── */
 .blindReveal {
   padding: 4px 12px 5px;

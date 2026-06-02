@@ -3,6 +3,7 @@ import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
 import { FloatingNote } from './FloatingNote'
 import { countWords, wordForm } from '../utils/wordCount'
+import { TAGS, TAGS_MAP } from '../utils/tags'
 import styles from './FocusView.module.css'
 
 const DEFAULT_FIELDS = [
@@ -45,6 +46,22 @@ export function FocusView({
   const savedRangeRef = useRef(null)
   const photoRef = useRef(null)
   const [isDragTarget, setIsDragTarget] = useState(false)
+  const [showTagPicker, setShowTagPicker] = useState(false)
+  const tagBtnRef = useRef(null)
+  const tagPanelRef = useRef(null)
+
+  useEffect(() => {
+    if (!showTagPicker) return
+    const close = (e) => {
+      if (
+        tagPanelRef.current && !tagPanelRef.current.contains(e.target) &&
+        tagBtnRef.current && !tagBtnRef.current.contains(e.target)
+      ) setShowTagPicker(false)
+    }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('touchstart', close)
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('touchstart', close) }
+  }, [showTagPicker])
 
   // ── Standalone danger mode ────────────────────────────────────────
   const DANGER_PRESETS = [5, 10, 15, 20, 30]
@@ -250,6 +267,22 @@ export function FocusView({
           onClick={onToggleFocusMode}
           title="Режим фокуса"
         >⏱</button>
+        {!isProfile && !isImage && (
+          <button
+            ref={tagBtnRef}
+            className={styles.focusTimerBtn}
+            style={{
+              color: note.tag ? TAGS_MAP[note.tag].color : color.text,
+              background: note.tag ? TAGS_MAP[note.tag].bg : showTagPicker ? `${color.text}18` : `${color.text}0e`,
+              fontWeight: note.tag ? 700 : undefined,
+              fontSize: note.tag ? 12 : undefined,
+            }}
+            onClick={() => setShowTagPicker(v => !v)}
+            title="Тег заметки"
+          >
+            {note.tag ? TAGS_MAP[note.tag].label : '○'}
+          </button>
+        )}
         <button
           className={styles.panelBtn}
           style={{ color: color.text, background: showPanel ? `${color.text}18` : 'transparent' }}
@@ -264,6 +297,39 @@ export function FocusView({
           {notes && <span className={styles.noteCount}>{notes.length}</span>}
         </button>
       </div>
+
+      {/* Tag picker panel */}
+      {showTagPicker && !isProfile && !isImage && (
+        <div ref={tagPanelRef} className={styles.tagPanel} style={{ borderColor: `${color.text}18` }}>
+          <div className={styles.tagPanelTitle} style={{ color: color.text }}>Тег заметки</div>
+          <div className={styles.tagOptions}>
+            {TAGS.map(tag => (
+              <button
+                key={tag.id}
+                className={styles.tagOption}
+                style={{
+                  color: tag.color,
+                  borderColor: `${tag.color}60`,
+                  background: note.tag === tag.id ? tag.bg : 'transparent',
+                  fontWeight: note.tag === tag.id ? 700 : 600,
+                }}
+                onClick={() => { onUpdate(note.id, { tag: tag.id }); setShowTagPicker(false) }}
+              >
+                {tag.label}
+              </button>
+            ))}
+          </div>
+          {note.tag && (
+            <button
+              className={styles.tagOptionRemove}
+              style={{ color: color.text }}
+              onClick={() => { onUpdate(note.id, { tag: null }); setShowTagPicker(false) }}
+            >
+              Убрать тег
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Danger mode setup panel */}
       {dangerPhase === 'setup' && (

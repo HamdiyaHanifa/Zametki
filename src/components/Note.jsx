@@ -3,6 +3,7 @@ import { useDrag } from '../hooks/useDrag'
 import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
 import { countWords, wordForm, noteWordCount } from '../utils/wordCount'
+import { TAGS, TAGS_MAP } from '../utils/tags'
 import styles from './Note.module.css'
 
 const DEFAULT_W_TEXT = 280
@@ -28,6 +29,7 @@ function lastVisible(html, mode) {
 
 export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale, onResetWordCount, onTimerDangerActivity, blindMode = 'off', timerDangerResetSignal }) {
   const [showPicker, setShowPicker] = useState(false)
+  const [showTagPicker, setShowTagPicker] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isImage = Boolean(note.imageUrl)
@@ -138,7 +140,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
       style={{ left: note.x, top: note.y, zIndex, width: w }}
       onMouseDown={(e) => { e.stopPropagation(); onFocus(note.id) }}
       onTouchStart={(e) => { e.stopPropagation(); onFocus(note.id) }}
-      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setConfirmDelete(false) }}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { setConfirmDelete(false); setShowTagPicker(false) } }}
     >
       {/* Header */}
       <div
@@ -220,6 +222,62 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
           )}
         </div>
       </div>
+
+      {/* Tag strip */}
+      {!isImage && (
+        <div
+          className={styles.tagRow}
+          style={{ background: color.body, borderBottomColor: `${color.header}80` }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
+          <button
+            className={`${styles.tagChip} ${!note.tag ? styles.tagChipEmpty : ''}`}
+            style={note.tag ? {
+              color: TAGS_MAP[note.tag].color,
+              borderColor: `${TAGS_MAP[note.tag].color}55`,
+              background: TAGS_MAP[note.tag].bg,
+            } : { color: color.text }}
+            onClick={() => setShowTagPicker(v => !v)}
+            title="Тег заметки"
+          >
+            {note.tag ? TAGS_MAP[note.tag].label : '＋ тег'}
+          </button>
+        </div>
+      )}
+
+      {/* Tag picker */}
+      {showTagPicker && !isImage && (
+        <div
+          className={styles.tagPicker}
+          style={{ background: color.body, borderBottomColor: `${color.header}80` }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
+          {TAGS.map(tag => (
+            <button
+              key={tag.id}
+              className={styles.tagPickerBtn}
+              style={{
+                color: tag.color,
+                borderColor: `${tag.color}60`,
+                background: note.tag === tag.id ? tag.bg : 'transparent',
+              }}
+              onClick={() => { onUpdate(note.id, { tag: tag.id }); setShowTagPicker(false) }}
+            >
+              {tag.label}
+            </button>
+          ))}
+          {note.tag && (
+            <button
+              className={styles.tagRemoveBtn}
+              onClick={() => { onUpdate(note.id, { tag: null }); setShowTagPicker(false) }}
+            >
+              Убрать
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Palette picker */}
       {showPicker && !isImage && (
