@@ -11,7 +11,6 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
 
   const [showWordPanel, setShowWordPanel] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
-  const [exportFormat, setExportFormat] = useState('json')
   const [selectedIds, setSelectedIds] = useState(new Set())
 
   const handleFileChange = (e) => {
@@ -167,20 +166,9 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
         {showExportMenu && (
           <div className={styles.exportMenu}>
             <div className={styles.exportMenuTitle}>Экспорт</div>
-            <div className={styles.exportFormatRow}>
-              <button
-                className={`${styles.formatBtn} ${exportFormat === 'json' ? styles.formatBtnActive : ''}`}
-                onClick={() => setExportFormat('json')}
-              >JSON</button>
-              <button
-                className={`${styles.formatBtn} ${exportFormat === 'txt' ? styles.formatBtnActive : ''}`}
-                onClick={() => setExportFormat('txt')}
-              >Текст</button>
-            </div>
-            <div className={styles.exportMenuDivider} />
             <button
               className={styles.exportMenuItem}
-              onClick={() => { onExport(null, exportFormat); setShowExportMenu(false) }}
+              onClick={() => { onExport(null, 'txt'); setShowExportMenu(false) }}
             >
               Все заметки
             </button>
@@ -191,7 +179,7 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
               <button
                 key={tag.id}
                 className={styles.exportMenuItem}
-                onClick={() => { onExport(tag.id, exportFormat); setShowExportMenu(false) }}
+                onClick={() => { onExport(tag.id, 'txt'); setShowExportMenu(false) }}
               >
                 <span className={styles.exportMenuDot} style={{ background: tag.color }} />
                 {tag.label}
