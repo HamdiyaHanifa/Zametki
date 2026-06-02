@@ -40,20 +40,6 @@ export function HomeScreen({ canvases, onCreate, onOpen, onDelete, onRename, tra
           <span className={styles.newLabel}>Новый холст</span>
         </button>
 
-        {/* Trash card */}
-        <div className={styles.trashCard} onClick={onOpenTrash}>
-          <div className={styles.cardBody}>
-            <span className={styles.trashIcon}>🗑</span>
-            <span className={styles.name}>Корзина</span>
-            <span className={styles.count}>
-              {trashCount === 0 ? 'Пусто' : `${trashCount} ${noteWord(trashCount)}`}
-            </span>
-          </div>
-          <div className={styles.cardFooter}>
-            <span className={styles.trashHint}>Удалённые заметки</span>
-          </div>
-        </div>
-
         {[...canvases].reverse().map((canvas) => (
           <div
             key={canvas.id}
@@ -118,6 +104,17 @@ export function HomeScreen({ canvases, onCreate, onOpen, onDelete, onRename, tra
           </div>
         ))}
       </div>
+
+      <button className={styles.trashBar} onClick={onOpenTrash}>
+        <span className={styles.trashBarIcon}>🗑</span>
+        <span className={styles.trashBarLabel}>Корзина</span>
+        <span className={styles.trashBarCount}>
+          {trashCount === 0 ? 'Пусто' : `${trashCount} ${objectWord(trashCount)}`}
+        </span>
+        <svg className={styles.trashBarArrow} width="6" height="10" viewBox="0 0 6 10" fill="none">
+          <path d="M1 1l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
     </div>
   )
 }
@@ -126,4 +123,10 @@ function noteWord(n) {
   if (n % 10 === 1 && n % 100 !== 11) return 'заметка'
   if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'заметки'
   return 'заметок'
+}
+
+function objectWord(n) {
+  if (n % 10 === 1 && n % 100 !== 11) return 'удалённый объект'
+  if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'удалённых объекта'
+  return 'удалённых объектов'
 }

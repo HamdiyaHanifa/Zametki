@@ -167,45 +167,53 @@
 
 .confirmNo:hover { filter: brightness(0.9); }
 
-/* ── Trash card ── */
-.trashCard {
-  background: rgba(255, 250, 246, 0.97);
-  border-radius: 16px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.06);
+/* ── Trash bar ── */
+.trashBar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 860px;
+  margin-top: 22px;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1.5px dashed rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
   cursor: pointer;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: 130px;
-  transition: transform 0.15s, box-shadow 0.15s;
-  user-select: none;
-  border-top: 3px solid rgba(180, 60, 60, 0.22);
+  font-family: inherit;
+  transition: background 0.14s, border-color 0.14s;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
 }
 
-.trashCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.06);
+.trashBar:hover {
+  background: rgba(0, 0, 0, 0.07);
+  border-color: rgba(0, 0, 0, 0.22);
 }
 
-.trashCard .cardBody {
-  flex: 1;
-  padding: 16px 16px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.trashIcon {
-  font-size: 22px;
+.trashBarIcon {
+  font-size: 16px;
+  opacity: 0.45;
   line-height: 1;
-  opacity: 0.5;
+  flex-shrink: 0;
 }
 
-.trashHint {
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.32);
+.trashBarLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.trashBarCount {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.3);
   font-weight: 500;
   flex: 1;
+}
+
+.trashBarArrow {
+  color: rgba(0, 0, 0, 0.22);
+  flex-shrink: 0;
 }
 
 /* ── New canvas card ── */
