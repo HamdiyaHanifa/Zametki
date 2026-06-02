@@ -703,6 +703,7 @@ export default function App() {
           onAdd={addNote}
           onAddProfile={addProfile}
           onDelete={deleteNote}
+          onUpdate={updateNote}
         />
       )}
       {focusedNote && (

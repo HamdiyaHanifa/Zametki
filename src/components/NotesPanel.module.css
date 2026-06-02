@@ -197,6 +197,77 @@
   margin-top: 2px;
 }
 
+/* ── Rename button (pencil, hover-reveal) ── */
+.renameBtn {
+  width: 28px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0);
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s, background 0.12s;
+}
+
+.cardRow:hover .renameBtn { color: rgba(0, 0, 0, 0.28); }
+.renameBtn:hover { color: rgba(0, 0, 0, 0.65) !important; background: rgba(0, 0, 0, 0.06); }
+
+/* ── Rename input row ── */
+.renameInput {
+  flex: 1;
+  border: 1.5px solid rgba(0, 0, 0, 0.22);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  font-family: inherit;
+  background: #fff;
+  min-width: 0;
+}
+
+.renameInput:focus { border-color: rgba(0, 0, 0, 0.45); }
+
+.renameOkBtn {
+  width: 30px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(50, 160, 80, 0.12);
+  color: #2a8a3a;
+  font-size: 14px;
+  cursor: pointer;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+
+.renameOkBtn:hover { background: rgba(50, 160, 80, 0.22); }
+
+.renameCancelBtn {
+  width: 30px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.07);
+  color: rgba(0, 0, 0, 0.4);
+  font-size: 11px;
+  cursor: pointer;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+
+.renameCancelBtn:hover { background: rgba(0, 0, 0, 0.13); }
+
 /* ── Delete button ── */
 .delBtn {
   width: 30px;
