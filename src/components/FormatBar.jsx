@@ -131,6 +131,7 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
         <button
           className={`${styles.btn} ${styles.sizeToggle}`}
           style={s}
+          onTouchStart={(e) => { e.preventDefault(); handleOpenSizes() }}
           onClick={handleOpenSizes}
           title="Размер текста"
         >
@@ -140,7 +141,6 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
         {showSizes && (
           <div
             className={styles.sizeDrop}
-            style={{ background: `color-mix(in srgb, ${textColor}08, white 92%)` }}
             onMouseDown={(e) => e.preventDefault()}
           >
             <div className={styles.sizePresets}>
@@ -149,7 +149,8 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
                   key={px}
                   className={styles.presetBtn}
                   style={{ color: textColor, fontSize: 9 + i * 2.5 }}
-                  onClick={() => { applyFontSize(px); setStepSize(px) }}
+                  onTouchStart={(e) => { e.preventDefault(); applyFontSize(px); setStepSize(px); setShowSizes(false) }}
+                  onClick={() => { applyFontSize(px); setStepSize(px); setShowSizes(false) }}
                   title={`${px}px`}
                 >{label}</button>
               ))}
@@ -159,6 +160,7 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
               <button
                 className={styles.stepBtn}
                 style={{ color: textColor }}
+                onTouchStart={(e) => { e.preventDefault(); applyStep(-1) }}
                 onClick={() => applyStep(-1)}
                 title="-1px"
               >−</button>
@@ -166,6 +168,7 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
               <button
                 className={styles.stepBtn}
                 style={{ color: textColor }}
+                onTouchStart={(e) => { e.preventDefault(); applyStep(+1) }}
                 onClick={() => applyStep(+1)}
                 title="+1px"
               >+</button>
