@@ -249,8 +249,12 @@ export default function App() {
   }, [])
 
   const deleteCanvas = useCallback((id) => {
+    const canvas = canvases.find(c => c.id === id)
+    if (canvas) {
+      setTrash(prev => [...prev, { type: 'canvas', canvas, deletedAt: Date.now() }])
+    }
     setCanvases((prev) => prev.filter((c) => c.id !== id))
-  }, [])
+  }, [canvases])
 
   const renameCanvas = useCallback((id, name) => {
     setCanvases((prev) => prev.map((c) => c.id === id ? { ...c, name } : c))
@@ -402,23 +406,30 @@ export default function App() {
     }))
   }, [patchCanvas, canvases, activeCanvasId])
 
-  const restoreNote = useCallback((trashIndex) => {
+  const restoreTrashItem = useCallback((trashIndex) => {
     const item = trashRef.current[trashIndex]
     if (!item) return
-    const targetCanvas = canvases.find(c => c.id === item.canvasId) ?? canvases[0]
-    if (targetCanvas) {
-      setCanvases(prev => prev.map(c => {
-        if (c.id !== targetCanvas.id) return c
-        const maxId = Math.max(0, ...c.notes.map(n => n.id), c.nextNoteId - 1)
-        const newId = maxId + 1
-        return {
-          ...c,
-          notes: [...c.notes, { ...item.note, id: newId }],
-          order: [...c.order, newId],
-          nextNoteId: Math.max(c.nextNoteId, newId + 1),
-        }
-      }))
+
+    if (item.type === 'canvas') {
+      const newId = nextCanvasIdRef.current++
+      setCanvases(prev => [...prev, { ...item.canvas, id: newId }])
+    } else {
+      const targetCanvas = canvases.find(c => c.id === item.canvasId) ?? canvases[0]
+      if (targetCanvas) {
+        setCanvases(prev => prev.map(c => {
+          if (c.id !== targetCanvas.id) return c
+          const maxId = Math.max(0, ...c.notes.map(n => n.id), c.nextNoteId - 1)
+          const newId = maxId + 1
+          return {
+            ...c,
+            notes: [...c.notes, { ...item.note, id: newId }],
+            order: [...c.order, newId],
+            nextNoteId: Math.max(c.nextNoteId, newId + 1),
+          }
+        }))
+      }
     }
+
     setTrash(prev => prev.filter((_, i) => i !== trashIndex))
   }, [canvases])
 
@@ -687,7 +698,7 @@ export default function App() {
           trash={trash}
           canvases={canvases}
           onBack={() => setShowTrash(false)}
-          onRestore={restoreNote}
+          onRestore={restoreTrashItem}
           onPermanentDelete={permanentlyDeleteNote}
           onEmptyTrash={emptyTrash}
         />
