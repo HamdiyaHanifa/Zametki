@@ -565,6 +565,7 @@ export default function App() {
                 onMove={moveNote}
                 onDelete={deleteNote}
                 onFocus={bringToFront}
+                onOpenFocus={setFocusedNoteId}
                 scale={vpState.scale}
                 zIndex={order.indexOf(note.id) + 1}
               />

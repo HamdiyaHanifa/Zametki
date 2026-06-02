@@ -12,7 +12,7 @@ const DEFAULT_FIELDS = [
   { id: 4, label: 'Роль', value: '' },
 ]
 
-export function ProfileNote({ note, onUpdate, onMove, onDelete, onFocus, zIndex, scale }) {
+export function ProfileNote({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
   const color = PALETTE[note.colorIndex % PALETTE.length]
@@ -110,6 +110,14 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onFocus, zIndex,
             style={{ background: `${color.text}18`, color: color.text }}
             onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}
             onClick={() => setShowPicker(v => !v)} title="Цвет карточки">🎨</button>
+          <button className={`${styles.btn} ${styles.btnIcon}`}
+            style={{ background: `${color.text}18`, color: color.text }}
+            onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}
+            onClick={() => onOpenFocus?.(note.id)} title="На весь экран">
+            <svg width="11" height="11" viewBox="0 0 10 10" fill="none">
+              <path d="M1 3.5V1H3.5M6.5 1H9V3.5M9 6.5V9H6.5M3.5 9H1V6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
           <button className={`${styles.btn} ${styles.btnIcon}`}
             style={{ background: `${color.text}18`, color: color.text }}
             onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}
