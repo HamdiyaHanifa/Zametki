@@ -112,7 +112,6 @@ export function FocusView({
             editorRef={editorRef}
             savedRangeRef={savedRangeRef}
             textColor={color.text}
-            bodyColor={color.body}
           />
           <div
             ref={editorRef}

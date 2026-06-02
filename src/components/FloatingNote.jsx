@@ -144,7 +144,6 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
         editorRef={editorRef}
         savedRangeRef={savedRangeRef}
         textColor={color.text}
-        bodyColor={color.body}
       />
       <div
         ref={editorRef}

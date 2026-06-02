@@ -1,14 +1,5 @@
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import styles from './FormatBar.module.css'
-
-const HIGHLIGHTS = [
-  { color: '#FFF59D', label: 'Жёлтый' },
-  { color: '#FFCDD2', label: 'Розовый' },
-  { color: '#C8E6C9', label: 'Зелёный' },
-  { color: '#BBDEFB', label: 'Голубой' },
-  { color: '#FFE0B2', label: 'Оранжевый' },
-  { color: '#E1BEE7', label: 'Фиолетовый' },
-]
 
 const SIZES = [
   { px: 11, label: 'S' },
@@ -17,9 +8,7 @@ const SIZES = [
   { px: 24, label: 'XL' },
 ]
 
-export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
-  const [showColors, setShowColors] = useState(false)
-
+export function FormatBar({ editorRef, savedRangeRef, textColor }) {
   // Restore selection into editor and run a command, then keep selection
   // focus() MUST come before addRange — iOS requirement
   const withSelection = useCallback((fn) => {
@@ -76,69 +65,9 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
     })
   }, [withSelection, editorRef, savedRangeRef])
 
-  // Highlight — pure DOM range manipulation, no execCommand, works on iOS
-  const applyHighlight = useCallback((color) => {
-    const range = savedRangeRef.current
-    if (!range || range.collapsed) { setShowColors(false); return }
-
-    try {
-      if (color === 'transparent') {
-        const spans = [...(editorRef.current?.querySelectorAll('span') || [])]
-        spans.forEach((span) => {
-          if (!span.style.backgroundColor) return
-          try {
-            if (range.intersectsNode(span)) {
-              span.style.backgroundColor = ''
-              if (!span.getAttribute('style')?.replace(/\s/g, '')) {
-                const parent = span.parentNode
-                while (span.firstChild) parent.insertBefore(span.firstChild, span)
-                parent.removeChild(span)
-              }
-            }
-          } catch { }
-        })
-      } else {
-        const frag = range.extractContents()
-        const span = document.createElement('span')
-        span.style.backgroundColor = color
-        span.appendChild(frag)
-        range.insertNode(span)
-        const newRange = document.createRange()
-        newRange.selectNodeContents(span)
-        savedRangeRef.current = newRange.cloneRange()
-      }
-    } catch { }
-
-    // Dispatch input synchronously so the change is saved before any re-render
-    editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))
-    setShowColors(false)
-  }, [savedRangeRef, editorRef])
-
-  // Save selection — call on any FormatBar touch/mousedown to capture before iOS collapses it
-  const saveSelectionNow = useCallback(() => {
-    const sel = window.getSelection()
-    if (sel && !sel.isCollapsed) {
-      const range = sel.getRangeAt(0)
-      if (editorRef.current?.contains(range.commonAncestorContainer)) {
-        savedRangeRef.current = range.cloneRange()
-      }
-    }
-  }, [savedRangeRef, editorRef])
-
   const handleBarMouseDown = useCallback((e) => {
-    saveSelectionNow()
     e.preventDefault()
-  }, [saveSelectionNow])
-
-  // On iOS, touchstart fires BEFORE the selection collapses — save range here
-  const handleBarTouchStart = useCallback(() => {
-    saveSelectionNow()
-  }, [saveSelectionNow])
-
-  const handleOpenColors = useCallback(() => {
-    saveSelectionNow()
-    setShowColors((v) => !v)
-  }, [saveSelectionNow])
+  }, [])
 
   const s = { color: textColor }
 
@@ -147,7 +76,6 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
       className={styles.bar}
       style={{ borderColor: `${textColor}14`, background: `${textColor}07` }}
       onMouseDown={handleBarMouseDown}
-      onTouchStart={handleBarTouchStart}
     >
       <button className={styles.btn} style={s} onClick={() => exec('bold')} title="Жирный"><b>B</b></button>
       <button className={styles.btn} style={{ ...s, fontStyle: 'italic' }} onClick={() => exec('italic')} title="Курсив"><i>I</i></button>
@@ -165,41 +93,6 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
           {label}
         </button>
       ))}
-
-      <span className={styles.sep} />
-
-      <div className={styles.colorWrap}>
-        <button className={styles.btn} style={s}
-          onTouchStart={handleOpenColors}
-          onClick={handleOpenColors}
-          title="Выделить цветом">
-          <span className={styles.aIcon}>A</span>
-        </button>
-        {showColors && (
-          <div
-            className={styles.colorDrop}
-            style={{ background: bodyColor }}
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            {HIGHLIGHTS.map(({ color, label }) => (
-              <button key={color} className={styles.dot}
-                style={{ background: color }}
-                onMouseDown={(e) => e.preventDefault()}
-                onTouchStart={(e) => { e.preventDefault(); applyHighlight(color) }}
-                onClick={() => applyHighlight(color)}
-                title={label} />
-            ))}
-            <button
-              className={styles.dot}
-              style={{ background: 'transparent', border: `1.5px solid ${textColor}40`, color: textColor, fontSize: 10 }}
-              onMouseDown={(e) => e.preventDefault()}
-              onTouchStart={(e) => { e.preventDefault(); applyHighlight('transparent') }}
-              onClick={() => applyHighlight('transparent')}
-              title="Убрать">✕
-            </button>
-          </div>
-        )}
-      </div>
     </div>
   )
 }
