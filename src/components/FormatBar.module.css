@@ -1,21 +1,13 @@
-/* Outer wrapper — position: relative so the dropdown escapes .bar's overflow clip */
-.barWrap {
-  position: relative;
-  flex-shrink: 0;
-}
-
 .bar {
   display: flex;
   align-items: center;
   gap: 1px;
   padding: 3px 6px;
   border-bottom: 1px solid;
+  flex-shrink: 0;
   flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
+  /* No overflow-x: auto — 6 buttons always fit, and overflow:auto would clip the dropdown */
 }
-
-.bar::-webkit-scrollbar { display: none; }
 
 .btn {
   width: 26px;
@@ -44,6 +36,13 @@
   flex-shrink: 0;
 }
 
+/* ── Size dropdown ── */
+
+/* Position anchor for the dropdown — sits inside .bar */
+.sizeWrap {
+  position: relative;
+}
+
 .sizeToggle {
   width: 32px;
   font-family: inherit;
@@ -56,11 +55,12 @@
   letter-spacing: -0.5px;
 }
 
-/* Dropdown is a sibling of .bar, not a child — avoids overflow clipping */
+/* Centered below the Аа button */
 .sizeDrop {
   position: absolute;
-  top: 100%;
-  right: 4px;
+  top: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
   padding: 7px 8px;
   border-radius: 12px;
   background: rgba(255, 250, 246, 0.98);
