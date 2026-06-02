@@ -1,6 +1,7 @@
 import { useRef, useCallback, useEffect, useState } from 'react'
 import { FormatBar } from './FormatBar'
 import { ImageResizer } from './ImageResizer'
+import { FreeImage } from './FreeImage'
 import { PALETTE } from '../palette'
 import styles from './FloatingNote.module.css'
 
@@ -18,9 +19,10 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isProfile = note.noteType === 'profile'
   const isImage = !isProfile && Boolean(note.imageUrl)
-  const editorRef = useRef(null)
+  const editorRef     = useRef(null)
   const savedRangeRef = useRef(null)
-  const photoRef = useRef(null)
+  const photoRef      = useRef(null)
+  const editorWrapRef = useRef(null)
   const [pos, setPos] = useState({ x: initialX ?? 60, y: initialY ?? 60 })
   const [size, setSize] = useState({ w: initialW ?? 360, h: initialH ?? 280 })
   const posRef = useRef(pos)
@@ -145,6 +147,17 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
     window.addEventListener('touchmove', onMove, { passive: false })
     window.addEventListener('touchend', onUp)
   }, [onPosChange])
+
+  const freeImages = note.freeImages || []
+  const addFreeImg = useCallback((src) => {
+    onUpdate(note.id, { freeImages: [...(note.freeImages || []), { id: String(Date.now()), src, x: 0.02, y: 0.02, w: 0.45 }] })
+  }, [note.id, note.freeImages, onUpdate])
+  const updateFreeImg = useCallback((imgId, changes) => {
+    onUpdate(note.id, { freeImages: (note.freeImages || []).map(i => i.id === imgId ? { ...i, ...changes } : i) })
+  }, [note.id, note.freeImages, onUpdate])
+  const deleteFreeImg = useCallback((imgId) => {
+    onUpdate(note.id, { freeImages: (note.freeImages || []).filter(i => i.id !== imgId) })
+  }, [note.id, note.freeImages, onUpdate])
 
   return (
     <div
@@ -290,22 +303,30 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
             editorRef={editorRef}
             savedRangeRef={savedRangeRef}
             textColor={color.text}
+            onAddFreeImage={addFreeImg}
           />
-          <div
-            ref={editorRef}
-            className={styles.editor}
-            style={{ color: color.text, height: size.h, background: color.body }}
-            contentEditable
-            suppressContentEditableWarning
-            onInput={handleInput}
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-            onMouseUp={saveRange}
-            onKeyUp={saveRange}
-            onTouchEnd={saveRange}
-            onBlur={saveRange}
-            data-placeholder="Введите текст..."
-          />
+          <div ref={editorWrapRef} style={{ position: 'relative', height: size.h, flexShrink: 0 }}>
+            <div
+              ref={editorRef}
+              className={styles.editor}
+              style={{ color: color.text, height: '100%', background: color.body }}
+              contentEditable
+              suppressContentEditableWarning
+              onInput={handleInput}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onMouseUp={saveRange}
+              onKeyUp={saveRange}
+              onTouchEnd={saveRange}
+              onBlur={saveRange}
+              data-placeholder="Введите текст..."
+            />
+            {freeImages.map(img => (
+              <FreeImage key={img.id} img={img} containerRef={editorWrapRef}
+                onUpdate={(ch) => updateFreeImg(img.id, ch)}
+                onDelete={() => deleteFreeImg(img.id)} />
+            ))}
+          </div>
           <ImageResizer
             editorRef={editorRef}
             onSave={() => editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))}

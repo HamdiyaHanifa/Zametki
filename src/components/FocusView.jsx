@@ -3,6 +3,7 @@ import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
 import { FloatingNote } from './FloatingNote'
 import { ImageResizer } from './ImageResizer'
+import { FreeImage } from './FreeImage'
 import { countWords, wordForm } from '../utils/wordCount'
 import { TAGS, TAGS_MAP } from '../utils/tags'
 import styles from './FocusView.module.css'
@@ -43,8 +44,9 @@ export function FocusView({
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isProfile = note.noteType === 'profile'
   const isImage = !isProfile && Boolean(note.imageUrl)
-  const editorRef = useRef(null)
+  const editorRef     = useRef(null)
   const savedRangeRef = useRef(null)
+  const editorAreaRef = useRef(null)
   const photoRef = useRef(null)
   const [isDragTarget, setIsDragTarget] = useState(false)
   const [showTagPicker, setShowTagPicker] = useState(false)
@@ -267,6 +269,17 @@ export function FocusView({
   }, [note.id, onUpdate, isImage, isProfile, editorRef])
 
   const titlePlaceholder = isProfile ? 'Имя персонажа...' : isImage ? 'Подпись...' : 'Заголовок...'
+
+  const freeImages = note.freeImages || []
+  const addFreeImg = useCallback((src) => {
+    onUpdate(note.id, { freeImages: [...(note.freeImages || []), { id: String(Date.now()), src, x: 0.02, y: 0.02, w: 0.4 }] })
+  }, [note.id, note.freeImages, onUpdate])
+  const updateFreeImg = useCallback((imgId, changes) => {
+    onUpdate(note.id, { freeImages: (note.freeImages || []).map(i => i.id === imgId ? { ...i, ...changes } : i) })
+  }, [note.id, note.freeImages, onUpdate])
+  const deleteFreeImg = useCallback((imgId) => {
+    onUpdate(note.id, { freeImages: (note.freeImages || []).filter(i => i.id !== imgId) })
+  }, [note.id, note.freeImages, onUpdate])
 
   return (
     <div
@@ -541,22 +554,30 @@ export function FocusView({
             editorRef={editorRef}
             savedRangeRef={savedRangeRef}
             textColor={color.text}
+            onAddFreeImage={addFreeImg}
           />
-          <div
-            ref={editorRef}
-            className={`${styles.editor} ${dangerPhase === 'dying' ? styles.editorDying : ''}`}
-            style={{ color: blindMode !== 'off' ? 'transparent' : color.text, caretColor: color.text }}
-            contentEditable={dangerPhase !== 'dying'}
-            suppressContentEditableWarning
-            onInput={handleInput}
-            onMouseDown={handleEditorMouseDown}
-            onKeyDown={handleEditorKeyDown}
-            onMouseUp={saveRange}
-            onKeyUp={saveRange}
-            onTouchEnd={saveRange}
-            onBlur={saveRange}
-            data-placeholder="Начните писать..."
-          />
+          <div ref={editorAreaRef} style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div
+              ref={editorRef}
+              className={`${styles.editor} ${dangerPhase === 'dying' ? styles.editorDying : ''}`}
+              style={{ color: blindMode !== 'off' ? 'transparent' : color.text, caretColor: color.text }}
+              contentEditable={dangerPhase !== 'dying'}
+              suppressContentEditableWarning
+              onInput={handleInput}
+              onMouseDown={handleEditorMouseDown}
+              onKeyDown={handleEditorKeyDown}
+              onMouseUp={saveRange}
+              onKeyUp={saveRange}
+              onTouchEnd={saveRange}
+              onBlur={saveRange}
+              data-placeholder="Начните писать..."
+            />
+            {freeImages.map(img => (
+              <FreeImage key={img.id} img={img} containerRef={editorAreaRef}
+                onUpdate={(ch) => updateFreeImg(img.id, ch)}
+                onDelete={() => deleteFreeImg(img.id)} />
+            ))}
+          </div>
           <ImageResizer
             editorRef={editorRef}
             onSave={() => editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))}
