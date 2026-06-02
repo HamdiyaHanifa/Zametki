@@ -21,7 +21,7 @@ export function FocusView({
       editorRef.current.innerHTML = note.htmlContent || ''
       editorRef.current.focus()
     }
-  }, []) // init once on mount
+  }, [note.id]) // re-init when switching to a different note
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
