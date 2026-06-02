@@ -27,7 +27,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
   useEffect(() => {
     if (!editorRef.current) return
     editorRef.current.innerHTML = note.htmlContent || ''
-  }, [note.id]) // eslint-disable-line
+  }, [note.id, note.minimized]) // eslint-disable-line
 
   useEffect(() => {
     if (!editorRef.current) return
