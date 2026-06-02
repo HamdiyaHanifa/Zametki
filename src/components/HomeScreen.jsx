@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './HomeScreen.module.css'
 
-export function HomeScreen({ canvases, onCreate, onOpen, onDelete, onRename }) {
+export function HomeScreen({ canvases, onCreate, onOpen, onDelete, onRename, trashCount, onOpenTrash }) {
   const [editingId, setEditingId] = useState(null)
   const [editingName, setEditingName] = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
@@ -39,6 +39,20 @@ export function HomeScreen({ canvases, onCreate, onOpen, onDelete, onRename }) {
           <span className={styles.plus}>+</span>
           <span className={styles.newLabel}>Новый холст</span>
         </button>
+
+        {/* Trash card */}
+        <div className={styles.trashCard} onClick={onOpenTrash}>
+          <div className={styles.cardBody}>
+            <span className={styles.trashIcon}>🗑</span>
+            <span className={styles.name}>Корзина</span>
+            <span className={styles.count}>
+              {trashCount === 0 ? 'Пусто' : `${trashCount} ${noteWord(trashCount)}`}
+            </span>
+          </div>
+          <div className={styles.cardFooter}>
+            <span className={styles.trashHint}>Удалённые заметки</span>
+          </div>
+        </div>
 
         {[...canvases].reverse().map((canvas) => (
           <div

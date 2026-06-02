@@ -8,6 +8,7 @@ import { countWords, noteWordCount } from './utils/wordCount'
 import { TAGS_MAP } from './utils/tags'
 import { NotesPanel } from './components/NotesPanel'
 import { HomeScreen } from './components/HomeScreen'
+import { TrashScreen } from './components/TrashScreen'
 import styles from './App.module.css'
 
 const COLORS_COUNT = 12
@@ -15,6 +16,7 @@ const MIN_SCALE = 0.1
 const MAX_SCALE = 4
 const STORAGE_KEY = 'zametki_v2'
 const LEGACY_KEY = 'zametki_v1'
+const TRASH_TTL = 30 * 24 * 60 * 60 * 1000 // 30 days
 
 function createNote(id, colorIndex) {
   return {
@@ -86,8 +88,13 @@ export default function App() {
     nextNoteId: 4,
   }])
   const nextCanvasIdRef = useRef(saved?.nextCanvasId ?? 2)
+  const [trash, setTrash] = useState(() =>
+    (saved?.trash ?? []).filter(item => Date.now() - item.deletedAt < TRASH_TTL)
+  )
+  const trashRef = useRef(trash)
 
   const [activeCanvasId, setActiveCanvasId] = useState(null)
+  const [showTrash, setShowTrash] = useState(false)
   const [focusedNoteId, setFocusedNoteId] = useState(null)
   const [showPanel, setShowPanel] = useState(false)
   const [navigating, setNavigating] = useState(false)
@@ -168,15 +175,19 @@ export default function App() {
   const notes = activeCanvas?.notes ?? []
   const order = activeCanvas?.order ?? []
 
-  // Auto-save whenever canvases change
+  // Keep trashRef in sync
+  useEffect(() => { trashRef.current = trash }, [trash])
+
+  // Auto-save whenever canvases or trash change
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         canvases,
         nextCanvasId: nextCanvasIdRef.current,
+        trash,
       }))
     } catch { /* storage full */ }
-  }, [canvases])
+  }, [canvases, trash])
 
   // Save viewport on tab close
   useEffect(() => {
@@ -379,12 +390,43 @@ export default function App() {
   }, [patchCanvas])
 
   const deleteNote = useCallback((id) => {
+    const note = notesRef.current.find(n => n.id === id)
+    const canvas = canvases.find(c => c.id === activeCanvasId)
+    if (note && canvas) {
+      setTrash(prev => [...prev, { note, canvasId: canvas.id, canvasName: canvas.name, deletedAt: Date.now() }])
+    }
     patchCanvas((c) => ({
       ...c,
       notes: c.notes.filter((n) => n.id !== id),
       order: c.order.filter((x) => x !== id),
     }))
-  }, [patchCanvas])
+  }, [patchCanvas, canvases, activeCanvasId])
+
+  const restoreNote = useCallback((trashIndex) => {
+    const item = trashRef.current[trashIndex]
+    if (!item) return
+    const targetCanvas = canvases.find(c => c.id === item.canvasId) ?? canvases[0]
+    if (targetCanvas) {
+      setCanvases(prev => prev.map(c => {
+        if (c.id !== targetCanvas.id) return c
+        const maxId = Math.max(0, ...c.notes.map(n => n.id), c.nextNoteId - 1)
+        const newId = maxId + 1
+        return {
+          ...c,
+          notes: [...c.notes, { ...item.note, id: newId }],
+          order: [...c.order, newId],
+          nextNoteId: Math.max(c.nextNoteId, newId + 1),
+        }
+      }))
+    }
+    setTrash(prev => prev.filter((_, i) => i !== trashIndex))
+  }, [canvases])
+
+  const permanentlyDeleteNote = useCallback((trashIndex) => {
+    setTrash(prev => prev.filter((_, i) => i !== trashIndex))
+  }, [])
+
+  const emptyTrash = useCallback(() => setTrash([]), [])
 
   const navigateToNote = useCallback((id) => {
     const note = notes.find((n) => n.id === id)
@@ -639,6 +681,18 @@ export default function App() {
   // ── Render ─────────────────────────────────────────────────────
 
   if (!activeCanvasId) {
+    if (showTrash) {
+      return (
+        <TrashScreen
+          trash={trash}
+          canvases={canvases}
+          onBack={() => setShowTrash(false)}
+          onRestore={restoreNote}
+          onPermanentDelete={permanentlyDeleteNote}
+          onEmptyTrash={emptyTrash}
+        />
+      )
+    }
     return (
       <HomeScreen
         canvases={canvases}
@@ -646,6 +700,8 @@ export default function App() {
         onOpen={openCanvas}
         onDelete={deleteCanvas}
         onRename={renameCanvas}
+        trashCount={trash.length}
+        onOpenTrash={() => setShowTrash(true)}
       />
     )
   }
