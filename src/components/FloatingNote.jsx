@@ -251,9 +251,19 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
               className={styles.profileDescriptionInput}
               style={{ color: color.text, borderColor: `${color.text}18` }}
               value={note.description || ''}
-              onChange={(e) => onUpdate(note.id, { description: e.target.value })}
+              onChange={(e) => {
+                const el = e.target
+                el.style.height = 'auto'
+                el.style.height = el.scrollHeight + 'px'
+                onUpdate(note.id, { description: e.target.value })
+              }}
+              onFocus={(e) => {
+                const el = e.target
+                el.style.height = 'auto'
+                el.style.height = el.scrollHeight + 'px'
+              }}
               placeholder="Описание персонажа..."
-              rows={3}
+              rows={2}
             />
           </div>
         </div>
