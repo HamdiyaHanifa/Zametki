@@ -175,6 +175,18 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
           onClick={(e) => { e.stopPropagation(); stopSession() }}
           title="Остановить"
         >■</button>
+        {dangerEnabled && (
+          <div className={styles.miniChipBar}>
+            <div
+              className={styles.miniChipBarFill}
+              style={{
+                width: `${Math.max(0, (1 - dangerInactiveProgress) * 100)}%`,
+                background: dangerBarColor,
+                transition: 'width 0.08s linear, background 0.3s ease',
+              }}
+            />
+          </div>
+        )}
       </div>
     )
   }

@@ -50,16 +50,30 @@
   border: 1px solid rgba(0, 0, 0, 0.09);
   border-radius: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.13);
-  padding: 8px 10px 8px 14px;
+  padding: 8px 10px 11px 14px;
   z-index: 52000;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: grab;
   user-select: none;
+  overflow: hidden;
 }
 
 .miniChip:active { cursor: grabbing; }
+
+.miniChipBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.miniChipBarFill {
+  height: 100%;
+}
 
 .miniChipDanger {
   border-color: rgba(244, 67, 54, 0.3);
