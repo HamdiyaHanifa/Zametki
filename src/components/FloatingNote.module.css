@@ -117,7 +117,18 @@
   font-family: inherit;
 }
 
-.profilePhotoWrap:hover .profileChangePhoto { opacity: 1; }
+.profilePhotoActions {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.profilePhotoWrap:hover .profilePhotoActions { opacity: 1; }
 
 .profilePhotoPlaceholder {
   display: flex;
@@ -222,6 +233,24 @@
 }
 
 .profileAddBtn:hover { opacity: 0.75; }
+
+.profileDescriptionInput {
+  width: 100%;
+  margin-top: 6px;
+  background: transparent;
+  border: 1px solid;
+  border-radius: 6px;
+  outline: none;
+  font-size: 12px;
+  line-height: 1.55;
+  padding: 6px 8px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 52px;
+  box-sizing: border-box;
+}
+
+.profileDescriptionInput::placeholder { opacity: 0.3; }
 
 .resizeHandle {
   position: absolute;

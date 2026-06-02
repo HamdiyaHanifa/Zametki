@@ -148,11 +148,18 @@ export function FocusView({
             {note.imageUrl ? (
               <>
                 <img src={note.imageUrl} className={styles.profilePhoto} draggable={false} />
-                <button
-                  className={styles.profileChangePhoto}
-                  style={{ color: color.text, background: `${color.body}dd` }}
-                  onClick={(e) => { e.stopPropagation(); photoRef.current?.click() }}
-                >Изменить фото</button>
+                <div className={styles.profilePhotoActions}>
+                  <button
+                    className={styles.profileChangePhoto}
+                    style={{ color: color.text, background: `${color.body}dd` }}
+                    onClick={(e) => { e.stopPropagation(); photoRef.current?.click() }}
+                  >Изменить</button>
+                  <button
+                    className={styles.profileChangePhoto}
+                    style={{ color: '#e05060', background: `${color.body}dd` }}
+                    onClick={(e) => { e.stopPropagation(); onUpdate(note.id, { imageUrl: null }) }}
+                  >Удалить</button>
+                </div>
               </>
             ) : (
               <div className={styles.profilePhotoPlaceholder} style={{ color: color.text }}>
@@ -197,6 +204,13 @@ export function FocusView({
               style={{ color: color.text, borderColor: `${color.text}30` }}
               onClick={addField}
             >+ Добавить строку</button>
+            <textarea
+              className={styles.profileDescription}
+              style={{ color: color.text, borderColor: `${color.text}20` }}
+              value={note.description || ''}
+              onChange={(e) => onUpdate(note.id, { description: e.target.value })}
+              placeholder="Описание персонажа..."
+            />
           </div>
         </div>
       ) : isImage ? (

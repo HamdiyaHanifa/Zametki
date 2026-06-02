@@ -217,7 +217,18 @@
   font-family: inherit;
 }
 
-.profilePhotoArea:hover .profileChangePhoto { opacity: 1; }
+.profilePhotoActions {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.profilePhotoArea:hover .profilePhotoActions { opacity: 1; }
 
 .profilePhotoPlaceholder {
   display: flex;
@@ -323,6 +334,24 @@
 }
 
 .profileAddBtn:hover { opacity: 0.75; background: rgba(0, 0, 0, 0.04); }
+
+.profileDescription {
+  width: 100%;
+  margin-top: 14px;
+  background: transparent;
+  border: 1px solid;
+  border-radius: 10px;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.65;
+  padding: 10px 12px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  box-sizing: border-box;
+}
+
+.profileDescription::placeholder { opacity: 0.3; }
 
 /* Image focus */
 .imageWrap {

@@ -192,11 +192,18 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
             {note.imageUrl ? (
               <>
                 <img src={note.imageUrl} className={styles.profilePhoto} draggable={false} />
-                <button
-                  className={styles.profileChangePhoto}
-                  style={{ color: color.text, background: `${color.body}dd` }}
-                  onClick={(e) => { e.stopPropagation(); photoRef.current?.click() }}
-                >Изменить фото</button>
+                <div className={styles.profilePhotoActions}>
+                  <button
+                    className={styles.profileChangePhoto}
+                    style={{ color: color.text, background: `${color.body}dd` }}
+                    onClick={(e) => { e.stopPropagation(); photoRef.current?.click() }}
+                  >Изменить</button>
+                  <button
+                    className={styles.profileChangePhoto}
+                    style={{ color: '#e05060', background: `${color.body}dd` }}
+                    onClick={(e) => { e.stopPropagation(); onUpdate(note.id, { imageUrl: null }) }}
+                  >Удалить</button>
+                </div>
               </>
             ) : (
               <div className={styles.profilePhotoPlaceholder} style={{ color: color.text }}>
@@ -240,6 +247,14 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
               style={{ color: color.text, borderColor: `${color.text}22` }}
               onClick={addField}
             >+ Добавить строку</button>
+            <textarea
+              className={styles.profileDescriptionInput}
+              style={{ color: color.text, borderColor: `${color.text}18` }}
+              value={note.description || ''}
+              onChange={(e) => onUpdate(note.id, { description: e.target.value })}
+              placeholder="Описание персонажа..."
+              rows={3}
+            />
           </div>
         </div>
       ) : (

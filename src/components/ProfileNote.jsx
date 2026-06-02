@@ -174,11 +174,18 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onFocus, onOpenF
             {note.imageUrl ? (
               <>
                 <img src={note.imageUrl} className={styles.photo} draggable={false} />
-                <button
-                  className={styles.changePhotoBtn}
-                  style={{ color: color.text, background: `${color.body}dd` }}
-                  onClick={(e) => { e.stopPropagation(); fileRef.current?.click() }}
-                >Изменить фото</button>
+                <div className={styles.photoActions}>
+                  <button
+                    className={styles.changePhotoBtn}
+                    style={{ color: color.text, background: `${color.body}dd` }}
+                    onClick={(e) => { e.stopPropagation(); fileRef.current?.click() }}
+                  >Изменить</button>
+                  <button
+                    className={styles.changePhotoBtn}
+                    style={{ color: '#e05060', background: `${color.body}dd` }}
+                    onClick={(e) => { e.stopPropagation(); onUpdate(note.id, { imageUrl: null }) }}
+                  >Удалить</button>
+                </div>
               </>
             ) : (
               <div className={styles.photoPlaceholder} style={{ color: color.text }}>
@@ -224,6 +231,14 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onFocus, onOpenF
               style={{ color: color.text, borderColor: `${color.text}22` }}
               onClick={addField}
             >+ Добавить строку</button>
+            <textarea
+              className={styles.descriptionInput}
+              style={{ color: color.text, borderColor: `${color.text}18` }}
+              value={note.description || ''}
+              onChange={(e) => onUpdate(note.id, { description: e.target.value })}
+              placeholder="Описание персонажа..."
+              rows={3}
+            />
           </div>
 
           {/* Right-edge resize */}
