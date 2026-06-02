@@ -79,9 +79,10 @@
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 20px;
-  height: 20px;
+  width: 32px;
+  height: 32px;
   cursor: nwse-resize;
-  background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, 0.18) 50%);
+  background: linear-gradient(135deg, transparent 55%, rgba(0, 0, 0, 0.2) 55%);
   border-radius: 0 0 14px 0;
+  touch-action: none;
 }

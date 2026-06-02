@@ -88,13 +88,27 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
     const sw = sizeRef.current.w, sh = sizeRef.current.h
     const onMove = (mv) => {
       const ns = { w: Math.max(MIN_W, sw + mv.clientX - sx), h: Math.max(MIN_H, sh + mv.clientY - sy) }
-      sizeRef.current = ns
-      setSize(ns)
+      sizeRef.current = ns; setSize(ns)
       onPosChange?.({ ...posRef.current, ...ns })
     }
     const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
+  }, [onPosChange])
+
+  const handleResizeTouchStart = useCallback((e) => {
+    e.stopPropagation()
+    const sx = e.touches[0].clientX, sy = e.touches[0].clientY
+    const sw = sizeRef.current.w, sh = sizeRef.current.h
+    const onMove = (mv) => {
+      mv.preventDefault()
+      const ns = { w: Math.max(MIN_W, sw + mv.touches[0].clientX - sx), h: Math.max(MIN_H, sh + mv.touches[0].clientY - sy) }
+      sizeRef.current = ns; setSize(ns)
+      onPosChange?.({ ...posRef.current, ...ns })
+    }
+    const onUp = () => { window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp) }
+    window.addEventListener('touchmove', onMove, { passive: false })
+    window.addEventListener('touchend', onUp)
   }, [onPosChange])
 
   return (
@@ -147,7 +161,11 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
         onBlur={saveRange}
         data-placeholder="Введите текст..."
       />
-      <div className={styles.resizeHandle} onMouseDown={handleResizeMouseDown} />
+      <div
+        className={styles.resizeHandle}
+        onMouseDown={handleResizeMouseDown}
+        onTouchStart={handleResizeTouchStart}
+      />
     </div>
   )
 }
