@@ -81,14 +81,49 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, bodyColor }) {
     })
   }, [withSelection, editorRef, savedRangeRef])
 
-  // Highlight color
+  // Highlight color — direct DOM manipulation, bypasses unreliable execCommand on iOS
   const applyHighlight = useCallback((color) => {
-    withSelection(() => {
-      document.execCommand('styleWithCSS', false, true)
-      document.execCommand('hiliteColor', false, color)
-    })
+    const range = savedRangeRef.current
+    if (!range || range.collapsed) { setShowColors(false); return }
+
+    editorRef.current?.focus()
+
+    if (color === 'transparent') {
+      // Remove background-color from all spans touched by the selection
+      const spans = [...(editorRef.current?.querySelectorAll('span') || [])]
+      spans.forEach((span) => {
+        if (!span.style.backgroundColor) return
+        try {
+          if (range.intersectsNode(span)) {
+            span.style.backgroundColor = ''
+            if (!span.getAttribute('style')?.replace(/\s/g, '')) {
+              const parent = span.parentNode
+              while (span.firstChild) parent.insertBefore(span.firstChild, span)
+              parent.removeChild(span)
+            }
+          }
+        } catch { /* ignore cross-origin etc */ }
+      })
+    } else {
+      // Wrap selected content in a background-colored span
+      const frag = range.extractContents()
+      const span = document.createElement('span')
+      span.style.backgroundColor = color
+      span.appendChild(frag)
+      range.insertNode(span)
+      // Re-select the new span so the selection stays visible
+      const newRange = document.createRange()
+      newRange.selectNodeContents(span)
+      const sel = window.getSelection()
+      if (sel) { sel.removeAllRanges(); sel.addRange(newRange) }
+      savedRangeRef.current = newRange.cloneRange()
+    }
+
+    setTimeout(() => {
+      editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))
+    }, 0)
     setShowColors(false)
-  }, [withSelection])
+  }, [savedRangeRef, editorRef])
 
   // Save selection on bar mousedown (desktop) — focus stays in editor
   const handleBarMouseDown = useCallback((e) => {
