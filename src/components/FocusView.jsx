@@ -28,6 +28,15 @@ export function FocusView({
   const photoRef = useRef(null)
   const [isDragTarget, setIsDragTarget] = useState(false)
   const [showFocusMode, setShowFocusMode] = useState(false)
+  const [timerDangerActive, setTimerDangerActive] = useState(false)
+  const [timerDangerProgress, setTimerDangerProgress] = useState(0)
+
+  const timerDangerActiveRef = useRef(false)
+  const timerDangerLastActivityRef = useRef(0)
+  const timerDangerStartContentRef = useRef('')
+  const timerDangerFailCbRef = useRef(null)
+  const timerDangerTimeoutRef = useRef(5)
+  const timerDangerIntervalRef = useRef(null)
 
   // ── Danger mode ──────────────────────────────────────────────────
   const DANGER_PRESETS = [5, 10, 15, 20, 30]
@@ -88,7 +97,52 @@ export function FocusView({
     return () => clearTimeout(t)
   }, [dangerPhase, note.id, onUpdate])
 
-  useEffect(() => () => clearInterval(dangerIntervalRef.current), [])
+  useEffect(() => () => {
+    clearInterval(dangerIntervalRef.current)
+    clearInterval(timerDangerIntervalRef.current)
+  }, [])
+
+  // ── Timer danger mode ────────────────────────────────────────────
+  useEffect(() => {
+    if (!timerDangerActive) return
+    timerDangerIntervalRef.current = setInterval(() => {
+      const elapsed = (Date.now() - timerDangerLastActivityRef.current) / 1000
+      const prog = Math.min(elapsed / timerDangerTimeoutRef.current, 1)
+      setTimerDangerProgress(prog)
+      if (elapsed >= timerDangerTimeoutRef.current) {
+        clearInterval(timerDangerIntervalRef.current)
+        timerDangerActiveRef.current = false
+        setTimerDangerActive(false)
+        setTimerDangerProgress(0)
+        const restored = timerDangerStartContentRef.current
+        if (editorRef.current) editorRef.current.innerHTML = restored
+        onUpdate(note.id, { htmlContent: restored })
+        timerDangerFailCbRef.current?.()
+      }
+    }, 80)
+    return () => clearInterval(timerDangerIntervalRef.current)
+  }, [timerDangerActive]) // eslint-disable-line
+
+  const handleTimerDangerStart = useCallback((inactivitySec, onInactivityFail) => {
+    timerDangerStartContentRef.current = note.htmlContent || ''
+    timerDangerLastActivityRef.current = Date.now()
+    timerDangerTimeoutRef.current = inactivitySec
+    timerDangerFailCbRef.current = onInactivityFail
+    timerDangerActiveRef.current = true
+    setTimerDangerActive(true)
+  }, [note.htmlContent])
+
+  const handleTimerDangerStop = useCallback((keepText) => {
+    clearInterval(timerDangerIntervalRef.current)
+    timerDangerActiveRef.current = false
+    setTimerDangerActive(false)
+    setTimerDangerProgress(0)
+    if (!keepText) {
+      const restored = timerDangerStartContentRef.current
+      if (editorRef.current) editorRef.current.innerHTML = restored
+      onUpdate(note.id, { htmlContent: restored })
+    }
+  }, [note.id, onUpdate])
 
   const fields = note.fields ?? DEFAULT_FIELDS
 
@@ -132,12 +186,19 @@ export function FocusView({
     if (dangerPhaseRef.current === 'active') {
       dangerLastActivityRef.current = Date.now()
     }
+    if (timerDangerActiveRef.current) {
+      timerDangerLastActivityRef.current = Date.now()
+    }
   }, [note.id, onUpdate])
 
   const handleEditorKeyDown = useCallback(() => {
     if (dangerPhaseRef.current === 'active') {
       dangerLastActivityRef.current = Date.now()
       setDangerInactiveFor(0)
+    }
+    if (timerDangerActiveRef.current) {
+      timerDangerLastActivityRef.current = Date.now()
+      setTimerDangerProgress(0)
     }
   }, [])
 
@@ -241,6 +302,9 @@ export function FocusView({
         <FocusMode
           totalWords={totalWords ?? 0}
           onClose={() => setShowFocusMode(false)}
+          onDangerStart={handleTimerDangerStart}
+          onDangerStop={handleTimerDangerStop}
+          dangerInactiveProgress={timerDangerProgress}
         />
       )}
 
