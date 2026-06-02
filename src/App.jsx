@@ -696,6 +696,7 @@ export default function App() {
                 scale={vpState.scale}
                 zIndex={order.indexOf(note.id) + 1}
                 onResetWordCount={resetNoteWordCount}
+                onTimerDangerActivity={handleTimerDangerActivity}
               />
             )
           )}

@@ -12,7 +12,7 @@ const DEFAULT_H_IMG  = 220
 const MIN_W = 180
 const MIN_H = 80
 
-export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale, onResetWordCount }) {
+export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale, onResetWordCount, onTimerDangerActivity }) {
   const [showPicker, setShowPicker] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const color = PALETTE[note.colorIndex % PALETTE.length]
@@ -59,7 +59,8 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
 
   const handleInput = useCallback(() => {
     onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
-  }, [note.id, onUpdate])
+    onTimerDangerActivity?.()
+  }, [note.id, onUpdate, onTimerDangerActivity])
 
   const handlePositionChange = useCallback((dx, dy) => {
     onMove(note.id, dx, dy)
@@ -143,7 +144,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
           className={styles.titleInput}
           style={{ color: color.text }}
           value={note.title}
-          onChange={(e) => onUpdate(note.id, { title: e.target.value })}
+          onChange={(e) => { onUpdate(note.id, { title: e.target.value }); onTimerDangerActivity?.() }}
           onMouseDown={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
           placeholder={isImage ? 'Подпись...' : 'Заголовок...'}
