@@ -12,7 +12,7 @@ const DEFAULT_H_IMG  = 220
 const MIN_W = 180
 const MIN_H = 80
 
-export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale, selectionMode, selected, onToggleSelect }) {
+export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale }) {
   const [showPicker, setShowPicker] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const color = PALETTE[note.colorIndex % PALETTE.length]
@@ -108,25 +108,12 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
 
   return (
     <div
-      className={`${styles.note} ${selected ? styles.noteSelected : ''}`}
+      className={styles.note}
       style={{ left: note.x, top: note.y, zIndex, width: w }}
       onMouseDown={(e) => { e.stopPropagation(); onFocus(note.id) }}
       onTouchStart={(e) => { e.stopPropagation(); onFocus(note.id) }}
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setConfirmDelete(false) }}
     >
-      {selectionMode && (
-        <button
-          className={`${styles.selectBtn} ${selected ? styles.selectBtnActive : ''}`}
-          style={{ borderColor: color.text, background: selected ? color.header : `${color.body}cc` }}
-          onMouseDown={(e) => e.stopPropagation()}
-          onTouchStart={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onToggleSelect() }}
-        >
-          {selected && <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-            <path d="M1 4l2.5 2.5L9 1" stroke={color.text} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>}
-        </button>
-      )}
       {/* Header */}
       <div
         className={styles.header}

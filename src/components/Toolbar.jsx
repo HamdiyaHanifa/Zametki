@@ -1,10 +1,14 @@
-import { useRef } from 'react'
-import { wordForm } from '../utils/wordCount'
+import { useRef, useState, useEffect } from 'react'
+import { countWords, wordForm } from '../utils/wordCount'
 import styles from './Toolbar.module.css'
 
-export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, selectionMode, selectedWords, selectedCount, onToggleSelection, onHome, canvasName }) {
+export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onHome, canvasName }) {
   const fileRef = useRef(null)
   const importRef = useRef(null)
+  const panelRef = useRef(null)
+
+  const [showWordPanel, setShowWordPanel] = useState(false)
+  const [selectedIds, setSelectedIds] = useState(new Set())
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -18,6 +22,33 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
     e.target.value = ''
   }
 
+  const toggleNote = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const selectAll = () => setSelectedIds(new Set(notes.map(n => n.id)))
+  const clearAll = () => setSelectedIds(new Set())
+
+  const selectedWords = [...selectedIds].reduce((sum, id) => {
+    const n = notes.find(x => x.id === id)
+    return sum + (n ? countWords(n.htmlContent) + countWords(n.description) : 0)
+  }, 0)
+
+  useEffect(() => {
+    if (!showWordPanel) return
+    const onPointerDown = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target)) {
+        setShowWordPanel(false)
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [showWordPanel])
+
   return (
     <div className={styles.toolbar}>
       <button className={styles.backBtn} onClick={onHome} title="Все холсты">
@@ -27,26 +58,67 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
         <span className={styles.canvasName}>{canvasName}</span>
       </button>
       <span className={styles.scale}>{Math.round(scale * 100)}%</span>
-      {selectionMode ? (
-        <span className={styles.totalWords}>
-          {selectedCount > 0 ? `${selectedWords} ${wordForm(selectedWords)} (${selectedCount})` : 'выберите заметки'}
-        </span>
-      ) : totalWords > 0 ? (
+      {totalWords > 0 && (
         <span className={styles.totalWords}>{totalWords} {wordForm(totalWords)}</span>
-      ) : null}
-      <button
-        className={styles.iconBtn}
-        style={selectionMode ? { background: 'rgba(0,0,0,0.14)' } : undefined}
-        onClick={onToggleSelection}
-        title={selectionMode ? 'Выйти из режима выбора' : 'Подсчёт слов по заметкам'}
-      >
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-          <rect x="1" y="1" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-          <rect x="8.5" y="1" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-          <rect x="1" y="8.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-          <path d="M9.5 11.5l1.5 1.5 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
+      )}
+      <div className={styles.wordBtnWrap} ref={panelRef}>
+        <button
+          className={styles.iconBtn}
+          style={showWordPanel ? { background: 'rgba(0,0,0,0.14)' } : undefined}
+          onClick={() => setShowWordPanel(v => !v)}
+          title="Подсчёт слов по заметкам"
+        >
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <rect x="1" y="1" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+            <rect x="8.5" y="1" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+            <rect x="1" y="8.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M9.5 11.5l1.5 1.5 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+
+        {showWordPanel && (
+          <div className={styles.wordPanel}>
+            <div className={styles.wordPanelHeader}>
+              <span>Слова по заметкам</span>
+              <div className={styles.wordPanelActions}>
+                <button className={styles.wordPanelActionBtn} onClick={selectAll}>Все</button>
+                <button className={styles.wordPanelActionBtn} onClick={clearAll}>Сброс</button>
+                <button className={styles.wordPanelActionBtn} onClick={() => setShowWordPanel(false)}>✕</button>
+              </div>
+            </div>
+            <div className={styles.wordPanelList}>
+              {notes.length === 0 && (
+                <div className={styles.wordPanelEmpty}>Нет заметок</div>
+              )}
+              {notes.map(note => {
+                const wc = countWords(note.htmlContent) + countWords(note.description)
+                const checked = selectedIds.has(note.id)
+                const isProfile = note.noteType === 'profile'
+                const isImg = !isProfile && Boolean(note.imageUrl)
+                return (
+                  <label key={note.id} className={`${styles.wordPanelItem} ${checked ? styles.wordPanelItemChecked : ''}`}>
+                    <input
+                      type="checkbox"
+                      className={styles.wordPanelCheck}
+                      checked={checked}
+                      onChange={() => toggleNote(note.id)}
+                    />
+                    <span className={styles.wordPanelTitle}>{note.title || 'Без названия'}</span>
+                    {isProfile && <span className={styles.wordPanelBadge}>анкета</span>}
+                    {isImg && <span className={styles.wordPanelBadge}>фото</span>}
+                    <span className={styles.wordPanelWc}>{wc > 0 ? `${wc} ${wordForm(wc)}` : '—'}</span>
+                  </label>
+                )
+              })}
+            </div>
+            {selectedIds.size > 0 && (
+              <div className={styles.wordPanelTotal}>
+                {selectedWords} {wordForm(selectedWords)} · {selectedIds.size} {selectedIds.size === 1 ? 'заметка' : selectedIds.size < 5 ? 'заметки' : 'заметок'}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       <input ref={fileRef} type="file" accept="image/*" className={styles.fileInput} onChange={handleFileChange} />
       <input ref={importRef} type="file" accept=".json" className={styles.fileInput} onChange={handleImportChange} />
       <button className={styles.iconBtn} onClick={() => importRef.current?.click()} title="Открыть файл заметок">
