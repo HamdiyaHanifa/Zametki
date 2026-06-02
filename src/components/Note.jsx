@@ -26,7 +26,7 @@ function lastVisible(html, mode) {
   return text
 }
 
-export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale, onResetWordCount, onTimerDangerActivity, blindMode = 'off' }) {
+export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale, onResetWordCount, onTimerDangerActivity, blindMode = 'off', timerDangerResetSignal }) {
   const [showPicker, setShowPicker] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const color = PALETTE[note.colorIndex % PALETTE.length]
@@ -49,6 +49,17 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
       editorRef.current.innerHTML = note.htmlContent || ''
     }
   }, [note.htmlContent])
+
+  // Force-reset editor when danger mode fires (bypasses the activeElement guard)
+  useEffect(() => {
+    if (!timerDangerResetSignal || !editorRef.current) return
+    if (timerDangerResetSignal.noteId === note.id) {
+      editorRef.current.innerHTML = timerDangerResetSignal.htmlContent
+    } else if (timerDangerResetSignal.noteId === null && timerDangerResetSignal.allNotes) {
+      const snap = timerDangerResetSignal.allNotes.find(n => n.id === note.id)
+      if (snap) editorRef.current.innerHTML = snap.htmlContent
+    }
+  }, [timerDangerResetSignal, note.id])
 
   const saveRange = useCallback(() => {
     const sel = window.getSelection()

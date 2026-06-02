@@ -97,6 +97,7 @@ export default function App() {
   const [timerBlindMode, setTimerBlindMode] = useState('off')
 
   const focusedNoteRef = useRef(null)
+  const notesRef = useRef([])
   const updateNoteRef = useRef(null)
   const timerDangerActiveRef = useRef(false)
   const timerDangerLastActivityRef = useRef(0)
@@ -107,7 +108,16 @@ export default function App() {
 
   const handleTimerDangerStart = useCallback((inactivitySec, onInactivityFail) => {
     const n = focusedNoteRef.current
-    timerDangerStartDataRef.current = { noteId: n?.id ?? null, htmlContent: n?.htmlContent ?? '' }
+    if (n) {
+      timerDangerStartDataRef.current = { noteId: n.id, htmlContent: n.htmlContent }
+    } else {
+      // Canvas mode: snapshot every text note
+      timerDangerStartDataRef.current = {
+        noteId: null,
+        htmlContent: '',
+        allNotes: notesRef.current.map(({ id, htmlContent }) => ({ id, htmlContent })),
+      }
+    }
     timerDangerLastActivityRef.current = Date.now()
     timerDangerTimeoutRef.current = inactivitySec
     timerDangerFailCbRef.current = onInactivityFail
@@ -115,19 +125,24 @@ export default function App() {
     setTimerDangerActive(true)
   }, [])
 
+  const restoreDangerSnapshot = useCallback(() => {
+    const { noteId, htmlContent, allNotes } = timerDangerStartDataRef.current
+    if (noteId !== null) {
+      updateNoteRef.current?.(noteId, { htmlContent })
+      setTimerDangerResetSignal({ noteId, htmlContent, t: Date.now() })
+    } else if (allNotes?.length) {
+      allNotes.forEach(({ id, htmlContent: hc }) => updateNoteRef.current?.(id, { htmlContent: hc }))
+      setTimerDangerResetSignal({ noteId: null, allNotes, t: Date.now() })
+    }
+  }, [])
+
   const handleTimerDangerStop = useCallback((keepText) => {
     clearInterval(timerDangerIntervalRef.current)
     timerDangerActiveRef.current = false
     setTimerDangerActive(false)
     setTimerDangerProgress(0)
-    if (!keepText) {
-      const { noteId, htmlContent } = timerDangerStartDataRef.current
-      if (noteId !== null) {
-        updateNoteRef.current?.(noteId, { htmlContent })
-        setTimerDangerResetSignal({ noteId, htmlContent, t: Date.now() })
-      }
-    }
-  }, [])
+    if (!keepText) restoreDangerSnapshot()
+  }, [restoreDangerSnapshot])
 
   const handleTimerDangerActivity = useCallback(() => {
     if (timerDangerActiveRef.current) {
@@ -309,6 +324,7 @@ export default function App() {
     focusedNoteRef.current = focusedNoteId ? notes.find(n => n.id === focusedNoteId) : null
   }, [focusedNoteId, notes])
 
+  useEffect(() => { notesRef.current = notes }, [notes])
   useEffect(() => { updateNoteRef.current = updateNote }, [updateNote])
 
   useEffect(() => {
@@ -322,16 +338,12 @@ export default function App() {
         timerDangerActiveRef.current = false
         setTimerDangerActive(false)
         setTimerDangerProgress(0)
-        const { noteId, htmlContent } = timerDangerStartDataRef.current
-        if (noteId !== null) {
-          updateNoteRef.current?.(noteId, { htmlContent })
-          setTimerDangerResetSignal({ noteId, htmlContent, t: Date.now() })
-        }
+        restoreDangerSnapshot()
         timerDangerFailCbRef.current?.()
       }
     }, 80)
     return () => clearInterval(timerDangerIntervalRef.current)
-  }, [timerDangerActive])
+  }, [timerDangerActive, restoreDangerSnapshot])
 
   const resetNoteWordCount = useCallback((id) => {
     patchCanvas((c) => ({
@@ -701,6 +713,7 @@ export default function App() {
                 onResetWordCount={resetNoteWordCount}
                 onTimerDangerActivity={handleTimerDangerActivity}
                 blindMode={timerBlindMode}
+                timerDangerResetSignal={timerDangerResetSignal}
               />
             )
           )}
