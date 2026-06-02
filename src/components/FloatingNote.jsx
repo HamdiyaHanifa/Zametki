@@ -6,12 +6,12 @@ import styles from './FloatingNote.module.css'
 const MIN_W = 240
 const MIN_H = 150
 
-export function FloatingNote({ note, onUpdate, onClose, initialX, initialY }) {
+export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, initialW, initialH, onPosChange }) {
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const editorRef = useRef(null)
   const savedRangeRef = useRef(null)
   const [pos, setPos] = useState({ x: initialX ?? 60, y: initialY ?? 60 })
-  const [size, setSize] = useState({ w: 360, h: 280 })
+  const [size, setSize] = useState({ w: initialW ?? 360, h: initialH ?? 280 })
   const posRef = useRef(pos)
   const sizeRef = useRef(size)
 
@@ -60,6 +60,7 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY }) {
       const p = { x: cx - ox, y: cy - oy }
       posRef.current = p
       setPos(p)
+      onPosChange?.({ ...p, w: sizeRef.current.w, h: sizeRef.current.h })
     }
     const onUp = () => {
       window.removeEventListener('mousemove', onMove)
@@ -71,7 +72,7 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY }) {
     window.addEventListener('mouseup', onUp)
     window.addEventListener('touchmove', onMove, { passive: false })
     window.addEventListener('touchend', onUp)
-  }, [])
+  }, [onPosChange])
 
   const handleHeaderMouseDown = useCallback((e) => {
     e.stopPropagation(); startDrag(e.clientX, e.clientY)
@@ -87,12 +88,14 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY }) {
     const sw = sizeRef.current.w, sh = sizeRef.current.h
     const onMove = (mv) => {
       const ns = { w: Math.max(MIN_W, sw + mv.clientX - sx), h: Math.max(MIN_H, sh + mv.clientY - sy) }
-      sizeRef.current = ns; setSize(ns)
+      sizeRef.current = ns
+      setSize(ns)
+      onPosChange?.({ ...posRef.current, ...ns })
     }
     const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
-  }, [])
+  }, [onPosChange])
 
   return (
     <div

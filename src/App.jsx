@@ -51,6 +51,7 @@ export default function App() {
   const [navigating, setNavigating] = useState(false)
   const [floatingNotes, setFloatingNotes] = useState([])
   const floatUidRef = useRef(0)
+  const floatPosRef = useRef({}) // uid → { x, y, w, h } — live pos, no re-render
   const [viewport, setVpState] = useState({ x: 0, y: 0, scale: 1 })
   const vpRef = useRef(viewport)
   const gestureRef = useRef(null)
@@ -153,17 +154,55 @@ export default function App() {
   }, [notes, setViewport])
 
   // Floating note windows inside FocusView
-  const addFloatingNote = useCallback((noteId, x, y) => {
+  const addFloatingNote = useCallback((noteId, x, y, w, h) => {
     setFloatingNotes((prev) => {
       if (prev.some((f) => f.noteId === noteId)) return prev
       const uid = floatUidRef.current++
-      return [...prev, { uid, noteId, x: x ?? 60 + prev.length * 30, y: y ?? 80 + prev.length * 30 }]
+      const entry = {
+        uid,
+        noteId,
+        x: x ?? 60 + prev.length * 30,
+        y: y ?? 80 + prev.length * 30,
+        w: w ?? 360,
+        h: h ?? 280,
+      }
+      floatPosRef.current[uid] = { x: entry.x, y: entry.y, w: entry.w, h: entry.h }
+      return [...prev, entry]
     })
   }, [])
 
   const removeFloatingNote = useCallback((uid) => {
+    delete floatPosRef.current[uid]
     setFloatingNotes((prev) => prev.filter((f) => f.uid !== uid))
   }, [])
+
+  const updateFloatPos = useCallback((uid, pos) => {
+    floatPosRef.current[uid] = pos
+  }, [])
+
+  // Swap: if noteId is a floating window, it becomes the main note and current main
+  // becomes a floating window at the same position/size the floating window was
+  const openOrSwapFocus = useCallback((noteId) => {
+    setFloatingNotes((prev) => {
+      const floating = prev.find((f) => f.noteId === noteId)
+      if (!floating) {
+        // Not a floating note — just switch main
+        setFocusedNoteId(noteId)
+        return prev
+      }
+      // Get current live pos/size of the floating note
+      const livePos = floatPosRef.current[floating.uid] || { x: floating.x, y: floating.y, w: floating.w ?? 360, h: floating.h ?? 280 }
+      // Remove the floating note that's becoming main
+      const withoutSwapped = prev.filter((f) => f.noteId !== noteId)
+      delete floatPosRef.current[floating.uid]
+      // Add current main as floating at the same spot
+      const newUid = floatUidRef.current++
+      floatPosRef.current[newUid] = livePos
+      const newEntry = { uid: newUid, noteId: focusedNoteId, ...livePos }
+      setFocusedNoteId(noteId)
+      return [...withoutSwapped, newEntry]
+    })
+  }, [focusedNoteId])
 
   // Clear floating notes when FocusView closes
   const closeFocusView = useCallback(() => {
@@ -336,7 +375,10 @@ export default function App() {
         <NotesPanel
           notes={notes}
           onNavigate={navigateToNote}
-          onOpenFocus={(id) => { setFocusedNoteId(id); setShowPanel(false) }}
+          onOpenFocus={focusedNoteId
+            ? (id) => { openOrSwapFocus(id); setShowPanel(false) }
+            : (id) => { setFocusedNoteId(id); setShowPanel(false) }
+          }
           onClose={() => setShowPanel(false)}
           focusMode={!!focusedNoteId}
           currentNoteId={focusedNoteId}
@@ -353,6 +395,7 @@ export default function App() {
           floatingNotes={floatingNotes}
           onAddFloating={addFloatingNote}
           onRemoveFloating={removeFloatingNote}
+          onUpdateFloatPos={updateFloatPos}
           showPanel={showPanel}
           onTogglePanel={() => setShowPanel((v) => !v)}
         />

@@ -7,7 +7,7 @@ import styles from './FocusView.module.css'
 export function FocusView({
   note, onUpdate, onClose,
   notes, onSwitchFocus,
-  floatingNotes, onAddFloating, onRemoveFloating,
+  floatingNotes, onAddFloating, onRemoveFloating, onUpdateFloatPos,
   showPanel, onTogglePanel,
 }) {
   const color = PALETTE[note.colorIndex % PALETTE.length]
@@ -142,6 +142,9 @@ export function FocusView({
             onClose={() => onRemoveFloating(uid)}
             initialX={x}
             initialY={y}
+            initialW={w}
+            initialH={h}
+            onPosChange={(pos) => onUpdateFloatPos?.(uid, pos)}
           />
         )
       })}
