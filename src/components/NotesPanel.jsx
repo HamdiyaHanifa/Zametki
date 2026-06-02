@@ -44,9 +44,12 @@ export function NotesPanel({ notes, onNavigate, onOpenFocus, onClose, focusMode,
           )}
           {notes.map((note) => {
             const color = PALETTE[note.colorIndex % PALETTE.length]
-            const preview = note.imageUrl
-              ? null
-              : stripHtml(note.htmlContent).trim().slice(0, 100)
+            const isProfile = note.noteType === 'profile'
+            const preview = isProfile
+              ? (note.fields ?? []).filter(f => f.value).slice(0, 3).map(f => `${f.label}: ${f.value}`).join(' · ')
+              : note.imageUrl
+                ? null
+                : stripHtml(note.htmlContent).trim().slice(0, 100)
             const isSelected = !focusMode && selectedId === note.id
             const isCurrent = focusMode && note.id === currentNoteId
             return (
@@ -66,9 +69,16 @@ export function NotesPanel({ notes, onNavigate, onOpenFocus, onClose, focusMode,
                   onClick={() => !isCurrent && handleCardClick(note)}
                 >
                   <div className={styles.cardTop}>
-                    <span className={styles.dot} style={{ background: color.header }} />
+                    {isProfile ? (
+                      <svg className={styles.profileIcon} style={{ color: color.header }} width="12" height="12" viewBox="0 0 14 14" fill="currentColor">
+                        <circle cx="7" cy="4.5" r="2.5"/>
+                        <path d="M2 13.5c0-3.5 2.2-5 5-5s5 1.5 5 5H2z"/>
+                      </svg>
+                    ) : (
+                      <span className={styles.dot} style={{ background: color.header }} />
+                    )}
                     <span className={styles.cardTitle} style={{ color: color.text }}>
-                      {note.title || 'Без названия'}
+                      {note.title || (isProfile ? 'Анкета персонажа' : 'Без названия')}
                     </span>
                     {isSelected && (
                       <span className={styles.hint} style={{ color: color.text }}>
@@ -78,7 +88,10 @@ export function NotesPanel({ notes, onNavigate, onOpenFocus, onClose, focusMode,
                     {isCurrent && (
                       <span className={styles.hint} style={{ color: color.text }}>открыта</span>
                     )}
-                    {!isSelected && !isCurrent && note.minimized && (
+                    {!isSelected && !isCurrent && isProfile && (
+                      <span className={styles.badge} style={{ color: color.text }}>анкета</span>
+                    )}
+                    {!isSelected && !isCurrent && !isProfile && note.minimized && (
                       <span className={styles.badge} style={{ color: color.text }}>свёрнута</span>
                     )}
                   </div>

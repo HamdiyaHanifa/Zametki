@@ -151,6 +151,11 @@
   flex-shrink: 0;
 }
 
+.profileIcon {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
 .cardTitle {
   font-size: 13px;
   font-weight: 600;
