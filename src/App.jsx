@@ -445,7 +445,7 @@ export default function App() {
 
   // ── Export / Import ────────────────────────────────────────────
 
-  const exportNotes = useCallback((tagFilter = null) => {
+  const exportNotes = useCallback((tagFilter = null, format = 'json') => {
     const filteredCanvases = tagFilter
       ? canvases
           .map(c => {
@@ -455,12 +455,47 @@ export default function App() {
           .filter(c => c.notes.length > 0)
       : canvases
     const tagSuffix = tagFilter ? `_${TAGS_MAP[tagFilter]?.label ?? tagFilter}` : ''
-    const data = JSON.stringify({ canvases: filteredCanvases, nextCanvasId: nextCanvasIdRef.current }, null, 2)
-    const blob = new Blob([data], { type: 'application/json' })
+    const date = new Date().toLocaleDateString('ru')
+
+    let blob
+    let filename
+    if (format === 'txt') {
+      const noteParts = []
+      filteredCanvases.forEach(canvas => {
+        canvas.notes.forEach(note => {
+          const lines = []
+          if (note.title) { lines.push(note.title); lines.push('') }
+          if (note.noteType === 'profile') {
+            ;(note.fields ?? []).forEach(f => { if (f.value) lines.push(`${f.label}: ${f.value}`) })
+            const desc = (note.description || '').trim()
+            if (desc) { lines.push(''); lines.push(desc) }
+          } else if (note.imageUrl) {
+            lines.push('[Изображение]')
+          } else {
+            const text = (note.htmlContent || '')
+              .replace(/<\/(p|h[1-6]|div|li)>/gi, '\n')
+              .replace(/<br\s*\/?>/gi, '\n')
+              .replace(/<[^>]+>/g, '')
+              .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+              .replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+              .replace(/\n{3,}/g, '\n\n').trim()
+            if (text) lines.push(text)
+          }
+          if (lines.length) noteParts.push(lines.join('\n').trimEnd())
+        })
+      })
+      blob = new Blob([noteParts.join('\n\n—\n\n')], { type: 'text/plain;charset=utf-8' })
+      filename = `заметки${tagSuffix}_${date}.txt`
+    } else {
+      const data = JSON.stringify({ canvases: filteredCanvases, nextCanvasId: nextCanvasIdRef.current }, null, 2)
+      blob = new Blob([data], { type: 'application/json' })
+      filename = `заметки${tagSuffix}_${date}.json`
+    }
+
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `заметки${tagSuffix}_${new Date().toLocaleDateString('ru')}.json`
+    a.download = filename
     a.click()
     URL.revokeObjectURL(url)
   }, [canvases])
