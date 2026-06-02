@@ -3,6 +3,7 @@ import { Note } from './components/Note'
 import { ProfileNote } from './components/ProfileNote'
 import { Toolbar } from './components/Toolbar'
 import { FocusView } from './components/FocusView'
+import { countWords } from './utils/wordCount'
 import { NotesPanel } from './components/NotesPanel'
 import { HomeScreen } from './components/HomeScreen'
 import styles from './App.module.css'
@@ -508,6 +509,7 @@ export default function App() {
         onImport={importNotes}
         onTogglePanel={() => setShowPanel((v) => !v)}
         noteCount={notes.length}
+        totalWords={notes.reduce((sum, n) => sum + countWords(n.htmlContent) + countWords(n.description), 0)}
         onHome={openHome}
         canvasName={activeCanvas?.name}
       />

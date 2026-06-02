@@ -50,6 +50,13 @@
   min-width: 38px;
 }
 
+.totalWords {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.35);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .fileInput {
   display: none;
 }

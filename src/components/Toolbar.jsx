@@ -1,7 +1,8 @@
 import { useRef } from 'react'
+import { wordForm } from '../utils/wordCount'
 import styles from './Toolbar.module.css'
 
-export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, onHome, canvasName }) {
+export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, onHome, canvasName }) {
   const fileRef = useRef(null)
   const importRef = useRef(null)
 
@@ -26,6 +27,9 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
         <span className={styles.canvasName}>{canvasName}</span>
       </button>
       <span className={styles.scale}>{Math.round(scale * 100)}%</span>
+      {totalWords > 0 && (
+        <span className={styles.totalWords}>{totalWords} {wordForm(totalWords)}</span>
+      )}
       <input ref={fileRef} type="file" accept="image/*" className={styles.fileInput} onChange={handleFileChange} />
       <input ref={importRef} type="file" accept=".json" className={styles.fileInput} onChange={handleImportChange} />
       <button className={styles.iconBtn} onClick={() => importRef.current?.click()} title="Открыть файл заметок">
