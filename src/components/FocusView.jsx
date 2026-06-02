@@ -20,9 +20,8 @@ export function FocusView({
   totalWords,
   onToggleFocusMode,
   focusModeVisible = false,
-  onRegisterDangerStart,
-  onRegisterDangerStop,
-  onDangerProgressChange,
+  onTimerDangerActivity,
+  timerDangerResetSignal,
 }) {
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isProfile = note.noteType === 'profile'
@@ -31,18 +30,6 @@ export function FocusView({
   const savedRangeRef = useRef(null)
   const photoRef = useRef(null)
   const [isDragTarget, setIsDragTarget] = useState(false)
-
-  // Stable ref to current note content (for danger mode snapshot)
-  const noteHtmlContentRef = useRef(note.htmlContent)
-  useEffect(() => { noteHtmlContentRef.current = note.htmlContent }, [note.htmlContent])
-
-  // ── Timer danger tracking refs ────────────────────────────────────
-  const timerDangerActiveRef = useRef(false)
-  const timerDangerLastActivityRef = useRef(0)
-  const timerDangerStartContentRef = useRef('')
-  const timerDangerFailCbRef = useRef(null)
-  const timerDangerTimeoutRef = useRef(5)
-  const timerDangerIntervalRef = useRef(null)
 
   // ── Standalone danger mode ────────────────────────────────────────
   const DANGER_PRESETS = [5, 10, 15, 20, 30]
@@ -104,58 +91,14 @@ export function FocusView({
   }, [dangerPhase, note.id, onUpdate])
 
   // Cleanup on unmount
-  useEffect(() => () => {
-    clearInterval(dangerIntervalRef.current)
-    clearInterval(timerDangerIntervalRef.current)
-  }, [])
+  useEffect(() => () => clearInterval(dangerIntervalRef.current), [])
 
-  // ── Timer danger handlers (bridged up to App.jsx → FocusMode) ────
-  const handleTimerDangerStart = useCallback((inactivitySec, onInactivityFail) => {
-    timerDangerStartContentRef.current = noteHtmlContentRef.current || ''
-    timerDangerLastActivityRef.current = Date.now()
-    timerDangerTimeoutRef.current = inactivitySec
-    timerDangerFailCbRef.current = onInactivityFail
-    timerDangerActiveRef.current = true
-    clearInterval(timerDangerIntervalRef.current)
-    timerDangerIntervalRef.current = setInterval(() => {
-      const elapsed = (Date.now() - timerDangerLastActivityRef.current) / 1000
-      const prog = Math.min(elapsed / timerDangerTimeoutRef.current, 1)
-      onDangerProgressChange?.(prog)
-      if (elapsed >= timerDangerTimeoutRef.current) {
-        clearInterval(timerDangerIntervalRef.current)
-        timerDangerActiveRef.current = false
-        onDangerProgressChange?.(0)
-        const restored = timerDangerStartContentRef.current
-        if (editorRef.current) editorRef.current.innerHTML = restored
-        onUpdate(note.id, { htmlContent: restored })
-        timerDangerFailCbRef.current?.()
-      }
-    }, 80)
-  }, [note.id, onUpdate, onDangerProgressChange])
-
-  const handleTimerDangerStop = useCallback((keepText) => {
-    clearInterval(timerDangerIntervalRef.current)
-    timerDangerActiveRef.current = false
-    onDangerProgressChange?.(0)
-    if (!keepText) {
-      const restored = timerDangerStartContentRef.current
-      if (editorRef.current) editorRef.current.innerHTML = restored
-      onUpdate(note.id, { htmlContent: restored })
-    }
-  }, [note.id, onUpdate, onDangerProgressChange])
-
-  // Register/unregister handlers with App.jsx when FocusView mounts/unmounts
+  // Restore editor content when App.jsx signals a timer danger reset
   useEffect(() => {
-    onRegisterDangerStart?.(handleTimerDangerStart)
-    onRegisterDangerStop?.(handleTimerDangerStop)
-    return () => {
-      clearInterval(timerDangerIntervalRef.current)
-      timerDangerActiveRef.current = false
-      onRegisterDangerStart?.(null)
-      onRegisterDangerStop?.(null)
-      onDangerProgressChange?.(0)
-    }
-  }, [handleTimerDangerStart, handleTimerDangerStop, onRegisterDangerStart, onRegisterDangerStop, onDangerProgressChange])
+    if (!timerDangerResetSignal) return
+    if (timerDangerResetSignal.noteId !== note.id) return
+    if (editorRef.current) editorRef.current.innerHTML = timerDangerResetSignal.htmlContent
+  }, [timerDangerResetSignal, note.id])
 
   const fields = note.fields ?? DEFAULT_FIELDS
 
@@ -199,21 +142,16 @@ export function FocusView({
     if (dangerPhaseRef.current === 'active') {
       dangerLastActivityRef.current = Date.now()
     }
-    if (timerDangerActiveRef.current) {
-      timerDangerLastActivityRef.current = Date.now()
-    }
-  }, [note.id, onUpdate])
+    onTimerDangerActivity?.()
+  }, [note.id, onUpdate, onTimerDangerActivity])
 
   const handleEditorKeyDown = useCallback(() => {
     if (dangerPhaseRef.current === 'active') {
       dangerLastActivityRef.current = Date.now()
       setDangerInactiveFor(0)
     }
-    if (timerDangerActiveRef.current) {
-      timerDangerLastActivityRef.current = Date.now()
-      onDangerProgressChange?.(0)
-    }
-  }, [onDangerProgressChange])
+    onTimerDangerActivity?.()
+  }, [onTimerDangerActivity])
 
   const handlePhotoChange = useCallback((e) => {
     const file = e.target.files[0]

@@ -92,19 +92,48 @@ export default function App() {
   const [navigating, setNavigating] = useState(false)
   const [showFocusMode, setShowFocusMode] = useState(false)
   const [timerDangerProgress, setTimerDangerProgress] = useState(0)
-  const focusViewDangerStartRef = useRef(null)
-  const focusViewDangerStopRef = useRef(null)
+  const [timerDangerActive, setTimerDangerActive] = useState(false)
+  const [timerDangerResetSignal, setTimerDangerResetSignal] = useState(null)
 
-  const handleTimerDangerStart = useCallback((secs, failCb) => {
-    focusViewDangerStartRef.current?.(secs, failCb)
+  const focusedNoteRef = useRef(null)
+  const updateNoteRef = useRef(null)
+  const timerDangerActiveRef = useRef(false)
+  const timerDangerLastActivityRef = useRef(0)
+  const timerDangerStartDataRef = useRef({ noteId: null, htmlContent: '' })
+  const timerDangerFailCbRef = useRef(null)
+  const timerDangerTimeoutRef = useRef(5)
+  const timerDangerIntervalRef = useRef(null)
+
+  const handleTimerDangerStart = useCallback((inactivitySec, onInactivityFail) => {
+    const n = focusedNoteRef.current
+    timerDangerStartDataRef.current = { noteId: n?.id ?? null, htmlContent: n?.htmlContent ?? '' }
+    timerDangerLastActivityRef.current = Date.now()
+    timerDangerTimeoutRef.current = inactivitySec
+    timerDangerFailCbRef.current = onInactivityFail
+    timerDangerActiveRef.current = true
+    setTimerDangerActive(true)
   }, [])
 
   const handleTimerDangerStop = useCallback((keepText) => {
-    focusViewDangerStopRef.current?.(keepText)
+    clearInterval(timerDangerIntervalRef.current)
+    timerDangerActiveRef.current = false
+    setTimerDangerActive(false)
+    setTimerDangerProgress(0)
+    if (!keepText) {
+      const { noteId, htmlContent } = timerDangerStartDataRef.current
+      if (noteId !== null) {
+        updateNoteRef.current?.(noteId, { htmlContent })
+        setTimerDangerResetSignal({ noteId, htmlContent, t: Date.now() })
+      }
+    }
   }, [])
 
-  const registerDangerStart = useCallback((fn) => { focusViewDangerStartRef.current = fn }, [])
-  const registerDangerStop = useCallback((fn) => { focusViewDangerStopRef.current = fn }, [])
+  const handleTimerDangerActivity = useCallback(() => {
+    if (timerDangerActiveRef.current) {
+      timerDangerLastActivityRef.current = Date.now()
+      setTimerDangerProgress(0)
+    }
+  }, [])
   const [floatingNotes, setFloatingNotes] = useState([])
   const floatUidRef = useRef(0)
   const floatPosRef = useRef({})
@@ -274,6 +303,34 @@ export default function App() {
       notes: c.notes.map((n) => n.id === id ? { ...n, ...patch } : n),
     }))
   }, [patchCanvas])
+
+  useEffect(() => {
+    focusedNoteRef.current = focusedNoteId ? notes.find(n => n.id === focusedNoteId) : null
+  }, [focusedNoteId, notes])
+
+  useEffect(() => { updateNoteRef.current = updateNote }, [updateNote])
+
+  useEffect(() => {
+    if (!timerDangerActive) return
+    timerDangerIntervalRef.current = setInterval(() => {
+      const elapsed = (Date.now() - timerDangerLastActivityRef.current) / 1000
+      const prog = Math.min(elapsed / timerDangerTimeoutRef.current, 1)
+      setTimerDangerProgress(prog)
+      if (elapsed >= timerDangerTimeoutRef.current) {
+        clearInterval(timerDangerIntervalRef.current)
+        timerDangerActiveRef.current = false
+        setTimerDangerActive(false)
+        setTimerDangerProgress(0)
+        const { noteId, htmlContent } = timerDangerStartDataRef.current
+        if (noteId !== null) {
+          updateNoteRef.current?.(noteId, { htmlContent })
+          setTimerDangerResetSignal({ noteId, htmlContent, t: Date.now() })
+        }
+        timerDangerFailCbRef.current?.()
+      }
+    }, 80)
+    return () => clearInterval(timerDangerIntervalRef.current)
+  }, [timerDangerActive])
 
   const resetNoteWordCount = useCallback((id) => {
     patchCanvas((c) => ({
@@ -593,9 +650,8 @@ export default function App() {
           totalWords={notes.reduce((sum, n) => sum + noteWordCount(n), 0)}
           onToggleFocusMode={() => setShowFocusMode(v => !v)}
           focusModeVisible={showFocusMode}
-          onRegisterDangerStart={registerDangerStart}
-          onRegisterDangerStop={registerDangerStop}
-          onDangerProgressChange={setTimerDangerProgress}
+          onTimerDangerActivity={handleTimerDangerActivity}
+          timerDangerResetSignal={timerDangerResetSignal}
         />
       )}
       <div
