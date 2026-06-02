@@ -49,6 +49,8 @@ export default function App() {
   const [focusedNoteId, setFocusedNoteId] = useState(null)
   const [showPanel, setShowPanel] = useState(false)
   const [navigating, setNavigating] = useState(false)
+  const [floatingNotes, setFloatingNotes] = useState([])
+  const floatUidRef = useRef(0)
   const [viewport, setVpState] = useState({ x: 0, y: 0, scale: 1 })
   const vpRef = useRef(viewport)
   const gestureRef = useRef(null)
@@ -149,6 +151,26 @@ export default function App() {
     setViewport({ ...vp, x: newX, y: newY })
     setTimeout(() => setNavigating(false), 500)
   }, [notes, setViewport])
+
+  // Floating note windows inside FocusView
+  const addFloatingNote = useCallback((noteId, x, y) => {
+    setFloatingNotes((prev) => {
+      if (prev.some((f) => f.noteId === noteId)) return prev
+      const uid = floatUidRef.current++
+      return [...prev, { uid, noteId, x: x ?? 60 + prev.length * 30, y: y ?? 80 + prev.length * 30 }]
+    })
+  }, [])
+
+  const removeFloatingNote = useCallback((uid) => {
+    setFloatingNotes((prev) => prev.filter((f) => f.uid !== uid))
+  }, [])
+
+  // Clear floating notes when FocusView closes
+  const closeFocusView = useCallback(() => {
+    setFocusedNoteId(null)
+    setFloatingNotes([])
+    setShowPanel(false)
+  }, [])
 
   // Export all notes to a .json file
   const exportNotes = useCallback(() => {
@@ -316,13 +338,23 @@ export default function App() {
           onNavigate={navigateToNote}
           onOpenFocus={(id) => { setFocusedNoteId(id); setShowPanel(false) }}
           onClose={() => setShowPanel(false)}
+          focusMode={!!focusedNoteId}
+          currentNoteId={focusedNoteId}
+          onAddFloating={(id) => { addFloatingNote(id); setShowPanel(false) }}
         />
       )}
       {focusedNote && (
         <FocusView
           note={focusedNote}
           onUpdate={updateNote}
-          onClose={() => setFocusedNoteId(null)}
+          onClose={closeFocusView}
+          notes={notes}
+          onSwitchFocus={setFocusedNoteId}
+          floatingNotes={floatingNotes}
+          onAddFloating={addFloatingNote}
+          onRemoveFloating={removeFloatingNote}
+          showPanel={showPanel}
+          onTogglePanel={() => setShowPanel((v) => !v)}
         />
       )}
       <div

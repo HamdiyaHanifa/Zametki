@@ -1,0 +1,87 @@
+.floatingNote {
+  position: absolute;
+  border-radius: 14px;
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.09);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 52000;
+  min-width: 240px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 7px 10px;
+  cursor: grab;
+  gap: 8px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.header:active { cursor: grabbing; }
+
+.titleInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: inherit;
+  min-width: 0;
+}
+
+.titleInput::placeholder { color: rgba(0, 0, 0, 0.3); }
+.titleInput:focus { cursor: text; }
+
+.closeBtn {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: filter 0.12s;
+}
+
+.closeBtn:hover { filter: brightness(0.85); }
+
+.editor {
+  overflow-y: auto;
+  padding: 10px 14px;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.65;
+  font-family: inherit;
+  word-break: break-word;
+  cursor: text;
+  box-sizing: border-box;
+}
+
+.editor:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+.editor h3 { font-size: 18px; font-weight: 700; margin: 6px 0 3px; }
+.editor b, .editor strong { font-weight: 700; }
+.editor i, .editor em { font-style: italic; }
+.editor u { text-decoration: underline; }
+.editor s, .editor strike { text-decoration: line-through; }
+
+.resizeHandle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, 0.18) 50%);
+  border-radius: 0 0 14px 0;
+}

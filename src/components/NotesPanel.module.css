@@ -1,7 +1,7 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  z-index: 19000;
+  z-index: 59000;
   background: rgba(0, 0, 0, 0.18);
   animation: fadeIn 0.18s ease;
 }
@@ -20,7 +20,7 @@
   max-width: 90vw;
   background: rgba(255, 250, 246, 0.97);
   backdrop-filter: blur(14px);
-  z-index: 20000;
+  z-index: 60000;
   display: flex;
   flex-direction: column;
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.14);
@@ -64,6 +64,13 @@
 
 .closeBtn:hover { background: rgba(0, 0, 0, 0.14); }
 
+.focusHint {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.38);
+  padding: 0 16px 6px;
+  margin: 0;
+}
+
 .list {
   flex: 1;
   overflow-y: auto;
@@ -72,6 +79,35 @@
   flex-direction: column;
   gap: 8px;
 }
+
+.cardRow {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.cardRow .card {
+  flex: 1;
+}
+
+.currentRow .card {
+  cursor: default;
+}
+
+.addBtn {
+  width: 34px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: filter 0.15s, transform 0.1s;
+  opacity: 0.75;
+}
+
+.addBtn:hover { filter: brightness(0.88); opacity: 1; transform: scale(1.05); }
 
 .empty {
   text-align: center;

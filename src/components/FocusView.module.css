@@ -12,6 +12,11 @@
   to   { opacity: 1; transform: scale(1); }
 }
 
+.dragTarget {
+  outline: 3px dashed rgba(0, 0, 0, 0.2);
+  outline-offset: -6px;
+}
+
 .topBar {
   display: flex;
   align-items: center;
@@ -56,6 +61,43 @@
 
 .titleInput::placeholder {
   color: rgba(0, 0, 0, 0.25);
+}
+
+.panelBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.panelBtn:hover { background: rgba(0, 0, 0, 0.1) !important; }
+
+.noteCount {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.dropHint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px 24px;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 52001;
 }
 
 /* Text editor */
