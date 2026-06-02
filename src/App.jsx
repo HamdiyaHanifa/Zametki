@@ -48,6 +48,7 @@ export default function App() {
   const [order, setOrder] = useState(saved?.order ?? INITIAL_NOTES.map((n) => n.id))
   const [focusedNoteId, setFocusedNoteId] = useState(null)
   const [showPanel, setShowPanel] = useState(false)
+  const [navigating, setNavigating] = useState(false)
   const [viewport, setVpState] = useState({ x: 0, y: 0, scale: 1 })
   const vpRef = useRef(viewport)
   const gestureRef = useRef(null)
@@ -130,6 +131,24 @@ export default function App() {
     setNotes((prev) => prev.filter((n) => n.id !== id))
     setOrder((prev) => prev.filter((x) => x !== id))
   }, [])
+
+  // Pan canvas to center on a note (panel navigation)
+  const navigateToNote = useCallback((id) => {
+    const note = notes.find((n) => n.id === id)
+    if (!note) return
+    const vp = vpRef.current
+    const PANEL_W = 300
+    const w = note.width || 280
+    const h = note.height || 150
+    // Center in the visible area left of the panel
+    const visibleCx = (window.innerWidth - PANEL_W) / 2
+    const visibleCy = (window.innerHeight - 52) / 2 + 52
+    const newX = visibleCx - (note.x + w / 2) * vp.scale
+    const newY = visibleCy - (note.y + h / 2) * vp.scale
+    setNavigating(true)
+    setViewport({ ...vp, x: newX, y: newY })
+    setTimeout(() => setNavigating(false), 500)
+  }, [notes, setViewport])
 
   // Export all notes to a .json file
   const exportNotes = useCallback(() => {
@@ -294,6 +313,7 @@ export default function App() {
       {showPanel && (
         <NotesPanel
           notes={notes}
+          onNavigate={navigateToNote}
           onOpenFocus={(id) => { setFocusedNoteId(id); setShowPanel(false) }}
           onClose={() => setShowPanel(false)}
         />
@@ -316,7 +336,10 @@ export default function App() {
       >
         <div
           className={styles.world}
-          style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})` }}
+          style={{
+            transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})`,
+            transition: navigating ? 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)' : undefined,
+          }}
         >
           {notes.map((note) => (
             <Note
