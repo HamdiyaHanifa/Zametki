@@ -29,6 +29,67 @@ export function FocusView({
   const [isDragTarget, setIsDragTarget] = useState(false)
   const [showFocusMode, setShowFocusMode] = useState(false)
 
+  // ── Danger mode ──────────────────────────────────────────────────
+  const DANGER_PRESETS = [5, 10, 15, 20, 30]
+  const [dangerPhase, setDangerPhase] = useState('off') // 'off'|'setup'|'active'|'dying'
+  const [dangerTimeout, setDangerTimeout] = useState(5)
+  const [dangerInactiveFor, setDangerInactiveFor] = useState(0)
+  const dangerPhaseRef = useRef('off')
+  const dangerLastActivityRef = useRef(0)
+  const dangerStartContentRef = useRef('')
+  const dangerIntervalRef = useRef(null)
+
+  const startDangerSession = useCallback(() => {
+    dangerStartContentRef.current = note.htmlContent || ''
+    dangerLastActivityRef.current = Date.now()
+    dangerPhaseRef.current = 'active'
+    setDangerInactiveFor(0)
+    setDangerPhase('active')
+  }, [note.htmlContent])
+
+  const stopDangerSession = useCallback((save) => {
+    clearInterval(dangerIntervalRef.current)
+    dangerPhaseRef.current = 'off'
+    setDangerPhase('off')
+    setDangerInactiveFor(0)
+    if (!save) {
+      const restored = dangerStartContentRef.current
+      if (editorRef.current) editorRef.current.innerHTML = restored
+      onUpdate(note.id, { htmlContent: restored })
+    }
+  }, [note.id, onUpdate])
+
+  // Inactivity check interval
+  useEffect(() => {
+    if (dangerPhase !== 'active') return
+    dangerIntervalRef.current = setInterval(() => {
+      const elapsed = (Date.now() - dangerLastActivityRef.current) / 1000
+      setDangerInactiveFor(Math.min(elapsed, dangerTimeout))
+      if (elapsed >= dangerTimeout) {
+        clearInterval(dangerIntervalRef.current)
+        dangerPhaseRef.current = 'dying'
+        setDangerPhase('dying')
+      }
+    }, 80)
+    return () => clearInterval(dangerIntervalRef.current)
+  }, [dangerPhase, dangerTimeout])
+
+  // After burn animation, restore content
+  useEffect(() => {
+    if (dangerPhase !== 'dying') return
+    const t = setTimeout(() => {
+      const restored = dangerStartContentRef.current
+      if (editorRef.current) editorRef.current.innerHTML = restored
+      onUpdate(note.id, { htmlContent: restored })
+      dangerPhaseRef.current = 'off'
+      setDangerPhase('off')
+      setDangerInactiveFor(0)
+    }, 1600)
+    return () => clearTimeout(t)
+  }, [dangerPhase, note.id, onUpdate])
+
+  useEffect(() => () => clearInterval(dangerIntervalRef.current), [])
+
   const fields = note.fields ?? DEFAULT_FIELDS
 
   useEffect(() => {
@@ -68,7 +129,17 @@ export function FocusView({
 
   const handleInput = useCallback(() => {
     onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
+    if (dangerPhaseRef.current === 'active') {
+      dangerLastActivityRef.current = Date.now()
+    }
   }, [note.id, onUpdate])
+
+  const handleEditorKeyDown = useCallback(() => {
+    if (dangerPhaseRef.current === 'active') {
+      dangerLastActivityRef.current = Date.now()
+      setDangerInactiveFor(0)
+    }
+  }, [])
 
   const handlePhotoChange = useCallback((e) => {
     const file = e.target.files[0]
@@ -125,6 +196,24 @@ export function FocusView({
           onChange={(e) => onUpdate(note.id, { title: e.target.value })}
           placeholder={titlePlaceholder}
         />
+        {!isProfile && !isImage && (
+          <button
+            className={styles.focusTimerBtn}
+            style={{
+              color: dangerPhase === 'active' ? '#e53935' : dangerPhase === 'dying' ? '#e53935' : color.text,
+              background: dangerPhase === 'active' ? 'rgba(229,57,53,0.12)'
+                        : dangerPhase === 'setup'  ? `${color.text}22`
+                        : `${color.text}0e`,
+              animation: dangerPhase === 'active' ? 'dangerPulse 1.4s ease-in-out infinite' : 'none',
+            }}
+            onClick={() => {
+              if (dangerPhase === 'off') setDangerPhase('setup')
+              else if (dangerPhase === 'setup') setDangerPhase('off')
+              else if (dangerPhase === 'active') stopDangerSession(true)
+            }}
+            title={dangerPhase === 'active' ? 'Завершить (сохранить текст)' : 'Опасный режим'}
+          >⚡{dangerPhase === 'active' ? ' Стоп' : ''}</button>
+        )}
         <button
           className={styles.focusTimerBtn}
           style={{
@@ -153,6 +242,55 @@ export function FocusView({
           totalWords={totalWords ?? 0}
           onClose={() => setShowFocusMode(false)}
         />
+      )}
+
+      {/* Danger mode setup panel */}
+      {dangerPhase === 'setup' && (
+        <div className={styles.dangerPanel} style={{ borderColor: `${color.text}18` }}>
+          <div className={styles.dangerPanelTitle} style={{ color: color.text }}>⚡ Опасный режим</div>
+          <div className={styles.dangerPanelSub} style={{ color: color.text }}>
+            Если перестанешь писать на...
+          </div>
+          <div className={styles.dangerPresets}>
+            {DANGER_PRESETS.map(s => (
+              <button
+                key={s}
+                className={`${styles.dangerPreset} ${dangerTimeout === s ? styles.dangerPresetActive : ''}`}
+                style={dangerTimeout !== s ? { color: color.text, borderColor: `${color.text}30` } : {}}
+                onClick={() => setDangerTimeout(s)}
+              >
+                {s}<span className={styles.dangerPresetUnit}>с</span>
+              </button>
+            ))}
+          </div>
+          <div className={styles.dangerPanelWarn} style={{ color: color.text }}>
+            ...весь написанный текст исчезнет
+          </div>
+          <button className={styles.dangerStartBtn} onClick={startDangerSession}>
+            Начать
+          </button>
+          <button
+            className={styles.dangerCancelBtn}
+            style={{ color: color.text }}
+            onClick={() => setDangerPhase('off')}
+          >Отмена</button>
+        </div>
+      )}
+
+      {/* Danger countdown bar */}
+      {(dangerPhase === 'active' || dangerPhase === 'dying') && (
+        <div className={styles.dangerBarWrap}>
+          <div
+            className={styles.dangerBar}
+            style={{
+              width: `${Math.max(0, (1 - dangerInactiveFor / dangerTimeout) * 100)}%`,
+              background: dangerInactiveFor / dangerTimeout < 0.5 ? '#4caf50'
+                        : dangerInactiveFor / dangerTimeout < 0.8 ? '#ff9800'
+                        : '#f44336',
+              transition: 'width 0.08s linear, background 0.3s ease',
+            }}
+          />
+        </div>
       )}
 
       {isProfile ? (
@@ -267,11 +405,12 @@ export function FocusView({
           />
           <div
             ref={editorRef}
-            className={styles.editor}
+            className={`${styles.editor} ${dangerPhase === 'dying' ? styles.editorDying : ''}`}
             style={{ color: color.text }}
-            contentEditable
+            contentEditable={dangerPhase !== 'dying'}
             suppressContentEditableWarning
             onInput={handleInput}
+            onKeyDown={handleEditorKeyDown}
             onMouseUp={saveRange}
             onKeyUp={saveRange}
             onTouchEnd={saveRange}
