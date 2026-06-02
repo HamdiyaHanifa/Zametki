@@ -11,13 +11,13 @@ const SIZES = [
 export function FormatBar({ editorRef, savedRangeRef, textColor }) {
   const [showSizes, setShowSizes] = useState(false)
   const [stepSize, setStepSize] = useState(14)
-  const dropRef = useRef(null)
+  const wrapRef = useRef(null)
 
-  // Close size dropdown on outside click
+  // Close dropdown on outside click
   useEffect(() => {
     if (!showSizes) return
     const onClose = (e) => {
-      if (!dropRef.current?.contains(e.target)) setShowSizes(false)
+      if (!wrapRef.current?.contains(e.target)) setShowSizes(false)
     }
     const id = setTimeout(() => window.addEventListener('pointerdown', onClose), 0)
     return () => { clearTimeout(id); window.removeEventListener('pointerdown', onClose) }
@@ -94,13 +94,12 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
 
   const handleOpenSizes = useCallback(() => {
     saveSelectionNow()
-    // Read current font size from selection
     const sel = window.getSelection()
     if (sel?.rangeCount > 0) {
       const node = sel.getRangeAt(0).commonAncestorContainer
       const el = node?.nodeType === Node.TEXT_NODE ? node.parentElement : node
       const computed = el ? parseInt(window.getComputedStyle(el).fontSize) : 14
-      if (computed && computed > 0) setStepSize(computed)
+      if (computed > 0) setStepSize(computed)
     }
     setShowSizes((v) => !v)
   }, [saveSelectionNow])
@@ -114,20 +113,22 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
   const s = { color: textColor }
 
   return (
-    <div
-      className={styles.bar}
-      style={{ borderColor: `${textColor}14`, background: `${textColor}07` }}
-      onMouseDown={handleBarMouseDown}
-    >
-      <button className={styles.btn} style={s} onClick={() => exec('bold')} title="Жирный"><b>B</b></button>
-      <button className={styles.btn} style={{ ...s, fontStyle: 'italic' }} onClick={() => exec('italic')} title="Курсив"><i>I</i></button>
-      <button className={styles.btn} style={{ ...s, textDecoration: 'underline' }} onClick={() => exec('underline')} title="Подчёркнутый">U</button>
-      <button className={styles.btn} style={{ ...s, textDecoration: 'line-through' }} onClick={() => exec('strikeThrough')} title="Зачёркнутый">S</button>
-      <button className={styles.btn} style={{ ...s, fontWeight: 700, fontSize: 14 }} onClick={toggleHeading} title="Заголовок">H</button>
+    // wrapRef wraps bar + dropdown; dropdown is a SIBLING of .bar so it
+    // isn't clipped by .bar's overflow-x: auto
+    <div ref={wrapRef} className={styles.barWrap}>
+      <div
+        className={styles.bar}
+        style={{ borderColor: `${textColor}14`, background: `${textColor}07` }}
+        onMouseDown={handleBarMouseDown}
+      >
+        <button className={styles.btn} style={s} onClick={() => exec('bold')} title="Жирный"><b>B</b></button>
+        <button className={styles.btn} style={{ ...s, fontStyle: 'italic' }} onClick={() => exec('italic')} title="Курсив"><i>I</i></button>
+        <button className={styles.btn} style={{ ...s, textDecoration: 'underline' }} onClick={() => exec('underline')} title="Подчёркнутый">U</button>
+        <button className={styles.btn} style={{ ...s, textDecoration: 'line-through' }} onClick={() => exec('strikeThrough')} title="Зачёркнутый">S</button>
+        <button className={styles.btn} style={{ ...s, fontWeight: 700, fontSize: 14 }} onClick={toggleHeading} title="Заголовок">H</button>
 
-      <span className={styles.sep} />
+        <span className={styles.sep} />
 
-      <div className={styles.sizeWrap} ref={dropRef}>
         <button
           className={`${styles.btn} ${styles.sizeToggle}`}
           style={s}
@@ -137,45 +138,43 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
         >
           <span className={styles.aaIcon}>Аа</span>
         </button>
-
-        {showSizes && (
-          <div
-            className={styles.sizeDrop}
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <div className={styles.sizePresets}>
-              {SIZES.map(({ px, label }, i) => (
-                <button
-                  key={px}
-                  className={styles.presetBtn}
-                  style={{ color: textColor, fontSize: 9 + i * 2.5 }}
-                  onTouchStart={(e) => { e.preventDefault(); applyFontSize(px); setStepSize(px); setShowSizes(false) }}
-                  onClick={() => { applyFontSize(px); setStepSize(px); setShowSizes(false) }}
-                  title={`${px}px`}
-                >{label}</button>
-              ))}
-            </div>
-            <div className={styles.sep} style={{ width: '100%', height: 1, margin: '4px 0' }} />
-            <div className={styles.stepper}>
-              <button
-                className={styles.stepBtn}
-                style={{ color: textColor }}
-                onTouchStart={(e) => { e.preventDefault(); applyStep(-1) }}
-                onClick={() => applyStep(-1)}
-                title="-1px"
-              >−</button>
-              <span className={styles.stepDisplay} style={{ color: textColor }}>{stepSize}px</span>
-              <button
-                className={styles.stepBtn}
-                style={{ color: textColor }}
-                onTouchStart={(e) => { e.preventDefault(); applyStep(+1) }}
-                onClick={() => applyStep(+1)}
-                title="+1px"
-              >+</button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {showSizes && (
+        <div
+          className={styles.sizeDrop}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <div className={styles.sizePresets}>
+            {SIZES.map(({ px, label }, i) => (
+              <button
+                key={px}
+                className={styles.presetBtn}
+                style={{ color: textColor, fontSize: 9 + i * 2.5 }}
+                onTouchStart={(e) => { e.preventDefault(); applyFontSize(px); setStepSize(px); setShowSizes(false) }}
+                onClick={() => { applyFontSize(px); setStepSize(px); setShowSizes(false) }}
+                title={`${px}px`}
+              >{label}</button>
+            ))}
+          </div>
+          <div className={styles.dropSep} />
+          <div className={styles.stepper}>
+            <button
+              className={styles.stepBtn}
+              style={{ color: textColor }}
+              onTouchStart={(e) => { e.preventDefault(); applyStep(-1) }}
+              onClick={() => applyStep(-1)}
+            >−</button>
+            <span className={styles.stepDisplay} style={{ color: textColor }}>{stepSize}px</span>
+            <button
+              className={styles.stepBtn}
+              style={{ color: textColor }}
+              onTouchStart={(e) => { e.preventDefault(); applyStep(+1) }}
+              onClick={() => applyStep(+1)}
+            >+</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
