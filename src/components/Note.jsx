@@ -4,6 +4,7 @@ import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
 import { ImageResizer } from './ImageResizer'
 import { FreeImage } from './FreeImage'
+import { NoteHandles } from './NoteHandles'
 import { countWords, wordForm, noteWordCount } from '../utils/wordCount'
 import { TAGS, TAGS_MAP } from '../utils/tags'
 import styles from './Note.module.css'
@@ -39,9 +40,13 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
   const w = note.minimized ? 220 : (note.width || (isImage ? DEFAULT_W_IMG : DEFAULT_W_TEXT))
   const h = note.height || (isImage ? DEFAULT_H_IMG : DEFAULT_H_TEXT)
 
+  const noteRef          = useRef(null)
   const editorRef        = useRef(null)
   const savedRangeRef    = useRef(null)
   const freeImgWrapRef   = useRef(null)
+  const [showHandles, setShowHandles] = useState(false)
+  const hideTimerRef     = useRef(null)
+  const resizingRef      = useRef(false)
 
   useEffect(() => {
     if (!editorRef.current) return
@@ -136,36 +141,30 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
     e.stopPropagation(); onFocus(note.id); dragTouchStart(e)
   }, [note.id, onFocus, dragTouchStart])
 
-  // Corner resize (width + height)
-  const makeResizeHandlers = (startW, startH) => ({
-    onMouseDown(e) {
-      e.stopPropagation()
-      const sx = e.clientX, sy = e.clientY
-      const s = scale || 1
-      const onMove = (e) => onUpdate(note.id, {
-        width:  Math.max(MIN_W, startW + (e.clientX - sx) / s),
-        height: Math.max(MIN_H, startH + (e.clientY - sy) / s),
-      })
-      const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-      window.addEventListener('mousemove', onMove)
-      window.addEventListener('mouseup', onUp)
-    },
-    onTouchStart(e) {
-      e.stopPropagation()
-      const sx = e.touches[0].clientX, sy = e.touches[0].clientY
-      const s = scale || 1
-      const onMove = (e) => {
-        e.preventDefault()
-        onUpdate(note.id, {
-          width:  Math.max(MIN_W, startW + (e.touches[0].clientX - sx) / s),
-          height: Math.max(MIN_H, startH + (e.touches[0].clientY - sy) / s),
-        })
-      }
-      const onUp = () => { window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp) }
-      window.addEventListener('touchmove', onMove, { passive: false })
-      window.addEventListener('touchend', onUp)
-    },
-  })
+  const scheduleHide = useCallback(() => {
+    clearTimeout(hideTimerRef.current)
+    hideTimerRef.current = setTimeout(() => {
+      if (!resizingRef.current) setShowHandles(false)
+    }, 150)
+  }, [])
+
+  const cancelHide = useCallback(() => clearTimeout(hideTimerRef.current), [])
+
+  const getNoteState = useCallback(() => ({
+    x: note.x,
+    y: note.y,
+    w: note.width  || (isImage ? DEFAULT_W_IMG  : DEFAULT_W_TEXT),
+    h: note.height || (isImage ? DEFAULT_H_IMG  : DEFAULT_H_TEXT),
+  }), [note, isImage])
+
+  const handleNoteResize = useCallback(({ x, y, w, h }) => {
+    onUpdate(note.id, { x, y, width: w, height: h })
+  }, [note.id, onUpdate])
+
+  const handleResizingChange = useCallback((active) => {
+    resizingRef.current = active
+    if (!active) scheduleHide()
+  }, [scheduleHide])
 
   const freeImages = note.freeImages || []
   const addFreeImg = useCallback((src) => {
@@ -180,11 +179,14 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
 
   return (
     <div
+      ref={noteRef}
       className={styles.note}
       style={{ left: note.x, top: note.y, zIndex, width: w }}
       onMouseDown={(e) => { e.stopPropagation(); onFocus(note.id) }}
       onTouchStart={(e) => { e.stopPropagation(); onFocus(note.id) }}
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { setConfirmDelete(false); setShowTagPicker(false) } }}
+      onMouseEnter={() => { cancelHide(); setShowHandles(true) }}
+      onMouseLeave={scheduleHide}
     >
       {/* Header */}
       <div
@@ -390,13 +392,21 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
               })()}
             </>
           )}
-          {/* Corner resize handle */}
-          <div
-            className={styles.resizeCorner}
-            style={{ '--rc': color.header }}
-            {...makeResizeHandlers(w, h)}
-          />
         </div>
+      )}
+      {showHandles && !note.minimized && (
+        <NoteHandles
+          noteRef={noteRef}
+          scale={scale}
+          getState={getNoteState}
+          onResize={handleNoteResize}
+          color={color}
+          minW={MIN_W}
+          minH={MIN_H}
+          onResizingChange={handleResizingChange}
+          onHandleEnter={cancelHide}
+          onHandleLeave={scheduleHide}
+        />
       )}
     </div>
   )

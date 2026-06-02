@@ -2,6 +2,7 @@ import { useRef, useCallback, useEffect, useState } from 'react'
 import { FormatBar } from './FormatBar'
 import { ImageResizer } from './ImageResizer'
 import { FreeImage } from './FreeImage'
+import { NoteHandles } from './NoteHandles'
 import { PALETTE } from '../palette'
 import styles from './FloatingNote.module.css'
 
@@ -19,6 +20,7 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isProfile = note.noteType === 'profile'
   const isImage = !isProfile && Boolean(note.imageUrl)
+  const floatingNoteRef = useRef(null)
   const editorRef     = useRef(null)
   const savedRangeRef = useRef(null)
   const photoRef      = useRef(null)
@@ -27,6 +29,9 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
   const [size, setSize] = useState({ w: initialW ?? 360, h: initialH ?? 280 })
   const posRef = useRef(pos)
   const sizeRef = useRef(size)
+  const [showHandles, setShowHandles] = useState(false)
+  const hideTimerRef = useRef(null)
+  const resizingRef  = useRef(false)
 
   const fields = note.fields ?? DEFAULT_FIELDS
 
@@ -88,6 +93,37 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
     onUpdate(note.id, { fields: fields.filter(f => f.id !== fid) })
   }, [note.id, fields, onUpdate])
 
+  const scheduleHide = useCallback(() => {
+    clearTimeout(hideTimerRef.current)
+    hideTimerRef.current = setTimeout(() => {
+      if (!resizingRef.current) setShowHandles(false)
+    }, 150)
+  }, [])
+
+  const cancelHide = useCallback(() => clearTimeout(hideTimerRef.current), [])
+
+  const getFloatState = useCallback(() => ({
+    x: posRef.current.x,
+    y: posRef.current.y,
+    w: sizeRef.current.w,
+    h: sizeRef.current.h,
+  }), [])
+
+  const handleFloatResize = useCallback(({ x, y, w, h }) => {
+    const newPos  = { x, y }
+    const newSize = { w, h }
+    posRef.current  = newPos
+    sizeRef.current = newSize
+    setPos(newPos)
+    setSize(newSize)
+    onPosChange?.({ x, y, w, h })
+  }, [onPosChange])
+
+  const handleResizingChange = useCallback((active) => {
+    resizingRef.current = active
+    if (!active) scheduleHide()
+  }, [scheduleHide])
+
   const startDrag = useCallback((clientX, clientY) => {
     const ox = clientX - posRef.current.x
     const oy = clientY - posRef.current.y
@@ -119,34 +155,6 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
     e.stopPropagation(); startDrag(e.touches[0].clientX, e.touches[0].clientY)
   }, [startDrag])
 
-  const handleResizeMouseDown = useCallback((e) => {
-    e.stopPropagation()
-    const sx = e.clientX, sy = e.clientY
-    const sw = sizeRef.current.w, sh = sizeRef.current.h
-    const onMove = (mv) => {
-      const ns = { w: Math.max(MIN_W, sw + mv.clientX - sx), h: Math.max(MIN_H, sh + mv.clientY - sy) }
-      sizeRef.current = ns; setSize(ns)
-      onPosChange?.({ ...posRef.current, ...ns })
-    }
-    const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-  }, [onPosChange])
-
-  const handleResizeTouchStart = useCallback((e) => {
-    e.stopPropagation()
-    const sx = e.touches[0].clientX, sy = e.touches[0].clientY
-    const sw = sizeRef.current.w, sh = sizeRef.current.h
-    const onMove = (mv) => {
-      mv.preventDefault()
-      const ns = { w: Math.max(MIN_W, sw + mv.touches[0].clientX - sx), h: Math.max(MIN_H, sh + mv.touches[0].clientY - sy) }
-      sizeRef.current = ns; setSize(ns)
-      onPosChange?.({ ...posRef.current, ...ns })
-    }
-    const onUp = () => { window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp) }
-    window.addEventListener('touchmove', onMove, { passive: false })
-    window.addEventListener('touchend', onUp)
-  }, [onPosChange])
 
   const freeImages = note.freeImages || []
   const addFreeImg = useCallback((src) => {
@@ -161,10 +169,13 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
 
   return (
     <div
+      ref={floatingNoteRef}
       className={styles.floatingNote}
       style={{ left: pos.x, top: pos.y, width: size.w, background: color.body }}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
+      onMouseEnter={() => { cancelHide(); setShowHandles(true) }}
+      onMouseLeave={scheduleHide}
     >
       <div
         className={styles.header}
@@ -334,11 +345,20 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
         </>
       )}
 
-      <div
-        className={styles.resizeHandle}
-        onMouseDown={handleResizeMouseDown}
-        onTouchStart={handleResizeTouchStart}
-      />
+      {showHandles && (
+        <NoteHandles
+          noteRef={floatingNoteRef}
+          scale={1}
+          getState={getFloatState}
+          onResize={handleFloatResize}
+          color={color}
+          minW={MIN_W}
+          minH={MIN_H}
+          onResizingChange={handleResizingChange}
+          onHandleEnter={cancelHide}
+          onHandleLeave={scheduleHide}
+        />
+      )}
     </div>
   )
 }
