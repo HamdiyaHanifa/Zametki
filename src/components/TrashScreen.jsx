@@ -14,6 +14,12 @@ function stripHtml(html) {
   return div.textContent || ''
 }
 
+function noteWord(n) {
+  if (n % 10 === 1 && n % 100 !== 11) return 'заметка'
+  if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'заметки'
+  return 'заметок'
+}
+
 function notePreview(note) {
   if (note.noteType === 'profile') {
     const fields = (note.fields ?? []).filter(f => f.value).slice(0, 4)
@@ -60,11 +66,82 @@ export function TrashScreen({ trash, canvases, onBack, onRestore, onPermanentDel
           <p className={styles.hint}>Заметки удаляются автоматически через 30 дней после удаления</p>
           <div className={styles.list}>
             {trash.map((item, idx) => {
+              const days = daysLeft(item.deletedAt)
+              const isConfirming = confirmDeleteIdx === idx
+
+              if (item.type === 'canvas') {
+                const noteCount = item.canvas.notes?.length ?? 0
+                const noteTitles = (item.canvas.notes ?? [])
+                  .slice(0, 3)
+                  .map(n => n.title || 'Без названия')
+                return (
+                  <div
+                    key={idx}
+                    className={styles.item}
+                    style={{ background: 'rgba(255,250,246,0.97)', borderLeftColor: '#a0896e' }}
+                  >
+                    <div className={styles.itemTop}>
+                      <svg width="13" height="12" viewBox="0 0 14 13" fill="none"
+                        style={{ flexShrink: 0, opacity: 0.7 }}>
+                        <path d="M1 3.5C1 2.67 1.67 2 2.5 2H5l1.5 2H12c.83 0 1.5.67 1.5 1.5v6c0 .83-.67 1.5-1.5 1.5H2.5C1.67 13 1 12.33 1 11.5v-8z"
+                          fill="#a0896e"/>
+                      </svg>
+                      <span className={styles.itemTitle} style={{ color: '#3a2828' }}>
+                        {item.canvas.name || 'Без названия'}
+                      </span>
+                    </div>
+
+                    {noteCount > 0 ? (
+                      <p className={styles.preview} style={{ color: '#3a2828' }}>
+                        {noteTitles.join(' · ')}{noteCount > 3 ? ` · ещё ${noteCount - 3}` : ''}
+                      </p>
+                    ) : (
+                      <p className={styles.preview} style={{ color: '#3a2828', opacity: 0.4 }}>Пустой холст</p>
+                    )}
+
+                    <div className={styles.itemMeta}>
+                      <span className={styles.canvasTag} style={{ color: '#3a2828', opacity: 0.5 }}>
+                        {noteCount} {noteWord(noteCount)}
+                      </span>
+                      <span className={styles.daysTag} style={{ color: days <= 3 ? '#c0392b' : undefined }}>
+                        {days === 0 ? 'удаляется сегодня' : `ещё ${days} дн.`}
+                      </span>
+                    </div>
+
+                    <div className={styles.itemActions}>
+                      <button
+                        className={styles.restoreBtn}
+                        style={{ color: '#3a2828', background: 'rgba(160,137,110,0.15)', borderColor: 'rgba(160,137,110,0.4)' }}
+                        onClick={() => { setConfirmDeleteIdx(null); onRestore(idx) }}
+                      >
+                        Восстановить
+                      </button>
+                      {isConfirming ? (
+                        <>
+                          <button
+                            className={styles.delConfirmBtn}
+                            onClick={() => { onPermanentDelete(idx); setConfirmDeleteIdx(null) }}
+                          >Удалить</button>
+                          <button
+                            className={styles.delCancelBtn}
+                            onClick={() => setConfirmDeleteIdx(null)}
+                          >Нет</button>
+                        </>
+                      ) : (
+                        <button
+                          className={styles.delBtn}
+                          onClick={() => setConfirmDeleteIdx(idx)}
+                          title="Удалить навсегда"
+                        >✕</button>
+                      )}
+                    </div>
+                  </div>
+                )
+              }
+
               const color = PALETTE[(item.note.colorIndex ?? 0) % PALETTE.length]
               const isProfile = item.note.noteType === 'profile'
               const canvasExists = canvases.some(c => c.id === item.canvasId)
-              const days = daysLeft(item.deletedAt)
-              const isConfirming = confirmDeleteIdx === idx
               const preview = notePreview(item.note)
 
               return (
