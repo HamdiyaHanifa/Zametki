@@ -107,6 +107,7 @@
 }
 
 .editBtn,
+.duplicateBtn,
 .deleteBtn {
   width: 26px;
   height: 26px;
@@ -124,6 +125,11 @@
 }
 
 .editBtn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #3a2828;
+}
+
+.duplicateBtn:hover {
   background: rgba(0, 0, 0, 0.08);
   color: #3a2828;
 }

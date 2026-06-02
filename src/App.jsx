@@ -260,6 +260,24 @@ export default function App() {
     setCanvases((prev) => prev.map((c) => c.id === id ? { ...c, name } : c))
   }, [])
 
+  const duplicateCanvas = useCallback((id) => {
+    const canvas = canvases.find(c => c.id === id)
+    if (!canvas) return
+    const newCanvasId = nextCanvasIdRef.current++
+    const idMap = {}
+    canvas.notes.forEach((n, i) => { idMap[n.id] = i + 1 })
+    const newNotes = canvas.notes.map(n => ({ ...n, id: idMap[n.id] }))
+    const newOrder = canvas.order.map(oldId => idMap[oldId]).filter(Boolean)
+    setCanvases(prev => [...prev, {
+      ...canvas,
+      id: newCanvasId,
+      name: `${canvas.name} — копия`,
+      notes: newNotes,
+      order: newOrder,
+      nextNoteId: newNotes.length + 1,
+    }])
+  }, [canvases])
+
   // ── Note mutations (all patch canvases array) ──────────────────
 
   const patchCanvas = useCallback((updater) => {
@@ -391,6 +409,21 @@ export default function App() {
         n.id === id ? { ...n, x: n.x + screenDx / s, y: n.y + screenDy / s } : n
       ),
     }))
+  }, [patchCanvas])
+
+  const duplicateNote = useCallback((id) => {
+    patchCanvas((c) => {
+      const note = c.notes.find(n => n.id === id)
+      if (!note) return c
+      const newId = c.nextNoteId
+      const copy = { ...note, id: newId, x: note.x + 30, y: note.y + 30 }
+      return {
+        ...c,
+        notes: [...c.notes, copy],
+        order: [...c.order, newId],
+        nextNoteId: newId + 1,
+      }
+    })
   }, [patchCanvas])
 
   const deleteNote = useCallback((id) => {
@@ -711,6 +744,7 @@ export default function App() {
         onOpen={openCanvas}
         onDelete={deleteCanvas}
         onRename={renameCanvas}
+        onDuplicate={duplicateCanvas}
         trashCount={trash.length}
         onOpenTrash={() => setShowTrash(true)}
       />
@@ -818,6 +852,7 @@ export default function App() {
                 onUpdate={updateNote}
                 onMove={moveNote}
                 onDelete={deleteNote}
+                onDuplicate={duplicateNote}
                 onFocus={bringToFront}
                 onOpenFocus={setFocusedNoteId}
                 scale={vpState.scale}
@@ -831,6 +866,7 @@ export default function App() {
                 onUpdate={updateNote}
                 onMove={moveNote}
                 onDelete={deleteNote}
+                onDuplicate={duplicateNote}
                 onFocus={bringToFront}
                 onOpenFocus={setFocusedNoteId}
                 scale={vpState.scale}

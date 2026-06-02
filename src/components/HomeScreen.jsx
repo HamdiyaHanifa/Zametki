@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './HomeScreen.module.css'
 
-export function HomeScreen({ canvases, onCreate, onOpen, onDelete, onRename, trashCount, onOpenTrash }) {
+export function HomeScreen({ canvases, onCreate, onOpen, onDelete, onRename, onDuplicate, trashCount, onOpenTrash }) {
   const [editingId, setEditingId] = useState(null)
   const [editingName, setEditingName] = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
@@ -93,6 +93,16 @@ export function HomeScreen({ canvases, onCreate, onOpen, onDelete, onRename, tra
                     onClick={(e) => startEdit(e, canvas)}
                     title="Переименовать"
                   >✎</button>
+                  <button
+                    className={styles.duplicateBtn}
+                    onClick={(e) => { e.stopPropagation(); onDuplicate(canvas.id) }}
+                    title="Дублировать"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <rect x="3.5" y="0.5" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+                      <rect x="0.5" y="3.5" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill="currentColor" fillOpacity="0.1"/>
+                    </svg>
+                  </button>
                   <button
                     className={styles.deleteBtn}
                     onClick={() => { setEditingId(null); setConfirmDeleteId(canvas.id) }}

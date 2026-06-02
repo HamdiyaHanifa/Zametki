@@ -30,7 +30,7 @@ function lastVisible(html, mode) {
   return text
 }
 
-export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale, onResetWordCount, onTimerDangerActivity, blindMode = 'off', timerDangerResetSignal }) {
+export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, onOpenFocus, zIndex, scale, onResetWordCount, onTimerDangerActivity, blindMode = 'off', timerDangerResetSignal }) {
   const [showPicker, setShowPicker] = useState(false)
   const [showTagPicker, setShowTagPicker] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -241,6 +241,14 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
             onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}
             onClick={() => onUpdate(note.id, { minimized: !note.minimized })} title={note.minimized ? 'Развернуть' : 'Свернуть'}>
             {note.minimized ? '□' : '─'}
+          </button>
+          <button className={`${styles.btn} ${styles.btnIcon}`} style={{ background: `${color.text}18`, color: color.text }}
+            onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}
+            onClick={() => onDuplicate(note.id)} title="Дублировать">
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+              <rect x="3.5" y="0.5" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+              <rect x="0.5" y="3.5" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill="currentColor" fillOpacity="0.12"/>
+            </svg>
           </button>
           {confirmDelete ? (
             <div
