@@ -170,16 +170,6 @@ export function FocusView({
   }, [isImage, isProfile])
 
   const handleInput = useCallback(() => {
-    if (editorRef.current) {
-      editorRef.current.querySelectorAll('ul[data-todo] > li').forEach(li => {
-        if (!li.querySelector('.todo-cb')) {
-          const cb = document.createElement('span')
-          cb.className = 'todo-cb'
-          cb.setAttribute('contenteditable', 'false')
-          li.insertBefore(cb, li.firstChild)
-        }
-      })
-    }
     onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
     if (dangerPhaseRef.current === 'active') {
       dangerLastActivityRef.current = Date.now()
@@ -187,12 +177,15 @@ export function FocusView({
     onTimerDangerActivity?.()
   }, [note.id, onUpdate, onTimerDangerActivity])
 
-  const handleTodoCbClick = useCallback((e) => {
-    if (e.target.classList.contains('todo-cb')) {
-      const li = e.target.closest('li')
-      if (li) {
+  const handleEditorMouseDown = useCallback((e) => {
+    const li = e.target.closest?.('ul[data-todo] > li')
+    if (li) {
+      const rect = li.getBoundingClientRect()
+      if (e.clientX - rect.left < 26) {
+        e.preventDefault()
         li.dataset.checked = li.dataset.checked === 'true' ? 'false' : 'true'
         onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
+        return
       }
     }
   }, [note.id, onUpdate])
@@ -517,7 +510,7 @@ export function FocusView({
             contentEditable={dangerPhase !== 'dying'}
             suppressContentEditableWarning
             onInput={handleInput}
-            onClick={handleTodoCbClick}
+            onMouseDown={handleEditorMouseDown}
             onKeyDown={handleEditorKeyDown}
             onMouseUp={saveRange}
             onKeyUp={saveRange}

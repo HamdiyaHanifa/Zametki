@@ -10,10 +10,11 @@ const SIZES = [
 
 export function FormatBar({ editorRef, savedRangeRef, textColor }) {
   const [showSizes, setShowSizes] = useState(false)
+  const [showListDrop, setShowListDrop] = useState(false)
   const [stepSize, setStepSize] = useState(14)
   const sizeWrapRef = useRef(null)
+  const listWrapRef = useRef(null)
 
-  // Close dropdown on click outside the size button/dropdown
   useEffect(() => {
     if (!showSizes) return
     const onClose = (e) => {
@@ -22,6 +23,15 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
     const id = setTimeout(() => window.addEventListener('pointerdown', onClose), 0)
     return () => { clearTimeout(id); window.removeEventListener('pointerdown', onClose) }
   }, [showSizes])
+
+  useEffect(() => {
+    if (!showListDrop) return
+    const onClose = (e) => {
+      if (!listWrapRef.current?.contains(e.target)) setShowListDrop(false)
+    }
+    const id = setTimeout(() => window.addEventListener('pointerdown', onClose), 0)
+    return () => { clearTimeout(id); window.removeEventListener('pointerdown', onClose) }
+  }, [showListDrop])
 
   const withSelection = useCallback((fn) => {
     if (!savedRangeRef.current) return
@@ -68,7 +78,6 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
     const existingTodo = node?.closest?.('ul[data-todo]')
     if (existingTodo) {
       existingTodo.removeAttribute('data-todo')
-      existingTodo.querySelectorAll('.todo-cb').forEach(cb => cb.remove())
       existingTodo.querySelectorAll('li[data-checked]').forEach(li => li.removeAttribute('data-checked'))
     } else {
       document.execCommand('insertUnorderedList', false, null)
@@ -77,17 +86,7 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
       let n = sel2.getRangeAt(0).commonAncestorContainer
       if (n?.nodeType === Node.TEXT_NODE) n = n.parentNode
       const ul = n?.closest?.('ul')
-      if (ul && !ul.dataset.todo) {
-        ul.dataset.todo = 'true'
-        ul.querySelectorAll(':scope > li').forEach(li => {
-          if (!li.querySelector('.todo-cb')) {
-            const cb = document.createElement('span')
-            cb.className = 'todo-cb'
-            cb.setAttribute('contenteditable', 'false')
-            li.insertBefore(cb, li.firstChild)
-          }
-        })
-      }
+      if (ul && !ul.dataset.todo) ul.dataset.todo = 'true'
     }
     setTimeout(() => {
       editorRef.current?.dispatchEvent(new Event('input', { bubbles: true }))
@@ -132,6 +131,13 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
     e.preventDefault()
   }, [saveSelectionNow])
 
+  const handleListOption = useCallback((type) => {
+    setShowListDrop(false)
+    if (type === 'ul') exec('insertUnorderedList')
+    else if (type === 'ol') exec('insertOrderedList')
+    else if (type === 'todo') insertTodoList()
+  }, [exec, insertTodoList])
+
   const handleOpenSizes = useCallback(() => {
     saveSelectionNow()
     const sel = window.getSelection()
@@ -166,37 +172,77 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
 
       <span className={styles.sep} />
 
-      <button className={styles.btn} style={s} onClick={() => exec('insertUnorderedList')} title="Список">
-        <svg width="13" height="11" viewBox="0 0 13 11" fill="currentColor">
-          <circle cx="1.5" cy="1.5" r="1.5"/>
-          <rect x="4" y="0.5" width="9" height="2" rx="1"/>
-          <circle cx="1.5" cy="5.5" r="1.5"/>
-          <rect x="4" y="4.5" width="9" height="2" rx="1"/>
-          <circle cx="1.5" cy="9.5" r="1.5"/>
-          <rect x="4" y="8.5" width="9" height="2" rx="1"/>
-        </svg>
-      </button>
-      <button className={styles.btn} style={s} onClick={() => exec('insertOrderedList')} title="Нумерованный список">
-        <svg width="13" height="11" viewBox="0 0 13 11" fill="currentColor">
-          <rect x="0.5" y="0" width="2" height="3" rx="0.7"/>
-          <rect x="4" y="0.5" width="9" height="2" rx="1"/>
-          <rect x="0.5" y="4" width="2" height="3" rx="0.7"/>
-          <rect x="4" y="4.5" width="9" height="2" rx="1"/>
-          <rect x="0.5" y="8" width="2" height="3" rx="0.7"/>
-          <rect x="4" y="8.5" width="9" height="2" rx="1"/>
-        </svg>
-      </button>
-      <button className={styles.btn} style={s} onClick={insertTodoList} title="Список с галочками">
-        <svg width="13" height="11" viewBox="0 0 13 11" fill="none">
-          <rect x="0.7" y="0.7" width="2.6" height="2.6" rx="0.6" stroke="currentColor" strokeWidth="1.2"/>
-          <rect x="4" y="0.5" width="9" height="2" rx="1" fill="currentColor"/>
-          <rect x="0.7" y="4.7" width="2.6" height="2.6" rx="0.6" stroke="currentColor" strokeWidth="1.2"/>
-          <path d="M1.3 6.1l0.75 0.75 1.3-1.3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
-          <rect x="4" y="4.5" width="9" height="2" rx="1" fill="currentColor"/>
-          <rect x="0.7" y="8.7" width="2.6" height="2.6" rx="0.6" stroke="currentColor" strokeWidth="1.2"/>
-          <rect x="4" y="8.5" width="9" height="2" rx="1" fill="currentColor"/>
-        </svg>
-      </button>
+      {/* List type dropdown */}
+      <div className={styles.sizeWrap} ref={listWrapRef}>
+        <button
+          className={styles.btn}
+          style={s}
+          onTouchStart={(e) => { e.preventDefault(); setShowListDrop(v => !v) }}
+          onClick={() => setShowListDrop(v => !v)}
+          title="Списки"
+        >
+          <svg width="13" height="11" viewBox="0 0 13 11" fill="currentColor">
+            <circle cx="1.5" cy="1.5" r="1.5"/>
+            <rect x="4" y="0.5" width="9" height="2" rx="1"/>
+            <circle cx="1.5" cy="5.5" r="1.5"/>
+            <rect x="4" y="4.5" width="9" height="2" rx="1"/>
+            <circle cx="1.5" cy="9.5" r="1.5"/>
+            <rect x="4" y="8.5" width="9" height="2" rx="1"/>
+          </svg>
+        </button>
+
+        {showListDrop && (
+          <div className={styles.sizeDrop} style={{ minWidth: 160 }} onMouseDown={(e) => e.preventDefault()}>
+            <button
+              className={styles.listOption}
+              style={{ color: textColor }}
+              onTouchStart={(e) => { e.preventDefault(); handleListOption('ul') }}
+              onClick={() => handleListOption('ul')}
+            >
+              <svg width="11" height="10" viewBox="0 0 11 10" fill="currentColor" style={{ flexShrink: 0 }}>
+                <circle cx="1.2" cy="1.5" r="1.2"/><rect x="3.5" y="0.5" width="7.5" height="2" rx="0.8"/>
+                <circle cx="1.2" cy="5" r="1.2"/><rect x="3.5" y="4" width="7.5" height="2" rx="0.8"/>
+                <circle cx="1.2" cy="8.5" r="1.2"/><rect x="3.5" y="7.5" width="7.5" height="2" rx="0.8"/>
+              </svg>
+              Список
+            </button>
+            <button
+              className={styles.listOption}
+              style={{ color: textColor }}
+              onTouchStart={(e) => { e.preventDefault(); handleListOption('ol') }}
+              onClick={() => handleListOption('ol')}
+            >
+              <svg width="11" height="10" viewBox="0 0 11 10" fill="currentColor" style={{ flexShrink: 0 }}>
+                <rect x="0.3" y="0" width="2" height="3" rx="0.6"/>
+                <rect x="3.5" y="0.5" width="7.5" height="2" rx="0.8"/>
+                <rect x="0.3" y="3.5" width="2" height="3" rx="0.6"/>
+                <rect x="3.5" y="4" width="7.5" height="2" rx="0.8"/>
+                <rect x="0.3" y="7" width="2" height="3" rx="0.6"/>
+                <rect x="3.5" y="7.5" width="7.5" height="2" rx="0.8"/>
+              </svg>
+              Нумерованный
+            </button>
+            <div className={styles.dropSep} />
+            <button
+              className={styles.listOption}
+              style={{ color: textColor }}
+              onTouchStart={(e) => { e.preventDefault(); handleListOption('todo') }}
+              onClick={() => handleListOption('todo')}
+            >
+              <svg width="11" height="10" viewBox="0 0 11 10" fill="none" style={{ flexShrink: 0 }}>
+                <rect x="0.6" y="0.6" width="2.3" height="2.3" rx="0.5" stroke="currentColor" strokeWidth="1.1"/>
+                <rect x="3.5" y="0.5" width="7.5" height="2" rx="0.8" fill="currentColor"/>
+                <rect x="0.6" y="3.8" width="2.3" height="2.3" rx="0.5" stroke="currentColor" strokeWidth="1.1"/>
+                <path d="M1.1 5l0.65 0.65 1.1-1.1" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="3.5" y="4" width="7.5" height="2" rx="0.8" fill="currentColor"/>
+                <rect x="0.6" y="7" width="2.3" height="2.3" rx="0.5" stroke="currentColor" strokeWidth="1.1"/>
+                <rect x="3.5" y="7.5" width="7.5" height="2" rx="0.8" fill="currentColor"/>
+              </svg>
+              Галочки
+            </button>
+          </div>
+        )}
+      </div>
 
       <span className={styles.sep} />
 

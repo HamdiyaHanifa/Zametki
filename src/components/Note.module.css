@@ -193,24 +193,25 @@
 
 .editor ul[data-todo] { list-style: none; padding-left: 4px; margin: 2px 0; }
 
-.editor ul[data-todo] > li { position: relative; padding-left: 20px; min-height: 1.4em; }
-
-.editor .todo-cb {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 18px;
-  text-align: center;
-  cursor: pointer;
-  user-select: none;
-  font-size: 13px;
-  line-height: inherit;
-  -webkit-user-modify: read-only;
+.editor ul[data-todo] > li {
+  position: relative;
+  padding-left: 20px;
+  min-height: 1.4em;
+  cursor: text;
 }
 
-.editor .todo-cb::before { content: '☐'; }
+.editor ul[data-todo] > li::before {
+  content: '☐';
+  position: absolute;
+  left: 1px;
+  top: 0;
+  font-size: 13px;
+  line-height: inherit;
+  cursor: pointer;
+  user-select: none;
+}
 
-.editor ul[data-todo] > li[data-checked="true"] .todo-cb::before { content: '☑'; }
+.editor ul[data-todo] > li[data-checked="true"]::before { content: '☑'; }
 
 .editor ul[data-todo] > li[data-checked="true"] {
   opacity: 0.45;
