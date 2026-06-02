@@ -1,6 +1,7 @@
 import { useCallback, useState, useRef } from 'react'
 import { useDrag } from '../hooks/useDrag'
 import { PALETTE } from '../palette'
+import { NoteHandles } from './NoteHandles'
 import { countWords, wordForm, noteWordCount } from '../utils/wordCount'
 import styles from './ProfileNote.module.css'
 
@@ -16,8 +17,12 @@ const DEFAULT_FIELDS = [
 export function ProfileNote({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale, onResetWordCount }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
+  const [showHandles, setShowHandles] = useState(false)
   const color = PALETTE[note.colorIndex % PALETTE.length]
-  const fileRef = useRef(null)
+  const fileRef    = useRef(null)
+  const noteRef    = useRef(null)
+  const hideTimerRef = useRef(null)
+  const resizingRef  = useRef(false)
 
   const w = note.width || 260
   const fields = note.fields ?? DEFAULT_FIELDS
@@ -54,29 +59,43 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onFocus, onOpenF
     e.target.value = ''
   }, [note.id, onUpdate])
 
-  const handleResizeMouseDown = useCallback((e) => {
-    e.stopPropagation()
-    const sx = e.clientX, sw = w, s = scale || 1
-    const onMv = (ev) => onUpdate(note.id, { width: Math.max(MIN_W, sw + (ev.clientX - sx) / s) })
-    const onUp = () => { window.removeEventListener('mousemove', onMv); window.removeEventListener('mouseup', onUp) }
-    window.addEventListener('mousemove', onMv); window.addEventListener('mouseup', onUp)
-  }, [note.id, onUpdate, w, scale])
+  const scheduleHide = useCallback(() => {
+    clearTimeout(hideTimerRef.current)
+    hideTimerRef.current = setTimeout(() => {
+      if (!resizingRef.current) setShowHandles(false)
+    }, 150)
+  }, [])
 
-  const handleResizeTouchStart = useCallback((e) => {
-    e.stopPropagation()
-    const sx = e.touches[0].clientX, sw = w, s = scale || 1
-    const onMv = (ev) => { ev.preventDefault(); onUpdate(note.id, { width: Math.max(MIN_W, sw + (ev.touches[0].clientX - sx) / s) }) }
-    const onUp = () => { window.removeEventListener('touchmove', onMv); window.removeEventListener('touchend', onUp) }
-    window.addEventListener('touchmove', onMv, { passive: false }); window.addEventListener('touchend', onUp)
-  }, [note.id, onUpdate, w, scale])
+  const cancelHide = useCallback(() => clearTimeout(hideTimerRef.current), [])
+
+  const getProfileState = useCallback(() => ({
+    x: note.x,
+    y: note.y,
+    w: note.width || 260,
+    h: noteRef.current
+      ? noteRef.current.getBoundingClientRect().height / (scale || 1)
+      : 300,
+  }), [note, scale])
+
+  const handleProfileResize = useCallback(({ x, w: newW }) => {
+    onUpdate(note.id, { x, width: newW })
+  }, [note.id, onUpdate])
+
+  const handleResizingChange = useCallback((active) => {
+    resizingRef.current = active
+    if (!active) scheduleHide()
+  }, [scheduleHide])
 
   return (
     <div
+      ref={noteRef}
       className={styles.note}
       style={{ left: note.x, top: note.y, zIndex, width: w }}
       onMouseDown={(e) => { e.stopPropagation(); onFocus(note.id) }}
       onTouchStart={(e) => { e.stopPropagation(); onFocus(note.id) }}
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setConfirmDelete(false) }}
+      onMouseEnter={() => { cancelHide(); setShowHandles(true) }}
+      onMouseLeave={scheduleHide}
     >
       {/* ── Header ── */}
       <div
@@ -278,13 +297,21 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onFocus, onOpenF
             })()}
           </div>
 
-          {/* Right-edge resize */}
-          <div
-            className={styles.resizeEdge}
-            onMouseDown={handleResizeMouseDown}
-            onTouchStart={handleResizeTouchStart}
-          />
         </div>
+      )}
+      {showHandles && !note.minimized && (
+        <NoteHandles
+          noteRef={noteRef}
+          scale={scale}
+          getState={getProfileState}
+          onResize={handleProfileResize}
+          color={color}
+          minW={MIN_W}
+          minH={80}
+          onResizingChange={handleResizingChange}
+          onHandleEnter={cancelHide}
+          onHandleLeave={scheduleHide}
+        />
       )}
     </div>
   )
