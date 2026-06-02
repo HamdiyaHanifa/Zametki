@@ -16,12 +16,27 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 7px 8px;
+  padding: 6px 8px;
   cursor: grab;
   border-bottom: 1px solid rgba(0, 0, 0, 0.07);
 }
 
 .header:active { cursor: grabbing; }
+
+/* Dedicated drag grip — explicit large touch target */
+.dragGrip {
+  flex-shrink: 0;
+  width: 20px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  margin-left: -2px;
+  touch-action: none;
+}
+
+.dragGrip:active { cursor: grabbing; }
 
 .titleInput {
   flex: 1;

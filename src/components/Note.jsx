@@ -121,7 +121,23 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
         onTouchStart={handleHeaderTouchStart}
         onDoubleClick={() => onUpdate(note.id, { minimized: !note.minimized })}
       >
-        {note.minimized && isImage && <img src={note.imageUrl} className={styles.thumb} draggable={false} />}
+        {/* Dedicated drag grip — large touch target, always draggable */}
+        <div
+          className={styles.dragGrip}
+          onMouseDown={handleHeaderMouseDown}
+          onTouchStart={handleHeaderTouchStart}
+        >
+          {note.minimized && isImage
+            ? <img src={note.imageUrl} className={styles.thumb} draggable={false} />
+            : (
+              <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" style={{ color: color.text, opacity: 0.35 }}>
+                <circle cx="2.5" cy="3"  r="1.4"/><circle cx="7.5" cy="3"  r="1.4"/>
+                <circle cx="2.5" cy="8"  r="1.4"/><circle cx="7.5" cy="8"  r="1.4"/>
+                <circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/>
+              </svg>
+            )
+          }
+        </div>
         <input
           className={styles.titleInput}
           style={{ color: color.text }}
