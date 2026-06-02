@@ -2,6 +2,7 @@ import { useCallback, useState, useRef, useEffect } from 'react'
 import { useDrag } from '../hooks/useDrag'
 import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
+import { countWords, wordForm } from '../utils/wordCount'
 import styles from './Note.module.css'
 
 const DEFAULT_W_TEXT = 280
@@ -222,6 +223,11 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
                 onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}
                 onMouseUp={saveRange} onKeyUp={saveRange} onTouchEnd={saveRange} onBlur={saveRange}
                 data-placeholder="Введите текст заметки..." />
+              {(() => { const wc = countWords(note.htmlContent); return wc > 0 ? (
+                <div className={styles.wordCount} style={{ color: color.text }}>
+                  {wc} {wordForm(wc)}
+                </div>
+              ) : null })()}
             </>
           )}
           {/* Corner resize handle */}

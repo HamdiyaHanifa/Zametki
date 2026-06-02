@@ -149,6 +149,16 @@
   text-decoration: line-through;
 }
 
+.wordCount {
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.35;
+  padding: 6px 0 10px;
+  pointer-events: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+
 /* Profile focus layout */
 .profileWrap {
   flex: 1;

@@ -181,6 +181,15 @@
   pointer-events: none;
 }
 
+.wordCount {
+  font-size: 10px;
+  opacity: 0.35;
+  text-align: right;
+  padding: 2px 32px 4px 8px;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* ── Corner resize handle ── */
 .resizeCorner {
   position: absolute;

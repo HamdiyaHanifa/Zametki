@@ -2,6 +2,7 @@ import { useRef, useCallback, useEffect, useState } from 'react'
 import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
 import { FloatingNote } from './FloatingNote'
+import { countWords, wordForm } from '../utils/wordCount'
 import styles from './FocusView.module.css'
 
 const DEFAULT_FIELDS = [
@@ -259,6 +260,11 @@ export function FocusView({
             onBlur={saveRange}
             data-placeholder="Начните писать..."
           />
+          {(() => { const wc = countWords(note.htmlContent); return wc > 0 ? (
+            <div className={styles.wordCount} style={{ color: color.text }}>
+              {wc} {wordForm(wc)}
+            </div>
+          ) : null })()}
         </>
       )}
 
