@@ -234,6 +234,23 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
+/* ── Blind mode reveal ── */
+.blindReveal {
+  padding: 4px 12px 5px;
+  font-size: 12px;
+  font-style: italic;
+  border-top: 1px solid;
+  min-height: 22px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.65;
+}
+
+.blindRevealHint {
+  opacity: 0.45;
+}
+
 /* ── Corner resize handle ── */
 .resizeCorner {
   position: absolute;

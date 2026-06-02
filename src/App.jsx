@@ -94,6 +94,7 @@ export default function App() {
   const [timerDangerProgress, setTimerDangerProgress] = useState(0)
   const [timerDangerActive, setTimerDangerActive] = useState(false)
   const [timerDangerResetSignal, setTimerDangerResetSignal] = useState(null)
+  const [timerBlindMode, setTimerBlindMode] = useState('off')
 
   const focusedNoteRef = useRef(null)
   const updateNoteRef = useRef(null)
@@ -619,6 +620,7 @@ export default function App() {
         dangerInactiveProgress={timerDangerProgress}
         visible={showFocusMode}
         onShow={() => setShowFocusMode(true)}
+        onBlindModeChange={setTimerBlindMode}
       />
       {showPanel && (
         <NotesPanel
@@ -652,6 +654,7 @@ export default function App() {
           focusModeVisible={showFocusMode}
           onTimerDangerActivity={handleTimerDangerActivity}
           timerDangerResetSignal={timerDangerResetSignal}
+          blindMode={timerBlindMode}
         />
       )}
       <div
@@ -697,6 +700,7 @@ export default function App() {
                 zIndex={order.indexOf(note.id) + 1}
                 onResetWordCount={resetNoteWordCount}
                 onTimerDangerActivity={handleTimerDangerActivity}
+                blindMode={timerBlindMode}
               />
             )
           )}

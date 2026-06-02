@@ -12,7 +12,21 @@ const DEFAULT_H_IMG  = 220
 const MIN_W = 180
 const MIN_H = 80
 
-export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale, onResetWordCount, onTimerDangerActivity }) {
+function lastVisible(html, mode) {
+  const el = document.createElement('div')
+  el.innerHTML = html || ''
+  const text = (el.textContent || '').replace(/\s+/g, ' ').trim()
+  if (!text) return ''
+  if (mode === 'word') return text.match(/\S+$/)?.[0] || ''
+  const parts = text.split(/[.!?]\s+|\n/)
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i].trim()
+    if (p) return p
+  }
+  return text
+}
+
+export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale, onResetWordCount, onTimerDangerActivity, blindMode = 'off' }) {
   const [showPicker, setShowPicker] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const color = PALETTE[note.colorIndex % PALETTE.length]
@@ -218,12 +232,20 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
             <>
               <FormatBar editorRef={editorRef} savedRangeRef={savedRangeRef} textColor={color.text} bodyColor={color.body} />
               <div ref={editorRef} className={styles.editor}
-                style={{ color: color.text, height: h }}
+                style={{ color: blindMode !== 'off' ? 'transparent' : color.text, caretColor: color.text, height: h }}
                 contentEditable suppressContentEditableWarning
                 onInput={handleInput}
                 onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}
                 onMouseUp={saveRange} onKeyUp={saveRange} onTouchEnd={saveRange} onBlur={saveRange}
                 data-placeholder="Введите текст заметки..." />
+              {blindMode !== 'off' && (
+                <div className={styles.blindReveal} style={{ color: color.text, borderTopColor: `${color.text}25` }}>
+                  {blindMode === 'all'
+                    ? <span className={styles.blindRevealHint}>текст скрыт</span>
+                    : <span>{lastVisible(note.htmlContent, blindMode) || '…'}</span>
+                  }
+                </div>
+              )}
               {(() => {
                 const raw = countWords(note.htmlContent)
                 if (raw === 0) return null

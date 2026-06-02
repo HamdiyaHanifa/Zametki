@@ -451,6 +451,54 @@
   border-radius: 2px;
 }
 
+/* ── Blind mode setup ── */
+.blindSection {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.blindSectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3a2828;
+}
+
+.blindOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.blindOption {
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  background: transparent;
+  border-radius: 9px;
+  padding: 6px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  color: #3a2828;
+  transition: background 0.12s;
+  text-align: center;
+}
+
+.blindOption:hover { background: rgba(0, 0, 0, 0.05); }
+
+.blindOptionActive {
+  background: #7986CB !important;
+  color: #fff !important;
+  border-color: #7986CB !important;
+}
+
+.blindHint {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+  line-height: 1.4;
+}
+
 /* ── Done danger ── */
 .dangerFailMsg {
   font-size: 12px;

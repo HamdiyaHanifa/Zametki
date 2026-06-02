@@ -7,7 +7,7 @@ const DANGER_PRESETS = [5, 10, 15, 20, 30]
 const R = 50
 const CIRC = 2 * Math.PI * R
 
-export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, dangerInactiveProgress = 0, visible = true, onShow }) {
+export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, dangerInactiveProgress = 0, visible = true, onShow, onBlindModeChange }) {
   const [phase, setPhase] = useState('setup') // 'setup' | 'active' | 'done'
   const [duration, setDuration] = useState(25)
   const [customVal, setCustomVal] = useState('')
@@ -19,6 +19,7 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
   const [dangerEnabled, setDangerEnabled] = useState(false)
   const [dangerInactivitySec, setDangerInactivitySec] = useState(5)
   const [dangerFailed, setDangerFailed] = useState(false)
+  const [blindMode, setBlindMode] = useState('off') // 'off'|'all'|'sentence'|'word'
   const [pos, setPos] = useState({ x: null, y: null })
   const [isCollapsed, setIsCollapsed] = useState(false)
 
@@ -28,12 +29,16 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
   const dangerEnabledRef = useRef(false)
   const dangerInactivitySecRef = useRef(5)
   const onDangerStopRef = useRef(onDangerStop)
+  const blindModeRef = useRef('off')
+  const onBlindModeChangeRef = useRef(onBlindModeChange)
   const sessionStartTimeRef = useRef(0)
 
   useEffect(() => { durationRef.current = duration }, [duration])
   useEffect(() => { dangerEnabledRef.current = dangerEnabled }, [dangerEnabled])
   useEffect(() => { dangerInactivitySecRef.current = dangerInactivitySec }, [dangerInactivitySec])
   useEffect(() => { onDangerStopRef.current = onDangerStop }, [onDangerStop])
+  useEffect(() => { blindModeRef.current = blindMode }, [blindMode])
+  useEffect(() => { onBlindModeChangeRef.current = onBlindModeChange }, [onBlindModeChange])
 
   const wordsWritten = Math.max(0, totalWords - startWords)
   const mm = String(Math.floor(remaining / 60)).padStart(2, '0')
@@ -57,15 +62,16 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
     setDangerFailed(false)
     sessionStartTimeRef.current = Date.now()
     setPhase('active')
+    onBlindModeChangeRef.current?.(blindModeRef.current)
 
     if (dangerEnabledRef.current) {
       onDangerStart?.(dangerInactivitySecRef.current, () => {
-        // Called by FocusView when inactivity threshold exceeded
         clearInterval(intervalRef.current)
         setElapsedSec(Math.round((Date.now() - sessionStartTimeRef.current) / 1000))
         setDangerFailed(true)
         setStoppedEarly(false)
         setPhase('done')
+        onBlindModeChangeRef.current?.('off')
       })
     }
   }, [totalWords, onDangerStart])
@@ -76,6 +82,7 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
     setStoppedEarly(true)
     setDangerFailed(dangerEnabledRef.current)
     setPhase('done')
+    onBlindModeChangeRef.current?.('off')
     if (dangerEnabledRef.current) {
       onDangerStopRef.current?.(false) // danger mode manual stop = delete text
     }
@@ -86,6 +93,7 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
       clearInterval(intervalRef.current)
       onDangerStopRef.current?.(true) // closing panel = keep text (no penalty)
     }
+    onBlindModeChangeRef.current?.('off')
     onClose()
   }, [phase, onClose])
 
@@ -130,6 +138,7 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
           setStoppedEarly(false)
           setDangerFailed(false)
           setPhase('done')
+          onBlindModeChangeRef.current?.('off')
           if (dangerEnabledRef.current) {
             onDangerStopRef.current?.(true) // timer completed = save text
           }
@@ -259,6 +268,32 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
                 </div>
                 <div className={styles.dangerHint2}>...и текст исчезнет</div>
               </>
+            )}
+          </div>
+
+          {/* Blind mode */}
+          <div className={styles.blindSection}>
+            <div className={styles.blindSectionTitle}>Слепой режим</div>
+            <div className={styles.blindOptions}>
+              {[
+                { value: 'off',      label: 'Выкл' },
+                { value: 'all',      label: 'Всё скрыто' },
+                { value: 'sentence', label: 'Предложение' },
+                { value: 'word',     label: 'Слово' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  className={`${styles.blindOption} ${blindMode === opt.value ? styles.blindOptionActive : ''}`}
+                  onClick={() => setBlindMode(opt.value)}
+                >{opt.label}</button>
+              ))}
+            </div>
+            {blindMode !== 'off' && (
+              <div className={styles.blindHint}>
+                {blindMode === 'all' && 'Весь текст невидим до конца таймера'}
+                {blindMode === 'sentence' && 'Видно только текущее предложение'}
+                {blindMode === 'word' && 'Видно только последнее слово'}
+              </div>
             )}
           </div>
 

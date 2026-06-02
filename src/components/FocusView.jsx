@@ -12,6 +12,20 @@ const DEFAULT_FIELDS = [
   { id: 4, label: 'Роль', value: '' },
 ]
 
+function lastVisible(html, mode) {
+  const el = document.createElement('div')
+  el.innerHTML = html || ''
+  const text = (el.textContent || '').replace(/\s+/g, ' ').trim()
+  if (!text) return ''
+  if (mode === 'word') return text.match(/\S+$/)?.[0] || ''
+  const parts = text.split(/[.!?]\s+|\n/)
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i].trim()
+    if (p) return p
+  }
+  return text
+}
+
 export function FocusView({
   note, onUpdate, onClose,
   notes, onSwitchFocus,
@@ -22,6 +36,7 @@ export function FocusView({
   focusModeVisible = false,
   onTimerDangerActivity,
   timerDangerResetSignal,
+  blindMode = 'off',
 }) {
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isProfile = note.noteType === 'profile'
@@ -412,7 +427,7 @@ export function FocusView({
           <div
             ref={editorRef}
             className={`${styles.editor} ${dangerPhase === 'dying' ? styles.editorDying : ''}`}
-            style={{ color: color.text }}
+            style={{ color: blindMode !== 'off' ? 'transparent' : color.text, caretColor: color.text }}
             contentEditable={dangerPhase !== 'dying'}
             suppressContentEditableWarning
             onInput={handleInput}
@@ -423,6 +438,14 @@ export function FocusView({
             onBlur={saveRange}
             data-placeholder="Начните писать..."
           />
+          {blindMode !== 'off' && (
+            <div className={styles.blindReveal} style={{ color: color.text, borderTopColor: `${color.text}15` }}>
+              {blindMode === 'all'
+                ? <span className={styles.blindRevealHint}>текст скрыт до конца таймера</span>
+                : <span className={styles.blindRevealText}>{lastVisible(note.htmlContent, blindMode) || '…'}</span>
+              }
+            </div>
+          )}
           {(() => { const wc = countWords(note.htmlContent); return wc > 0 ? (
             <div className={styles.wordCount} style={{ color: color.text }}>
               {wc} {wordForm(wc)}

@@ -308,6 +308,30 @@
 
 .dangerCancelBtn:hover { opacity: 0.8; }
 
+/* ── Blind mode reveal ── */
+.blindReveal {
+  flex-shrink: 0;
+  padding: 12px 28px 14px;
+  max-width: 780px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  border-top: 1px solid;
+  font-size: 15px;
+  font-style: italic;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.blindRevealHint {
+  opacity: 0.25;
+}
+
+.blindRevealText {
+  opacity: 0.6;
+}
+
 /* Profile focus layout */
 .profileWrap {
   flex: 1;
