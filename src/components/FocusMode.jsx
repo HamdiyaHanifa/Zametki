@@ -13,7 +13,12 @@ export function FocusMode({ totalWords, onClose }) {
   const [remaining, setRemaining] = useState(0)
   const [paused, setPaused] = useState(false)
   const [startWords, setStartWords] = useState(0)
+  const [elapsedSec, setElapsedSec] = useState(0)
+  const [stoppedEarly, setStoppedEarly] = useState(false)
   const intervalRef = useRef(null)
+  const durationRef = useRef(duration)
+
+  useEffect(() => { durationRef.current = duration }, [duration])
 
   const wordsWritten = Math.max(0, totalWords - startWords)
   const mm = String(Math.floor(remaining / 60)).padStart(2, '0')
@@ -21,13 +26,28 @@ export function FocusMode({ totalWords, onClose }) {
   const progress = duration > 0 ? 1 - remaining / (duration * 60) : 0
   const dashOffset = CIRC * (1 - progress)
 
+  const formatElapsed = (sec) => {
+    const m = Math.floor(sec / 60)
+    const s = sec % 60
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
+
   const startSession = useCallback((min) => {
     clearInterval(intervalRef.current)
     setRemaining(min * 60)
     setStartWords(totalWords)
     setPaused(false)
+    setStoppedEarly(false)
+    setElapsedSec(0)
     setPhase('active')
   }, [totalWords])
+
+  const stopSession = useCallback(() => {
+    clearInterval(intervalRef.current)
+    setElapsedSec(durationRef.current * 60 - remaining)
+    setStoppedEarly(true)
+    setPhase('done')
+  }, [remaining])
 
   useEffect(() => {
     if (phase !== 'active' || paused) return
@@ -35,6 +55,8 @@ export function FocusMode({ totalWords, onClose }) {
       setRemaining(r => {
         if (r <= 1) {
           clearInterval(intervalRef.current)
+          setElapsedSec(durationRef.current * 60)
+          setStoppedEarly(false)
           setPhase('done')
           return 0
         }
@@ -121,18 +143,16 @@ export function FocusMode({ totalWords, onClose }) {
             <button className={styles.pauseBtn} onClick={() => setPaused(v => !v)}>
               {paused ? '▶' : '⏸'}
             </button>
-            <button className={styles.stopBtn} onClick={() => {
-              clearInterval(intervalRef.current)
-              setPhase('setup')
-              setRemaining(0)
-            }}>■</button>
+            <button className={styles.stopBtn} onClick={stopSession}>■</button>
           </div>
         </>
       )}
 
       {phase === 'done' && (
         <>
-          <div className={styles.doneTitle}>Время вышло!</div>
+          <div className={styles.doneTitle}>
+            {stoppedEarly ? 'Сессия прервана' : 'Время вышло!'}
+          </div>
           <div className={styles.doneStats}>
             <div className={styles.doneStat}>
               <span className={styles.doneNum}>{wordsWritten}</span>
@@ -140,13 +160,13 @@ export function FocusMode({ totalWords, onClose }) {
             </div>
             <div className={styles.doneDivider}/>
             <div className={styles.doneStat}>
-              <span className={styles.doneNum}>{duration}</span>
-              <span className={styles.doneLabel}>минут</span>
+              <span className={styles.doneNum}>{formatElapsed(elapsedSec)}</span>
+              <span className={styles.doneLabel}>мм:сс</span>
             </div>
           </div>
           <div className={styles.doneControls}>
             <button className={styles.startBtn} onClick={() => { setPhase('setup'); setCustomVal('') }}>
-              Ещё раз
+              Новая сессия
             </button>
             <button className={styles.closeOutlineBtn} onClick={onClose}>Закрыть</button>
           </div>
