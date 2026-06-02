@@ -89,6 +89,8 @@ export default function App() {
   const [focusedNoteId, setFocusedNoteId] = useState(null)
   const [showPanel, setShowPanel] = useState(false)
   const [navigating, setNavigating] = useState(false)
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedNoteIds, setSelectedNoteIds] = useState(new Set())
   const [floatingNotes, setFloatingNotes] = useState([])
   const floatUidRef = useRef(0)
   const floatPosRef = useRef({})
@@ -510,6 +512,13 @@ export default function App() {
         onTogglePanel={() => setShowPanel((v) => !v)}
         noteCount={notes.length}
         totalWords={notes.reduce((sum, n) => sum + countWords(n.htmlContent) + countWords(n.description), 0)}
+        selectionMode={selectionMode}
+        selectedWords={[...selectedNoteIds].reduce((sum, id) => {
+          const n = notes.find(x => x.id === id)
+          return sum + (n ? countWords(n.htmlContent) + countWords(n.description) : 0)
+        }, 0)}
+        selectedCount={selectedNoteIds.size}
+        onToggleSelection={() => { setSelectionMode(v => !v); setSelectedNoteIds(new Set()) }}
         onHome={openHome}
         canvasName={activeCanvas?.name}
       />
@@ -558,8 +567,13 @@ export default function App() {
             transition: navigating ? 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)' : undefined,
           }}
         >
-          {notes.map((note) =>
-            note.noteType === 'profile' ? (
+          {notes.map((note) => {
+            const toggleSelect = () => setSelectedNoteIds(prev => {
+              const next = new Set(prev)
+              next.has(note.id) ? next.delete(note.id) : next.add(note.id)
+              return next
+            })
+            return note.noteType === 'profile' ? (
               <ProfileNote
                 key={note.id}
                 note={note}
@@ -570,6 +584,9 @@ export default function App() {
                 onOpenFocus={setFocusedNoteId}
                 scale={vpState.scale}
                 zIndex={order.indexOf(note.id) + 1}
+                selectionMode={selectionMode}
+                selected={selectedNoteIds.has(note.id)}
+                onToggleSelect={toggleSelect}
               />
             ) : (
               <Note
@@ -582,9 +599,12 @@ export default function App() {
                 onOpenFocus={setFocusedNoteId}
                 scale={vpState.scale}
                 zIndex={order.indexOf(note.id) + 1}
+                selectionMode={selectionMode}
+                selected={selectedNoteIds.has(note.id)}
+                onToggleSelect={toggleSelect}
               />
             )
-          )}
+          })}
         </div>
         {isDragOver && (
           <div className={styles.dropHint}>Отпустите чтобы добавить изображение</div>
