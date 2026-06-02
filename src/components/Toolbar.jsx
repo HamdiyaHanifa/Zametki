@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from 'react'
 import { noteWordCount, wordForm } from '../utils/wordCount'
 import styles from './Toolbar.module.css'
 
-export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onHome, canvasName }) {
+export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName }) {
   const fileRef = useRef(null)
   const importRef = useRef(null)
   const panelRef = useRef(null)
@@ -155,6 +155,13 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
           <rect x="1" y="10.5" width="13" height="2.5" rx="1.2" fill="currentColor"/>
         </svg>
         {noteCount > 0 && <span className={styles.badge}>{noteCount}</span>}
+      </button>
+      <button
+        className={`${styles.focusBtn} ${focusActive ? styles.focusBtnActive : ''}`}
+        onClick={onToggleFocus}
+        title="Режим фокуса"
+      >
+        ⏱ Фокус
       </button>
       <button className={styles.photoBtn} onClick={() => fileRef.current?.click()} title="Добавить фото">
         📷 Фото

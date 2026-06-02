@@ -3,6 +3,7 @@ import { Note } from './components/Note'
 import { ProfileNote } from './components/ProfileNote'
 import { Toolbar } from './components/Toolbar'
 import { FocusView } from './components/FocusView'
+import { FocusMode } from './components/FocusMode'
 import { countWords, noteWordCount } from './utils/wordCount'
 import { NotesPanel } from './components/NotesPanel'
 import { HomeScreen } from './components/HomeScreen'
@@ -89,6 +90,7 @@ export default function App() {
   const [focusedNoteId, setFocusedNoteId] = useState(null)
   const [showPanel, setShowPanel] = useState(false)
   const [navigating, setNavigating] = useState(false)
+  const [showFocusMode, setShowFocusMode] = useState(false)
   const [floatingNotes, setFloatingNotes] = useState([])
   const floatUidRef = useRef(0)
   const floatPosRef = useRef({})
@@ -533,9 +535,17 @@ export default function App() {
         notes={notes}
         onResetAllWordCounts={resetAllWordCounts}
         onResetNoteWordCount={resetNoteWordCount}
+        onToggleFocus={() => setShowFocusMode(v => !v)}
+        focusActive={showFocusMode}
         onHome={openHome}
         canvasName={activeCanvas?.name}
       />
+      {showFocusMode && (
+        <FocusMode
+          totalWords={notes.reduce((sum, n) => sum + noteWordCount(n), 0)}
+          onClose={() => setShowFocusMode(false)}
+        />
+      )}
       {showPanel && (
         <NotesPanel
           notes={notes}

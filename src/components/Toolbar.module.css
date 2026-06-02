@@ -133,8 +133,28 @@
   line-height: 1.4;
 }
 
-.photoBtn {
+.focusBtn {
   margin-left: auto;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.06);
+  color: #3a2828;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s, background 0.15s;
+}
+
+.focusBtn:hover { filter: brightness(0.88); }
+.focusBtn:active { transform: scale(0.97); }
+
+.focusBtnActive {
+  background: #C4B5E8;
+  color: #2a1860;
+}
+
+.photoBtn {
   padding: 8px 16px;
   background: #A8C4BC;
   color: #1a3830;
