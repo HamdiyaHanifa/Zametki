@@ -3,10 +3,11 @@ import { wordForm } from '../utils/wordCount'
 import styles from './FocusMode.module.css'
 
 const PRESETS = [10, 15, 25, 30, 45, 60]
+const DANGER_PRESETS = [5, 10, 15, 20, 30]
 const R = 50
 const CIRC = 2 * Math.PI * R
 
-export function FocusMode({ totalWords, onClose }) {
+export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, dangerInactiveProgress = 0 }) {
   const [phase, setPhase] = useState('setup') // 'setup' | 'active' | 'done'
   const [duration, setDuration] = useState(25)
   const [customVal, setCustomVal] = useState('')
@@ -15,10 +16,21 @@ export function FocusMode({ totalWords, onClose }) {
   const [startWords, setStartWords] = useState(0)
   const [elapsedSec, setElapsedSec] = useState(0)
   const [stoppedEarly, setStoppedEarly] = useState(false)
+  const [dangerEnabled, setDangerEnabled] = useState(false)
+  const [dangerInactivitySec, setDangerInactivitySec] = useState(5)
+  const [dangerFailed, setDangerFailed] = useState(false)
+
   const intervalRef = useRef(null)
   const durationRef = useRef(duration)
+  const dangerEnabledRef = useRef(false)
+  const dangerInactivitySecRef = useRef(5)
+  const onDangerStopRef = useRef(onDangerStop)
+  const sessionStartTimeRef = useRef(0)
 
   useEffect(() => { durationRef.current = duration }, [duration])
+  useEffect(() => { dangerEnabledRef.current = dangerEnabled }, [dangerEnabled])
+  useEffect(() => { dangerInactivitySecRef.current = dangerInactivitySec }, [dangerInactivitySec])
+  useEffect(() => { onDangerStopRef.current = onDangerStop }, [onDangerStop])
 
   const wordsWritten = Math.max(0, totalWords - startWords)
   const mm = String(Math.floor(remaining / 60)).padStart(2, '0')
@@ -39,15 +51,40 @@ export function FocusMode({ totalWords, onClose }) {
     setPaused(false)
     setStoppedEarly(false)
     setElapsedSec(0)
+    setDangerFailed(false)
+    sessionStartTimeRef.current = Date.now()
     setPhase('active')
-  }, [totalWords])
+
+    if (dangerEnabledRef.current) {
+      onDangerStart?.(dangerInactivitySecRef.current, () => {
+        // Called by FocusView when inactivity threshold exceeded
+        clearInterval(intervalRef.current)
+        setElapsedSec(Math.round((Date.now() - sessionStartTimeRef.current) / 1000))
+        setDangerFailed(true)
+        setStoppedEarly(false)
+        setPhase('done')
+      })
+    }
+  }, [totalWords, onDangerStart])
 
   const stopSession = useCallback(() => {
     clearInterval(intervalRef.current)
-    setElapsedSec(durationRef.current * 60 - remaining)
+    setElapsedSec(Math.round((Date.now() - sessionStartTimeRef.current) / 1000))
     setStoppedEarly(true)
+    setDangerFailed(dangerEnabledRef.current)
     setPhase('done')
-  }, [remaining])
+    if (dangerEnabledRef.current) {
+      onDangerStopRef.current?.(false) // danger mode manual stop = delete text
+    }
+  }, [])
+
+  const handleClose = useCallback(() => {
+    if (dangerEnabledRef.current && phase === 'active') {
+      clearInterval(intervalRef.current)
+      onDangerStopRef.current?.(true) // closing panel = keep text (no penalty)
+    }
+    onClose()
+  }, [phase, onClose])
 
   useEffect(() => {
     if (phase !== 'active' || paused) return
@@ -57,7 +94,11 @@ export function FocusMode({ totalWords, onClose }) {
           clearInterval(intervalRef.current)
           setElapsedSec(durationRef.current * 60)
           setStoppedEarly(false)
+          setDangerFailed(false)
           setPhase('done')
+          if (dangerEnabledRef.current) {
+            onDangerStopRef.current?.(true) // timer completed = save text
+          }
           return 0
         }
         return r - 1
@@ -68,9 +109,13 @@ export function FocusMode({ totalWords, onClose }) {
 
   useEffect(() => () => clearInterval(intervalRef.current), [])
 
+  const dangerBarColor = dangerInactiveProgress < 0.5 ? '#4caf50'
+                        : dangerInactiveProgress < 0.8 ? '#ff9800'
+                        : '#f44336'
+
   return (
     <div className={styles.panel}>
-      <button className={styles.closeBtn} onClick={onClose}>✕</button>
+      <button className={styles.closeBtn} onClick={handleClose}>✕</button>
 
       {phase === 'setup' && (
         <>
@@ -103,26 +148,59 @@ export function FocusMode({ totalWords, onClose }) {
             />
             <span className={styles.customUnit}>мин</span>
           </div>
+
+          {/* Danger mode toggle */}
+          <div className={styles.dangerSection}>
+            <label className={styles.dangerToggle}>
+              <input
+                type="checkbox"
+                checked={dangerEnabled}
+                onChange={e => setDangerEnabled(e.target.checked)}
+                className={styles.dangerCheckbox}
+              />
+              <span className={styles.dangerToggleLabel}>⚡ Опасный режим</span>
+            </label>
+            {dangerEnabled && (
+              <>
+                <div className={styles.dangerHint}>
+                  Текст сохранится только если таймер дойдёт до конца. Остановишься на...
+                </div>
+                <div className={styles.dangerTimeRow}>
+                  {DANGER_PRESETS.map(s => (
+                    <button
+                      key={s}
+                      className={`${styles.dangerTimeBtn} ${dangerInactivitySec === s ? styles.dangerTimeBtnActive : ''}`}
+                      onClick={() => setDangerInactivitySec(s)}
+                    >
+                      {s}<span className={styles.dangerTimeBtnUnit}>с</span>
+                    </button>
+                  ))}
+                </div>
+                <div className={styles.dangerHint2}>...и текст исчезнет</div>
+              </>
+            )}
+          </div>
+
           <button
-            className={styles.startBtn}
+            className={`${styles.startBtn} ${dangerEnabled ? styles.startBtnDanger : ''}`}
             onClick={() => startSession(duration)}
             disabled={!duration || duration < 1}
           >
-            ▶ Начать
+            {dangerEnabled ? '⚡ Начать' : '▶ Начать'}
           </button>
         </>
       )}
 
       {phase === 'active' && (
         <>
-          <div className={styles.title}>{paused ? 'Пауза' : 'Фокус'}</div>
+          <div className={styles.title}>{paused ? 'Пауза' : (dangerEnabled ? '⚡ Опасно' : 'Фокус')}</div>
           <div className={styles.ringWrap}>
             <svg width="120" height="120" viewBox="0 0 120 120" className={styles.ring}>
               <circle cx="60" cy="60" r={R} fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth="8"/>
               <circle
                 cx="60" cy="60" r={R}
                 fill="none"
-                stroke={paused ? '#C4B5E8' : '#E8A4AE'}
+                stroke={paused ? '#C4B5E8' : dangerEnabled ? '#f44336' : '#E8A4AE'}
                 strokeWidth="8"
                 strokeLinecap="round"
                 strokeDasharray={CIRC}
@@ -139,6 +217,18 @@ export function FocusMode({ totalWords, onClose }) {
             <span className={styles.wordsNum}>{wordsWritten}</span>
             <span className={styles.wordsLabel}>{wordForm(wordsWritten)} за сессию</span>
           </div>
+          {dangerEnabled && (
+            <div className={styles.dangerProgressWrap}>
+              <div
+                className={styles.dangerProgressBar}
+                style={{
+                  width: `${Math.max(0, (1 - dangerInactiveProgress) * 100)}%`,
+                  background: dangerBarColor,
+                  transition: 'width 0.08s linear, background 0.3s ease',
+                }}
+              />
+            </div>
+          )}
           <div className={styles.controls}>
             <button className={styles.pauseBtn} onClick={() => setPaused(v => !v)}>
               {paused ? '▶' : '⏸'}
@@ -151,8 +241,11 @@ export function FocusMode({ totalWords, onClose }) {
       {phase === 'done' && (
         <>
           <div className={styles.doneTitle}>
-            {stoppedEarly ? 'Сессия прервана' : 'Время вышло!'}
+            {dangerFailed ? '💀 Провалено' : stoppedEarly && dangerEnabled ? 'Остановлено' : stoppedEarly ? 'Сессия прервана' : '✓ Завершено!'}
           </div>
+          {dangerFailed || (stoppedEarly && dangerEnabled) ? (
+            <div className={styles.dangerFailMsg}>Написанный текст удалён</div>
+          ) : null}
           <div className={styles.doneStats}>
             <div className={styles.doneStat}>
               <span className={styles.doneNum}>{wordsWritten}</span>
@@ -165,10 +258,10 @@ export function FocusMode({ totalWords, onClose }) {
             </div>
           </div>
           <div className={styles.doneControls}>
-            <button className={styles.startBtn} onClick={() => { setPhase('setup'); setCustomVal('') }}>
+            <button className={styles.startBtn} onClick={() => { setPhase('setup'); setCustomVal(''); setDangerFailed(false) }}>
               Новая сессия
             </button>
-            <button className={styles.closeOutlineBtn} onClick={onClose}>Закрыть</button>
+            <button className={styles.closeOutlineBtn} onClick={handleClose}>Закрыть</button>
           </div>
         </>
       )}
