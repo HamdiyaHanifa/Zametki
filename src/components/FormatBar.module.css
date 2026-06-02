@@ -136,6 +136,50 @@
   opacity: 0.75;
 }
 
+/* ── Highlight color ── */
+.hlIcon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+.hlIcon > span:first-child {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: Georgia, serif;
+}
+
+.hlBar {
+  width: 14px;
+  height: 3px;
+  border-radius: 1.5px;
+  flex-shrink: 0;
+}
+
+.hlSwatches {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  padding: 3px 2px;
+}
+
+.hlSwatch {
+  width: 28px;
+  height: 22px;
+  border: 1.5px solid rgba(0, 0, 0, 0.13);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s, border-color 0.1s;
+}
+
+.hlSwatch:hover {
+  transform: scale(1.12);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
 .listOption {
   display: flex;
   align-items: center;

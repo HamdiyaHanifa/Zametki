@@ -8,12 +8,20 @@ const SIZES = [
   { px: 24, label: 'XL' },
 ]
 
+const HIGHLIGHT_COLORS = [
+  '#FFEB3B', '#A5D6A7', '#F48FB1',
+  '#90CAF9', '#FFCC80', '#CE93D8',
+]
+
 export function FormatBar({ editorRef, savedRangeRef, textColor }) {
   const [showSizes, setShowSizes] = useState(false)
   const [showListDrop, setShowListDrop] = useState(false)
+  const [showHighlight, setShowHighlight] = useState(false)
+  const [lastHighlight, setLastHighlight] = useState('#FFEB3B')
   const [stepSize, setStepSize] = useState(14)
   const sizeWrapRef = useRef(null)
   const listWrapRef = useRef(null)
+  const highlightWrapRef = useRef(null)
 
   useEffect(() => {
     if (!showSizes) return
@@ -32,6 +40,15 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
     const id = setTimeout(() => window.addEventListener('pointerdown', onClose), 0)
     return () => { clearTimeout(id); window.removeEventListener('pointerdown', onClose) }
   }, [showListDrop])
+
+  useEffect(() => {
+    if (!showHighlight) return
+    const onClose = (e) => {
+      if (!highlightWrapRef.current?.contains(e.target)) setShowHighlight(false)
+    }
+    const id = setTimeout(() => window.addEventListener('pointerdown', onClose), 0)
+    return () => { clearTimeout(id); window.removeEventListener('pointerdown', onClose) }
+  }, [showHighlight])
 
   const withSelection = useCallback((fn) => {
     if (!savedRangeRef.current) return
@@ -138,6 +155,12 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
     else if (type === 'todo') insertTodoList()
   }, [exec, insertTodoList])
 
+  const applyHighlight = useCallback((color) => {
+    setShowHighlight(false)
+    if (color !== 'transparent') setLastHighlight(color)
+    withSelection(() => document.execCommand('hiliteColor', false, color))
+  }, [withSelection])
+
   const handleOpenSizes = useCallback(() => {
     saveSelectionNow()
     const sel = window.getSelection()
@@ -240,6 +263,45 @@ export function FormatBar({ editorRef, savedRangeRef, textColor }) {
               </svg>
               Галочки
             </button>
+          </div>
+        )}
+      </div>
+
+      {/* Highlight color dropdown */}
+      <div className={styles.sizeWrap} ref={highlightWrapRef}>
+        <button
+          className={styles.btn}
+          style={s}
+          onTouchStart={(e) => { e.preventDefault(); setShowHighlight(v => !v) }}
+          onClick={() => setShowHighlight(v => !v)}
+          title="Выделение цветом"
+        >
+          <span className={styles.hlIcon}>
+            <span>A</span>
+            <span className={styles.hlBar} style={{ background: lastHighlight }} />
+          </span>
+        </button>
+
+        {showHighlight && (
+          <div className={styles.sizeDrop} onMouseDown={(e) => e.preventDefault()}>
+            <div className={styles.hlSwatches}>
+              {HIGHLIGHT_COLORS.map(color => (
+                <button
+                  key={color}
+                  className={styles.hlSwatch}
+                  style={{ background: color }}
+                  onTouchStart={(e) => { e.preventDefault(); applyHighlight(color) }}
+                  onClick={() => applyHighlight(color)}
+                />
+              ))}
+            </div>
+            <div className={styles.dropSep} />
+            <button
+              className={styles.listOption}
+              style={{ color: textColor }}
+              onTouchStart={(e) => { e.preventDefault(); applyHighlight('transparent') }}
+              onClick={() => applyHighlight('transparent')}
+            >Убрать выделение</button>
           </div>
         )}
       </div>
