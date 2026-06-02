@@ -241,12 +241,25 @@ export function FocusView({
       const dataUrl = ev.target.result
       if (isImage || isProfile) {
         onUpdate(note.id, { imageUrl: dataUrl })
-      } else {
-        if (editorRef.current) {
-          editorRef.current.focus()
-          document.execCommand('insertImage', false, dataUrl)
-          editorRef.current.dispatchEvent(new Event('input', { bubbles: true }))
+      } else if (editorRef.current) {
+        editorRef.current.focus()
+        const img = document.createElement('img')
+        img.src = dataUrl
+        img.style.maxWidth = '100%'
+        const sel = window.getSelection()
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0)
+          range.deleteContents()
+          range.insertNode(img)
+          const after = document.createRange()
+          after.setStartAfter(img)
+          after.collapse(true)
+          sel.removeAllRanges()
+          sel.addRange(after)
+        } else {
+          editorRef.current.appendChild(img)
         }
+        editorRef.current.dispatchEvent(new Event('input', { bubbles: true }))
       }
     }
     reader.readAsDataURL(file)

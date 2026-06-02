@@ -562,13 +562,14 @@ export default function App() {
 
   useEffect(() => {
     const onPaste = (e) => {
+      if (focusedNoteId !== null) return // FocusView handles its own paste
       const items = Array.from(e.clipboardData?.items || [])
       const imgItem = items.find((i) => i.type.startsWith('image/'))
       if (imgItem) loadImageFile(imgItem.getAsFile())
     }
     if (activeCanvasId) window.addEventListener('paste', onPaste)
     return () => window.removeEventListener('paste', onPaste)
-  }, [loadImageFile, activeCanvasId])
+  }, [loadImageFile, activeCanvasId, focusedNoteId])
 
   const handleDrop = useCallback((e) => {
     e.preventDefault()
