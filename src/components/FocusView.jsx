@@ -228,12 +228,37 @@ export function FocusView({
     }
   }, [note.id, onAddFloating])
 
+  const handlePaste = useCallback((e) => {
+    const items = Array.from(e.clipboardData?.items || [])
+    const imgItem = items.find(i => i.type.startsWith('image/'))
+    if (!imgItem) return
+    e.preventDefault()
+    e.stopPropagation()
+    const file = imgItem.getAsFile()
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result
+      if (isImage || isProfile) {
+        onUpdate(note.id, { imageUrl: dataUrl })
+      } else {
+        if (editorRef.current) {
+          editorRef.current.focus()
+          document.execCommand('insertImage', false, dataUrl)
+          editorRef.current.dispatchEvent(new Event('input', { bubbles: true }))
+        }
+      }
+    }
+    reader.readAsDataURL(file)
+  }, [note.id, onUpdate, isImage, isProfile, editorRef])
+
   const titlePlaceholder = isProfile ? 'Имя персонажа...' : isImage ? 'Подпись...' : 'Заголовок...'
 
   return (
     <div
       className={`${styles.overlay} ${isDragTarget ? styles.dragTarget : ''}`}
       style={{ background: color.body }}
+      onPaste={handlePaste}
       onDrop={handleDrop}
       onDragOver={(e) => { e.preventDefault(); setIsDragTarget(true) }}
       onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setIsDragTarget(false) }}

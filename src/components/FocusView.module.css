@@ -161,6 +161,14 @@
   text-decoration: line-through;
 }
 
+.editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+  margin: 6px 0;
+}
+
 .editor ol,
 .editor ul:not([data-todo]) { padding-left: 24px; margin: 3px 0; }
 
