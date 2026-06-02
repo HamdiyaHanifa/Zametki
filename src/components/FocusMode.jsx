@@ -90,25 +90,32 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
   }, [phase, onClose])
 
   const handleDragStart = useCallback((e) => {
-    if (e.button !== 0) return
-    e.preventDefault()
+    const isTouch = e.type === 'touchstart'
+    if (!isTouch && e.button !== 0) return
     const node = nodeRef.current
     if (!node) return
     const rect = node.getBoundingClientRect()
-    const ox = e.clientX - rect.left
-    const oy = e.clientY - rect.top
-    document.body.style.cursor = 'grabbing'
-    const onMove = (ev) => setPos({ x: ev.clientX - ox, y: ev.clientY - oy })
-    const onUp = () => {
-      document.body.style.cursor = ''
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
+    const cx0 = isTouch ? e.touches[0].clientX : e.clientX
+    const cy0 = isTouch ? e.touches[0].clientY : e.clientY
+    const ox = cx0 - rect.left
+    const oy = cy0 - rect.top
+    if (!isTouch) document.body.style.cursor = 'grabbing'
+    const onMove = (ev) => {
+      if (isTouch) ev.preventDefault()
+      const cx = isTouch ? ev.touches[0].clientX : ev.clientX
+      const cy = isTouch ? ev.touches[0].clientY : ev.clientY
+      setPos({ x: cx - ox, y: cy - oy })
     }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
+    const onEnd = () => {
+      if (!isTouch) document.body.style.cursor = ''
+      window.removeEventListener(isTouch ? 'touchmove' : 'mousemove', onMove)
+      window.removeEventListener(isTouch ? 'touchend' : 'mouseup', onEnd)
+    }
+    window.addEventListener(isTouch ? 'touchmove' : 'mousemove', onMove, isTouch ? { passive: false } : undefined)
+    window.addEventListener(isTouch ? 'touchend' : 'mouseup', onEnd)
   }, [])
 
-  const handlePanelMouseDown = useCallback((e) => {
+  const handlePanelInteract = useCallback((e) => {
     if (e.target.closest('button, input, textarea, select, label')) return
     handleDragStart(e)
   }, [handleDragStart])
@@ -155,6 +162,7 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
         className={`${styles.miniChip} ${dangerEnabled ? styles.miniChipDanger : ''}`}
         style={posStyle}
         onMouseDown={handleDragStart}
+        onTouchStart={handleDragStart}
         onClick={() => { setIsCollapsed(false); onShow?.() }}
         title="Открыть таймер"
       >
@@ -163,6 +171,7 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
         <button
           className={styles.miniChipStop}
           onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); stopSession() }}
           title="Остановить"
         >■</button>
@@ -171,7 +180,7 @@ export function FocusMode({ totalWords, onClose, onDangerStart, onDangerStop, da
   }
 
   return (
-    <div ref={nodeRef} className={styles.panel} style={posStyle} onMouseDown={handlePanelMouseDown}>
+    <div ref={nodeRef} className={styles.panel} style={posStyle} onMouseDown={handlePanelInteract} onTouchStart={handlePanelInteract}>
       <button className={styles.closeBtn} onClick={() => {
         if (phase === 'active') setIsCollapsed(true)
         else handleClose()
