@@ -5,6 +5,7 @@ import { Toolbar } from './components/Toolbar'
 import { FocusView } from './components/FocusView'
 import { FocusMode } from './components/FocusMode'
 import { countWords, noteWordCount } from './utils/wordCount'
+import { TAGS_MAP } from './utils/tags'
 import { NotesPanel } from './components/NotesPanel'
 import { HomeScreen } from './components/HomeScreen'
 import styles from './App.module.css'
@@ -444,13 +445,22 @@ export default function App() {
 
   // ── Export / Import ────────────────────────────────────────────
 
-  const exportNotes = useCallback(() => {
-    const data = JSON.stringify({ canvases, nextCanvasId: nextCanvasIdRef.current }, null, 2)
+  const exportNotes = useCallback((tagFilter = null) => {
+    const filteredCanvases = tagFilter
+      ? canvases
+          .map(c => {
+            const filteredNotes = c.notes.filter(n => n.tag === tagFilter)
+            return { ...c, notes: filteredNotes, order: c.order.filter(id => filteredNotes.some(n => n.id === id)) }
+          })
+          .filter(c => c.notes.length > 0)
+      : canvases
+    const tagSuffix = tagFilter ? `_${TAGS_MAP[tagFilter]?.label ?? tagFilter}` : ''
+    const data = JSON.stringify({ canvases: filteredCanvases, nextCanvasId: nextCanvasIdRef.current }, null, 2)
     const blob = new Blob([data], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `заметки_${new Date().toLocaleDateString('ru')}.json`
+    a.download = `заметки${tagSuffix}_${new Date().toLocaleDateString('ru')}.json`
     a.click()
     URL.revokeObjectURL(url)
   }, [canvases])
@@ -604,6 +614,11 @@ export default function App() {
 
   const focusedNote = focusedNoteId ? notes.find((n) => n.id === focusedNoteId) : null
 
+  const exportTagCounts = {}
+  canvases.forEach(c => c.notes.forEach(n => {
+    if (n.tag) exportTagCounts[n.tag] = (exportTagCounts[n.tag] || 0) + 1
+  }))
+
   return (
     <div className={styles.canvas}>
       <Toolbar
@@ -615,6 +630,7 @@ export default function App() {
         onImport={importNotes}
         onTogglePanel={() => setShowPanel((v) => !v)}
         noteCount={notes.length}
+        exportTagCounts={exportTagCounts}
         totalWords={notes.reduce((sum, n) => sum + noteWordCount(n), 0)}
         notes={notes}
         onResetAllWordCounts={resetAllWordCounts}

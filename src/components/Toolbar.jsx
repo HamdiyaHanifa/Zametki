@@ -1,13 +1,16 @@
 import { useRef, useState, useEffect } from 'react'
 import { noteWordCount, wordForm } from '../utils/wordCount'
+import { TAGS } from '../utils/tags'
 import styles from './Toolbar.module.css'
 
-export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName }) {
+export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName, exportTagCounts = {} }) {
   const fileRef = useRef(null)
   const importRef = useRef(null)
   const panelRef = useRef(null)
+  const exportMenuRef = useRef(null)
 
   const [showWordPanel, setShowWordPanel] = useState(false)
+  const [showExportMenu, setShowExportMenu] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
 
   const handleFileChange = (e) => {
@@ -41,13 +44,20 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
   useEffect(() => {
     if (!showWordPanel) return
     const onPointerDown = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target)) {
-        setShowWordPanel(false)
-      }
+      if (panelRef.current && !panelRef.current.contains(e.target)) setShowWordPanel(false)
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [showWordPanel])
+
+  useEffect(() => {
+    if (!showExportMenu) return
+    const onPointerDown = (e) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target)) setShowExportMenu(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [showExportMenu])
 
   return (
     <div className={styles.toolbar}>
@@ -143,11 +153,42 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
           <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 2v8M5 5l3-3 3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
-      <button className={styles.iconBtn} onClick={onExport} title="Сохранить в файл">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 10V2M5 7l3 3 3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
+      <div className={styles.exportWrap} ref={exportMenuRef}>
+        <button
+          className={`${styles.iconBtn} ${showExportMenu ? styles.iconBtnActive : ''}`}
+          onClick={() => setShowExportMenu(v => !v)}
+          title="Сохранить в файл"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 10V2M5 7l3 3 3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        {showExportMenu && (
+          <div className={styles.exportMenu}>
+            <div className={styles.exportMenuTitle}>Экспорт</div>
+            <button
+              className={styles.exportMenuItem}
+              onClick={() => { onExport(null); setShowExportMenu(false) }}
+            >
+              Все заметки
+            </button>
+            {TAGS.filter(tag => exportTagCounts[tag.id]).length > 0 && (
+              <div className={styles.exportMenuDivider} />
+            )}
+            {TAGS.filter(tag => exportTagCounts[tag.id]).map(tag => (
+              <button
+                key={tag.id}
+                className={styles.exportMenuItem}
+                onClick={() => { onExport(tag.id); setShowExportMenu(false) }}
+              >
+                <span className={styles.exportMenuDot} style={{ background: tag.color }} />
+                {tag.label}
+                <span className={styles.exportMenuCount}>{exportTagCounts[tag.id]}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       <button className={styles.panelBtn} onClick={onTogglePanel} title="Список заметок">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
           <rect x="1" y="2" width="13" height="2.5" rx="1.2" fill="currentColor"/>
