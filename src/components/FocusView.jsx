@@ -131,7 +131,7 @@ export function FocusView({
       )}
 
       {/* Floating note windows */}
-      {floatingNotes?.map(({ uid, noteId, x, y }) => {
+      {floatingNotes?.map(({ uid, noteId, x, y, w, h }) => {
         const floatNote = notes?.find((n) => n.id === noteId)
         if (!floatNote) return null
         return (
