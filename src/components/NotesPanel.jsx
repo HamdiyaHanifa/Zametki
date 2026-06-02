@@ -55,7 +55,7 @@ export function NotesPanel({ notes, onNavigate, onOpenFocus, onClose }) {
                   </span>
                   {isSelected && (
                     <span className={styles.hint} style={{ color: color.text }}>
-                      нажми ещё раз
+                      нажмите чтобы открыть
                     </span>
                   )}
                   {!isSelected && note.minimized && (

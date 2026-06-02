@@ -13,6 +13,7 @@ const MIN_H = 80
 
 export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, zIndex, scale }) {
   const [showPicker, setShowPicker] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isImage = Boolean(note.imageUrl)
 
@@ -110,6 +111,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
       style={{ left: note.x, top: note.y, zIndex, width: w }}
       onMouseDown={(e) => { e.stopPropagation(); onFocus(note.id) }}
       onTouchStart={(e) => { e.stopPropagation(); onFocus(note.id) }}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setConfirmDelete(false) }}
     >
       {/* Header */}
       <div
@@ -149,11 +151,30 @@ export function Note({ note, onUpdate, onMove, onDelete, onFocus, onOpenFocus, z
             onClick={() => onUpdate(note.id, { minimized: !note.minimized })} title={note.minimized ? 'Развернуть' : 'Свернуть'}>
             {note.minimized ? '□' : '─'}
           </button>
-          <button className={`${styles.btn} ${styles.btnClose}`}
-            onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}
-            onClick={() => onDelete(note.id)} title="Удалить">
-            ✕
-          </button>
+          {confirmDelete ? (
+            <div
+              className={styles.confirmRow}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+            >
+              <button className={`${styles.btn} ${styles.btnConfirm}`}
+                style={{ background: '#e53935', color: '#fff' }}
+                onClick={() => onDelete(note.id)}>
+                Удалить
+              </button>
+              <button className={`${styles.btn} ${styles.btnCancel}`}
+                style={{ background: `${color.text}18`, color: color.text }}
+                onClick={() => setConfirmDelete(false)}>
+                Нет
+              </button>
+            </div>
+          ) : (
+            <button className={`${styles.btn} ${styles.btnClose}`}
+              onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}
+              onClick={() => setConfirmDelete(true)} title="Удалить">
+              ✕
+            </button>
+          )}
         </div>
       </div>
 

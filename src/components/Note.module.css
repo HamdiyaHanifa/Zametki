@@ -67,6 +67,33 @@
 
 .btnClose:hover { background: #c03040; }
 
+.confirmRow {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.btnConfirm {
+  width: auto;
+  padding: 0 7px;
+  border-radius: 11px;
+  font-size: 10px;
+  font-weight: 700;
+  height: 22px;
+}
+
+.btnCancel {
+  width: auto;
+  padding: 0 7px;
+  border-radius: 11px;
+  font-size: 10px;
+  font-weight: 600;
+  height: 22px;
+}
+
+.btnConfirm:hover { filter: brightness(0.88); }
+.btnCancel:hover  { filter: brightness(0.88); }
+
 /* ── Palette picker ── */
 .picker {
   display: flex;
