@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Note } from './components/Note'
+import { ProfileNote } from './components/ProfileNote'
 import { Toolbar } from './components/Toolbar'
 import { FocusView } from './components/FocusView'
 import { NotesPanel } from './components/NotesPanel'
@@ -211,6 +212,21 @@ export default function App() {
   }, [patchCanvas])
 
   const addNote = useCallback(() => spawnNote({}), [spawnNote])
+
+  const addProfile = useCallback(() => spawnNote({
+    noteType: 'profile',
+    title: '',
+    htmlContent: '',
+    imageUrl: null,
+    fields: [
+      { id: 1, label: 'Имя', value: '' },
+      { id: 2, label: 'Пол', value: '' },
+      { id: 3, label: 'Возраст', value: '' },
+      { id: 4, label: 'Роль', value: '' },
+    ],
+    width: 260,
+    height: 150,
+  }), [spawnNote])
 
   const loadImageFile = useCallback((file, worldX, worldY) => {
     const reader = new FileReader()
@@ -485,6 +501,7 @@ export default function App() {
     <div className={styles.canvas}>
       <Toolbar
         onAdd={addNote}
+        onAddProfile={addProfile}
         onUploadImage={loadImageFile}
         scale={vpState.scale}
         onExport={exportNotes}
@@ -539,19 +556,32 @@ export default function App() {
             transition: navigating ? 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)' : undefined,
           }}
         >
-          {notes.map((note) => (
-            <Note
-              key={note.id}
-              note={note}
-              onUpdate={updateNote}
-              onMove={moveNote}
-              onDelete={deleteNote}
-              onFocus={bringToFront}
-              onOpenFocus={setFocusedNoteId}
-              scale={vpState.scale}
-              zIndex={order.indexOf(note.id) + 1}
-            />
-          ))}
+          {notes.map((note) =>
+            note.noteType === 'profile' ? (
+              <ProfileNote
+                key={note.id}
+                note={note}
+                onUpdate={updateNote}
+                onMove={moveNote}
+                onDelete={deleteNote}
+                onFocus={bringToFront}
+                scale={vpState.scale}
+                zIndex={order.indexOf(note.id) + 1}
+              />
+            ) : (
+              <Note
+                key={note.id}
+                note={note}
+                onUpdate={updateNote}
+                onMove={moveNote}
+                onDelete={deleteNote}
+                onFocus={bringToFront}
+                onOpenFocus={setFocusedNoteId}
+                scale={vpState.scale}
+                zIndex={order.indexOf(note.id) + 1}
+              />
+            )
+          )}
         </div>
         {isDragOver && (
           <div className={styles.dropHint}>Отпустите чтобы добавить изображение</div>

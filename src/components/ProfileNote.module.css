@@ -1,0 +1,272 @@
+.note {
+  position: absolute;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: box-shadow 0.15s;
+}
+
+.note:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  cursor: grab;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.header:active { cursor: grabbing; }
+
+.dragGrip {
+  flex-shrink: 0;
+  width: 20px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  margin-left: -2px;
+  touch-action: none;
+}
+
+.dragGrip:active { cursor: grabbing; }
+
+.titleInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: inherit;
+  min-width: 0;
+  font-family: inherit;
+}
+
+.titleInput::placeholder { color: rgba(0, 0, 0, 0.3); }
+.titleInput:focus { cursor: text; }
+
+.controls {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.btn {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  cursor: pointer;
+  transition: filter 0.12s;
+  line-height: 1;
+  padding: 0;
+}
+
+.btnIcon:hover { filter: brightness(0.85); }
+
+.btnClose { background: #e05060; color: #fff; }
+.btnClose:hover { background: #c03040; }
+
+.confirmRow { display: flex; gap: 3px; align-items: center; }
+
+.btnConfirm {
+  width: auto; padding: 0 7px; border-radius: 11px;
+  font-size: 10px; font-weight: 700; height: 22px;
+}
+
+.btnCancel {
+  width: auto; padding: 0 7px; border-radius: 11px;
+  font-size: 10px; font-weight: 600; height: 22px;
+}
+
+.btnConfirm:hover, .btnCancel:hover { filter: brightness(0.88); }
+
+/* ── Color picker ── */
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.12s;
+  padding: 0;
+}
+
+.swatch:hover { transform: scale(1.2); }
+
+/* ── Body ── */
+.body {
+  position: relative;
+}
+
+/* Photo */
+.photoWrap {
+  margin: 10px 12px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px dashed;
+  cursor: pointer;
+  position: relative;
+}
+
+.photo {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.changePhotoBtn {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border: none;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.photoWrap:hover .changePhotoBtn { opacity: 1; }
+
+.photoPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 22px 16px;
+  min-height: 100px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.photoLabel {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.45;
+}
+
+.photoHint {
+  font-size: 11px;
+  opacity: 0.3;
+}
+
+/* Fields */
+.fields {
+  padding: 10px 12px 12px;
+}
+
+.fieldRow {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 7px;
+}
+
+.labelInput {
+  width: 72px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.55;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.colon {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.valueInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid;
+  outline: none;
+  font-size: 13px;
+  padding-bottom: 2px;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.valueInput:focus { opacity: 1; }
+.valueInput::placeholder { opacity: 0.35; }
+
+.removeBtn {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 15px;
+  opacity: 0.25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 4px;
+  line-height: 1;
+  transition: opacity 0.12s, background 0.12s;
+}
+
+.removeBtn:hover { opacity: 0.7; background: rgba(0, 0, 0, 0.08); }
+
+.addFieldBtn {
+  width: 100%;
+  margin-top: 2px;
+  background: transparent;
+  border: 1.5px dashed;
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.12s, background 0.12s;
+  font-family: inherit;
+}
+
+.addFieldBtn:hover { opacity: 0.75; background: rgba(0, 0, 0, 0.04); }
+
+/* Right-edge resize */
+.resizeEdge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 100%;
+  cursor: ew-resize;
+  touch-action: none;
+}

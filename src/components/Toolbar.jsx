@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import styles from './Toolbar.module.css'
 
-export function Toolbar({ onAdd, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, onHome, canvasName }) {
+export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, onHome, canvasName }) {
   const fileRef = useRef(null)
   const importRef = useRef(null)
 
@@ -48,6 +48,9 @@ export function Toolbar({ onAdd, onUploadImage, scale, onExport, onImport, onTog
       </button>
       <button className={styles.photoBtn} onClick={() => fileRef.current?.click()} title="Добавить фото">
         📷 Фото
+      </button>
+      <button className={styles.profileBtn} onClick={onAddProfile} title="Анкета персонажа">
+        👤 Анкета
       </button>
       <button className={styles.addBtn} onClick={onAdd} title="Новая заметка">
         + Заметка
