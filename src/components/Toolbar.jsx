@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import styles from './Toolbar.module.css'
 
-export function Toolbar({ onAdd, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount }) {
+export function Toolbar({ onAdd, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, onHome, canvasName }) {
   const fileRef = useRef(null)
   const importRef = useRef(null)
 
@@ -19,7 +19,12 @@ export function Toolbar({ onAdd, onUploadImage, scale, onExport, onImport, onTog
 
   return (
     <div className={styles.toolbar}>
-      <span className={styles.logo}>📝 Заметки</span>
+      <button className={styles.backBtn} onClick={onHome} title="Все холсты">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <span className={styles.canvasName}>{canvasName}</span>
+      </button>
       <span className={styles.scale}>{Math.round(scale * 100)}%</span>
       <input ref={fileRef} type="file" accept="image/*" className={styles.fileInput} onChange={handleFileChange} />
       <input ref={importRef} type="file" accept=".json" className={styles.fileInput} onChange={handleImportChange} />

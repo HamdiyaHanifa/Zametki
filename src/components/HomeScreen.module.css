@@ -1,0 +1,200 @@
+.home {
+  min-height: 100vh;
+  background-color: #f0ece8;
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+  background-size: 32px 32px;
+  padding: 0 24px 60px;
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 0 4px;
+}
+
+.logo {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #2a1f1f;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.4);
+  margin: 0 0 20px;
+  font-weight: 500;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
+  max-width: 860px;
+}
+
+/* ── Canvas card ── */
+.card {
+  background: rgba(255, 250, 246, 0.97);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 130px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  user-select: none;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.cardBody {
+  flex: 1;
+  padding: 18px 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #2a1f1f;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.nameInput {
+  font-size: 15px;
+  font-weight: 700;
+  color: #2a1f1f;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1.5px solid rgba(0, 0, 0, 0.18);
+  border-radius: 7px;
+  padding: 3px 7px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.count {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.38);
+  font-weight: 500;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.018);
+  min-height: 36px;
+}
+
+.editBtn,
+.deleteBtn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.3);
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+
+.editBtn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #3a2828;
+}
+
+.deleteBtn:hover {
+  background: rgba(220, 60, 60, 0.1);
+  color: #b83232;
+}
+
+.confirmText {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+  flex: 1;
+}
+
+.confirmYes {
+  padding: 3px 10px;
+  background: #E8A4AE;
+  color: #4a1f28;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.12s;
+}
+
+.confirmYes:hover { filter: brightness(0.9); }
+
+.confirmNo {
+  padding: 3px 10px;
+  background: rgba(0, 0, 0, 0.07);
+  color: #333;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.12s;
+}
+
+.confirmNo:hover { filter: brightness(0.9); }
+
+/* ── New canvas card ── */
+.newCard {
+  background: transparent;
+  border: 2px dashed rgba(0, 0, 0, 0.18);
+  border-radius: 16px;
+  cursor: pointer;
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.newCard:hover {
+  border-color: rgba(0, 0, 0, 0.36);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.plus {
+  font-size: 30px;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.28);
+}
+
+.newLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.38);
+}
