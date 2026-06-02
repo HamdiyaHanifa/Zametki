@@ -40,6 +40,22 @@ export function NotesPanel({ notes, onNavigate, onOpenFocus, onClose, focusMode,
         {focusMode && (
           <p className={styles.focusHint}>Нажмите чтобы открыть · Перетащите в заметку</p>
         )}
+
+        {(onAdd || onAddProfile) && (
+          <div className={styles.addBar}>
+            {onAdd && (
+              <button className={styles.footerBtn} onClick={onAdd}>
+                + Заметка
+              </button>
+            )}
+            {onAddProfile && (
+              <button className={styles.footerBtn} onClick={onAddProfile}>
+                + Анкета
+              </button>
+            )}
+          </div>
+        )}
+
         <div className={styles.list}>
           {notes.length === 0 && (
             <p className={styles.empty}>Пока нет заметок</p>
@@ -147,20 +163,6 @@ export function NotesPanel({ notes, onNavigate, onOpenFocus, onClose, focusMode,
           })}
         </div>
 
-        {(onAdd || onAddProfile) && (
-          <div className={styles.footer}>
-            {onAdd && (
-              <button className={styles.footerBtn} onClick={() => { onAdd(); onClose() }}>
-                + Заметка
-              </button>
-            )}
-            {onAddProfile && (
-              <button className={styles.footerBtn} onClick={() => { onAddProfile(); onClose() }}>
-                + Анкета
-              </button>
-            )}
-          </div>
-        )}
       </div>
     </>
   )

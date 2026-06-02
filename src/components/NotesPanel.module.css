@@ -254,12 +254,12 @@
 
 .delCancelBtn:hover { background: rgba(0, 0, 0, 0.12); }
 
-/* ── Footer add buttons ── */
-.footer {
+/* ── Add buttons bar (above list) ── */
+.addBar {
   display: flex;
   gap: 8px;
-  padding: 10px 12px 14px;
-  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
   flex-shrink: 0;
 }
 
