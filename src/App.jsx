@@ -700,6 +700,9 @@ export default function App() {
           focusMode={!!focusedNoteId}
           currentNoteId={focusedNoteId}
           onAddFloating={(id) => { addFloatingNote(id); setShowPanel(false) }}
+          onAdd={addNote}
+          onAddProfile={addProfile}
+          onDelete={deleteNote}
         />
       )}
       {focusedNote && (

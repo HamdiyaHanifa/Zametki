@@ -8,10 +8,12 @@ function stripHtml(html) {
   return div.textContent || ''
 }
 
-export function NotesPanel({ notes, onNavigate, onOpenFocus, onClose, focusMode, onAddFloating, currentNoteId }) {
+export function NotesPanel({ notes, onNavigate, onOpenFocus, onClose, focusMode, onAddFloating, currentNoteId, onAdd, onAddProfile, onDelete }) {
   const [selectedId, setSelectedId] = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
 
   const handleCardClick = (note) => {
+    setConfirmDeleteId(null)
     if (focusMode) {
       onOpenFocus(note.id)
       onClose()
@@ -52,6 +54,7 @@ export function NotesPanel({ notes, onNavigate, onOpenFocus, onClose, focusMode,
                 : stripHtml(note.htmlContent).trim().slice(0, 100)
             const isSelected = !focusMode && selectedId === note.id
             const isCurrent = focusMode && note.id === currentNoteId
+            const isConfirming = confirmDeleteId === note.id
             return (
               <div
                 key={note.id}
@@ -118,10 +121,46 @@ export function NotesPanel({ notes, onNavigate, onOpenFocus, onClose, focusMode,
                     </svg>
                   </button>
                 )}
+
+                {onDelete && !isCurrent && (
+                  isConfirming ? (
+                    <>
+                      <button
+                        className={styles.delConfirmBtn}
+                        onClick={(e) => { e.stopPropagation(); onDelete(note.id); setConfirmDeleteId(null) }}
+                      >Удалить</button>
+                      <button
+                        className={styles.delCancelBtn}
+                        onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null) }}
+                      >Нет</button>
+                    </>
+                  ) : (
+                    <button
+                      className={styles.delBtn}
+                      title="Удалить"
+                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(note.id) }}
+                    >✕</button>
+                  )
+                )}
               </div>
             )
           })}
         </div>
+
+        {(onAdd || onAddProfile) && (
+          <div className={styles.footer}>
+            {onAdd && (
+              <button className={styles.footerBtn} onClick={() => { onAdd(); onClose() }}>
+                + Заметка
+              </button>
+            )}
+            {onAddProfile && (
+              <button className={styles.footerBtn} onClick={() => { onAddProfile(); onClose() }}>
+                + Анкета
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </>
   )

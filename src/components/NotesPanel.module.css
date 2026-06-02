@@ -196,3 +196,89 @@
   border-radius: 6px;
   margin-top: 2px;
 }
+
+/* ── Delete button ── */
+.delBtn {
+  width: 30px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.22);
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s, background 0.12s;
+}
+
+.delBtn:hover {
+  color: #e05060;
+  background: rgba(224, 80, 96, 0.09);
+}
+
+.delConfirmBtn {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: #e53935;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 9px;
+  cursor: pointer;
+  align-self: stretch;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: filter 0.12s;
+}
+
+.delConfirmBtn:hover { filter: brightness(0.88); }
+
+.delCancelBtn {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.07);
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0 9px;
+  cursor: pointer;
+  align-self: stretch;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+
+.delCancelBtn:hover { background: rgba(0, 0, 0, 0.12); }
+
+/* ── Footer add buttons ── */
+.footer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  flex-shrink: 0;
+}
+
+.footerBtn {
+  flex: 1;
+  border: 1.5px dashed rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+  padding: 9px 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.42);
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.footerBtn:hover {
+  border-color: rgba(0, 0, 0, 0.32);
+  color: rgba(0, 0, 0, 0.68);
+  background: rgba(0, 0, 0, 0.03);
+}
