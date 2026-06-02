@@ -2,7 +2,6 @@ import { useRef, useCallback, useEffect, useState } from 'react'
 import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
 import { FloatingNote } from './FloatingNote'
-import { FocusMode } from './FocusMode'
 import { countWords, wordForm } from '../utils/wordCount'
 import styles from './FocusView.module.css'
 
@@ -19,6 +18,11 @@ export function FocusView({
   floatingNotes, onAddFloating, onRemoveFloating, onUpdateFloatPos,
   showPanel, onTogglePanel,
   totalWords,
+  onToggleFocusMode,
+  focusModeVisible = false,
+  onRegisterDangerStart,
+  onRegisterDangerStop,
+  onDangerProgressChange,
 }) {
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isProfile = note.noteType === 'profile'
@@ -27,10 +31,12 @@ export function FocusView({
   const savedRangeRef = useRef(null)
   const photoRef = useRef(null)
   const [isDragTarget, setIsDragTarget] = useState(false)
-  const [showFocusMode, setShowFocusMode] = useState(false)
-  const [timerDangerActive, setTimerDangerActive] = useState(false)
-  const [timerDangerProgress, setTimerDangerProgress] = useState(0)
 
+  // Stable ref to current note content (for danger mode snapshot)
+  const noteHtmlContentRef = useRef(note.htmlContent)
+  useEffect(() => { noteHtmlContentRef.current = note.htmlContent }, [note.htmlContent])
+
+  // ── Timer danger tracking refs ────────────────────────────────────
   const timerDangerActiveRef = useRef(false)
   const timerDangerLastActivityRef = useRef(0)
   const timerDangerStartContentRef = useRef('')
@@ -38,7 +44,7 @@ export function FocusView({
   const timerDangerTimeoutRef = useRef(5)
   const timerDangerIntervalRef = useRef(null)
 
-  // ── Danger mode ──────────────────────────────────────────────────
+  // ── Standalone danger mode ────────────────────────────────────────
   const DANGER_PRESETS = [5, 10, 15, 20, 30]
   const [dangerPhase, setDangerPhase] = useState('off') // 'off'|'setup'|'active'|'dying'
   const [dangerTimeout, setDangerTimeout] = useState(5)
@@ -68,7 +74,7 @@ export function FocusView({
     }
   }, [note.id, onUpdate])
 
-  // Inactivity check interval
+  // Inactivity check interval for standalone danger
   useEffect(() => {
     if (dangerPhase !== 'active') return
     dangerIntervalRef.current = setInterval(() => {
@@ -97,52 +103,59 @@ export function FocusView({
     return () => clearTimeout(t)
   }, [dangerPhase, note.id, onUpdate])
 
+  // Cleanup on unmount
   useEffect(() => () => {
     clearInterval(dangerIntervalRef.current)
     clearInterval(timerDangerIntervalRef.current)
   }, [])
 
-  // ── Timer danger mode ────────────────────────────────────────────
-  useEffect(() => {
-    if (!timerDangerActive) return
+  // ── Timer danger handlers (bridged up to App.jsx → FocusMode) ────
+  const handleTimerDangerStart = useCallback((inactivitySec, onInactivityFail) => {
+    timerDangerStartContentRef.current = noteHtmlContentRef.current || ''
+    timerDangerLastActivityRef.current = Date.now()
+    timerDangerTimeoutRef.current = inactivitySec
+    timerDangerFailCbRef.current = onInactivityFail
+    timerDangerActiveRef.current = true
+    clearInterval(timerDangerIntervalRef.current)
     timerDangerIntervalRef.current = setInterval(() => {
       const elapsed = (Date.now() - timerDangerLastActivityRef.current) / 1000
       const prog = Math.min(elapsed / timerDangerTimeoutRef.current, 1)
-      setTimerDangerProgress(prog)
+      onDangerProgressChange?.(prog)
       if (elapsed >= timerDangerTimeoutRef.current) {
         clearInterval(timerDangerIntervalRef.current)
         timerDangerActiveRef.current = false
-        setTimerDangerActive(false)
-        setTimerDangerProgress(0)
+        onDangerProgressChange?.(0)
         const restored = timerDangerStartContentRef.current
         if (editorRef.current) editorRef.current.innerHTML = restored
         onUpdate(note.id, { htmlContent: restored })
         timerDangerFailCbRef.current?.()
       }
     }, 80)
-    return () => clearInterval(timerDangerIntervalRef.current)
-  }, [timerDangerActive]) // eslint-disable-line
-
-  const handleTimerDangerStart = useCallback((inactivitySec, onInactivityFail) => {
-    timerDangerStartContentRef.current = note.htmlContent || ''
-    timerDangerLastActivityRef.current = Date.now()
-    timerDangerTimeoutRef.current = inactivitySec
-    timerDangerFailCbRef.current = onInactivityFail
-    timerDangerActiveRef.current = true
-    setTimerDangerActive(true)
-  }, [note.htmlContent])
+  }, [note.id, onUpdate, onDangerProgressChange])
 
   const handleTimerDangerStop = useCallback((keepText) => {
     clearInterval(timerDangerIntervalRef.current)
     timerDangerActiveRef.current = false
-    setTimerDangerActive(false)
-    setTimerDangerProgress(0)
+    onDangerProgressChange?.(0)
     if (!keepText) {
       const restored = timerDangerStartContentRef.current
       if (editorRef.current) editorRef.current.innerHTML = restored
       onUpdate(note.id, { htmlContent: restored })
     }
-  }, [note.id, onUpdate])
+  }, [note.id, onUpdate, onDangerProgressChange])
+
+  // Register/unregister handlers with App.jsx when FocusView mounts/unmounts
+  useEffect(() => {
+    onRegisterDangerStart?.(handleTimerDangerStart)
+    onRegisterDangerStop?.(handleTimerDangerStop)
+    return () => {
+      clearInterval(timerDangerIntervalRef.current)
+      timerDangerActiveRef.current = false
+      onRegisterDangerStart?.(null)
+      onRegisterDangerStop?.(null)
+      onDangerProgressChange?.(0)
+    }
+  }, [handleTimerDangerStart, handleTimerDangerStop, onRegisterDangerStart, onRegisterDangerStop, onDangerProgressChange])
 
   const fields = note.fields ?? DEFAULT_FIELDS
 
@@ -198,9 +211,9 @@ export function FocusView({
     }
     if (timerDangerActiveRef.current) {
       timerDangerLastActivityRef.current = Date.now()
-      setTimerDangerProgress(0)
+      onDangerProgressChange?.(0)
     }
-  }, [])
+  }, [onDangerProgressChange])
 
   const handlePhotoChange = useCallback((e) => {
     const file = e.target.files[0]
@@ -279,9 +292,9 @@ export function FocusView({
           className={styles.focusTimerBtn}
           style={{
             color: color.text,
-            background: showFocusMode ? `${color.text}22` : `${color.text}0e`,
+            background: focusModeVisible ? `${color.text}22` : `${color.text}0e`,
           }}
-          onClick={() => setShowFocusMode(v => !v)}
+          onClick={onToggleFocusMode}
           title="Режим фокуса"
         >⏱</button>
         <button
@@ -298,15 +311,6 @@ export function FocusView({
           {notes && <span className={styles.noteCount}>{notes.length}</span>}
         </button>
       </div>
-      <FocusMode
-        totalWords={totalWords ?? 0}
-        onClose={() => setShowFocusMode(false)}
-        onDangerStart={handleTimerDangerStart}
-        onDangerStop={handleTimerDangerStop}
-        dangerInactiveProgress={timerDangerProgress}
-        visible={showFocusMode}
-        onShow={() => setShowFocusMode(true)}
-      />
 
       {/* Danger mode setup panel */}
       {dangerPhase === 'setup' && (

@@ -91,6 +91,20 @@ export default function App() {
   const [showPanel, setShowPanel] = useState(false)
   const [navigating, setNavigating] = useState(false)
   const [showFocusMode, setShowFocusMode] = useState(false)
+  const [timerDangerProgress, setTimerDangerProgress] = useState(0)
+  const focusViewDangerStartRef = useRef(null)
+  const focusViewDangerStopRef = useRef(null)
+
+  const handleTimerDangerStart = useCallback((secs, failCb) => {
+    focusViewDangerStartRef.current?.(secs, failCb)
+  }, [])
+
+  const handleTimerDangerStop = useCallback((keepText) => {
+    focusViewDangerStopRef.current?.(keepText)
+  }, [])
+
+  const registerDangerStart = useCallback((fn) => { focusViewDangerStartRef.current = fn }, [])
+  const registerDangerStop = useCallback((fn) => { focusViewDangerStopRef.current = fn }, [])
   const [floatingNotes, setFloatingNotes] = useState([])
   const floatUidRef = useRef(0)
   const floatPosRef = useRef({})
@@ -540,12 +554,15 @@ export default function App() {
         onHome={openHome}
         canvasName={activeCanvas?.name}
       />
-      {showFocusMode && (
-        <FocusMode
-          totalWords={notes.reduce((sum, n) => sum + noteWordCount(n), 0)}
-          onClose={() => setShowFocusMode(false)}
-        />
-      )}
+      <FocusMode
+        totalWords={notes.reduce((sum, n) => sum + noteWordCount(n), 0)}
+        onClose={() => setShowFocusMode(false)}
+        onDangerStart={handleTimerDangerStart}
+        onDangerStop={handleTimerDangerStop}
+        dangerInactiveProgress={timerDangerProgress}
+        visible={showFocusMode}
+        onShow={() => setShowFocusMode(true)}
+      />
       {showPanel && (
         <NotesPanel
           notes={notes}
@@ -574,6 +591,11 @@ export default function App() {
           showPanel={showPanel}
           onTogglePanel={() => setShowPanel((v) => !v)}
           totalWords={notes.reduce((sum, n) => sum + noteWordCount(n), 0)}
+          onToggleFocusMode={() => setShowFocusMode(v => !v)}
+          focusModeVisible={showFocusMode}
+          onRegisterDangerStart={registerDangerStart}
+          onRegisterDangerStop={registerDangerStop}
+          onDangerProgressChange={setTimerDangerProgress}
         />
       )}
       <div
