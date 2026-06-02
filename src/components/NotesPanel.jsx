@@ -15,7 +15,7 @@ export function NotesPanel({ notes, onNavigate, onOpenFocus, onClose, focusMode,
     if (focusMode) {
       onOpenFocus(note.id)
       onClose()
-    } else if (selectedId === note.id) {
+    } else if (note.noteType === 'profile' || selectedId === note.id) {
       onOpenFocus(note.id)
     } else {
       setSelectedId(note.id)
