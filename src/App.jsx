@@ -50,6 +50,18 @@ const DEFAULT_NOTES = [
   { ...createNote(3, 2), title: 'Заметка', htmlContent: '' },
 ]
 
+function isNoteEmpty(note) {
+  if (note.title?.trim()) return false
+  if (note.imageUrl) return false
+  if (note.freeImages?.length) return false
+  if (note.noteType === 'profile') {
+    return !(note.fields ?? []).some(f => f.value?.trim())
+  }
+  const div = document.createElement('div')
+  div.innerHTML = note.htmlContent || ''
+  return !(div.textContent || '').trim()
+}
+
 function loadSaved() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -429,7 +441,7 @@ export default function App() {
   const deleteNote = useCallback((id) => {
     const note = notesRef.current.find(n => n.id === id)
     const canvas = canvases.find(c => c.id === activeCanvasId)
-    if (note && canvas) {
+    if (note && canvas && !isNoteEmpty(note)) {
       setTrash(prev => [...prev, { note, canvasId: canvas.id, canvasName: canvas.name, deletedAt: Date.now() }])
     }
     patchCanvas((c) => ({
