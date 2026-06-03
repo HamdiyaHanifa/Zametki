@@ -77,7 +77,6 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
   }, [])
 
   useEffect(() => {
-    if (isImage) return
     const onSel = () => {
       const sel = window.getSelection()
       // Only save when there's actual non-collapsed selection (not just cursor)
@@ -90,7 +89,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
     }
     document.addEventListener('selectionchange', onSel)
     return () => document.removeEventListener('selectionchange', onSel)
-  }, [isImage])
+  }, [])
 
   const handleInput = useCallback(() => {
     onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
@@ -347,10 +346,24 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
 
       {/* Body */}
       {!note.minimized && (
-        <div className={styles.body} style={{ background: isImage ? 'transparent' : color.body }}>
+        <div className={styles.body} style={{ background: color.body }}>
           {isImage ? (
-            <img src={note.imageUrl} className={styles.image} style={{ height: h }}
-              draggable={false} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} />
+            <>
+              <FormatBar editorRef={editorRef} savedRangeRef={savedRangeRef} textColor={color.text} bodyColor={color.body} />
+              <div
+                ref={editorRef}
+                className={styles.editor}
+                style={{ color: color.text, caretColor: color.text, minHeight: 36 }}
+                contentEditable suppressContentEditableWarning
+                onInput={handleInput}
+                onMouseDown={handleEditorMouseDown}
+                onTouchStart={handleEditorTouchStart}
+                onMouseUp={saveRange} onKeyUp={saveRange} onTouchEnd={saveRange} onBlur={saveRange}
+                data-placeholder="Текст заметки..."
+              />
+              <img src={note.imageUrl} className={styles.image} style={{ height: h }}
+                draggable={false} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} />
+            </>
           ) : (
             <>
               <FormatBar editorRef={editorRef} savedRangeRef={savedRangeRef} textColor={color.text} bodyColor={color.body} onAddFreeImage={addFreeImg} />
