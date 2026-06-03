@@ -1,4 +1,5 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useDrag } from '../hooks/useDrag'
 import { PALETTE } from '../palette'
 import { FormatBar } from './FormatBar'
@@ -34,6 +35,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
   const [showPicker, setShowPicker] = useState(false)
   const [showTagPicker, setShowTagPicker] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [selectedImg, setSelectedImg] = useState(null) // { el, rect }
   const color = PALETTE[note.colorIndex % PALETTE.length]
   const isImage = Boolean(note.imageUrl)
 
@@ -98,6 +100,12 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
 
   const handleEditorMouseDown = useCallback((e) => {
     e.stopPropagation()
+    if (e.target.tagName === 'IMG' && e.target.dataset.freeimg) {
+      e.preventDefault()
+      setSelectedImg({ el: e.target, rect: e.target.getBoundingClientRect() })
+      return
+    }
+    setSelectedImg(null)
     const li = e.target.closest?.('ul[data-todo] > li')
     if (li) {
       const rect = li.getBoundingClientRect()
@@ -112,6 +120,12 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
 
   const handleEditorTouchStart = useCallback((e) => {
     e.stopPropagation()
+    if (e.target.tagName === 'IMG' && e.target.dataset.freeimg) {
+      e.preventDefault()
+      setSelectedImg({ el: e.target, rect: e.target.getBoundingClientRect() })
+      return
+    }
+    setSelectedImg(null)
     const touch = e.touches[0]
     if (!touch) return
     const li = e.target.closest?.('ul[data-todo] > li')
@@ -167,14 +181,57 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
 
   const freeImages = note.freeImages || []
   const addFreeImg = useCallback((src) => {
-    onUpdate(note.id, { freeImages: [...(note.freeImages || []), { id: String(Date.now()), src, x: 0.02, y: 0.02, w: 0.45 }] })
-  }, [note.id, note.freeImages, onUpdate])
+    if (!editorRef.current) return
+    editorRef.current.focus()
+    const sel = window.getSelection()
+    if (savedRangeRef.current) {
+      sel?.removeAllRanges()
+      sel?.addRange(savedRangeRef.current.cloneRange())
+    } else if (!sel?.rangeCount) {
+      const range = document.createRange()
+      range.selectNodeContents(editorRef.current)
+      range.collapse(false)
+      sel?.removeAllRanges()
+      sel?.addRange(range)
+    }
+    document.execCommand('insertHTML', false,
+      `<img src="${src}" data-freeimg="1" style="float:left;width:45%;margin:4px 10px 4px 0;border-radius:4px;">`)
+    setTimeout(() => {
+      onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
+    }, 0)
+  }, [note.id, editorRef, savedRangeRef, onUpdate])
+  const applyImgLayout = useCallback((layout) => {
+    const el = selectedImg?.el
+    if (!el) return
+    if (layout === 'left') {
+      Object.assign(el.style, { float: 'left', margin: '4px 10px 4px 0', maxWidth: '45%', display: '' })
+    } else if (layout === 'right') {
+      Object.assign(el.style, { float: 'right', margin: '4px 0 4px 10px', maxWidth: '45%', display: '' })
+    } else {
+      Object.assign(el.style, { float: 'none', margin: '8px auto', maxWidth: '100%', display: 'block' })
+    }
+    onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
+    setSelectedImg(null)
+  }, [selectedImg, note.id, editorRef, onUpdate])
+
+  const deleteSelectedImg = useCallback(() => {
+    selectedImg?.el?.remove()
+    onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
+    setSelectedImg(null)
+  }, [selectedImg, note.id, editorRef, onUpdate])
+
   const updateFreeImg = useCallback((imgId, changes) => {
     onUpdate(note.id, { freeImages: (note.freeImages || []).map(i => i.id === imgId ? { ...i, ...changes } : i) })
   }, [note.id, note.freeImages, onUpdate])
   const deleteFreeImg = useCallback((imgId) => {
     onUpdate(note.id, { freeImages: (note.freeImages || []).filter(i => i.id !== imgId) })
   }, [note.id, note.freeImages, onUpdate])
+
+  const imgBtnStyle = {
+    border: 'none', background: 'transparent', cursor: 'pointer',
+    borderRadius: 6, padding: '2px 4px', display: 'flex', alignItems: 'center',
+    transition: 'background 0.1s',
+  }
 
   return (
     <div
@@ -346,24 +403,10 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
 
       {/* Body */}
       {!note.minimized && (
-        <div className={styles.body} style={{ background: color.body }}>
+        <div className={styles.body} style={{ background: isImage ? 'transparent' : color.body }}>
           {isImage ? (
-            <>
-              <FormatBar editorRef={editorRef} savedRangeRef={savedRangeRef} textColor={color.text} bodyColor={color.body} />
-              <div
-                ref={editorRef}
-                className={styles.editor}
-                style={{ color: color.text, caretColor: color.text, minHeight: 36 }}
-                contentEditable suppressContentEditableWarning
-                onInput={handleInput}
-                onMouseDown={handleEditorMouseDown}
-                onTouchStart={handleEditorTouchStart}
-                onMouseUp={saveRange} onKeyUp={saveRange} onTouchEnd={saveRange} onBlur={saveRange}
-                data-placeholder="Текст заметки..."
-              />
-              <img src={note.imageUrl} className={styles.image} style={{ height: h }}
-                draggable={false} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} />
-            </>
+            <img src={note.imageUrl} className={styles.image} style={{ height: h }}
+              draggable={false} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} />
           ) : (
             <>
               <FormatBar editorRef={editorRef} savedRangeRef={savedRangeRef} textColor={color.text} bodyColor={color.body} onAddFreeImage={addFreeImg} />
@@ -414,6 +457,52 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
             </>
           )}
         </div>
+      )}
+      {selectedImg && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: selectedImg.rect.top - 42,
+            left: selectedImg.rect.left,
+            zIndex: 99999,
+            display: 'flex',
+            gap: 4,
+            background: 'rgba(255,250,246,0.98)',
+            borderRadius: 10,
+            padding: '5px 8px',
+            boxShadow: '0 3px 14px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.07)',
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <button onClick={() => applyImgLayout('left')} title="Текст справа" style={imgBtnStyle}>
+            <svg width="26" height="20" viewBox="0 0 26 20" fill="none">
+              <rect x="1" y="1" width="10" height="10" rx="2" fill={color.header}/>
+              <rect x="13" y="2" width="12" height="2" rx="1" fill={color.header} opacity=".5"/>
+              <rect x="13" y="6" width="10" height="2" rx="1" fill={color.header} opacity=".5"/>
+              <rect x="13" y="10" width="11" height="2" rx="1" fill={color.header} opacity=".5"/>
+              <rect x="1" y="14" width="24" height="2" rx="1" fill={color.header} opacity=".35"/>
+              <rect x="1" y="17" width="20" height="2" rx="1" fill={color.header} opacity=".35"/>
+            </svg>
+          </button>
+          <button onClick={() => applyImgLayout('block')} title="На всю ширину" style={imgBtnStyle}>
+            <svg width="26" height="20" viewBox="0 0 26 20" fill="none">
+              <rect x="1" y="4" width="24" height="12" rx="2" fill={color.header}/>
+            </svg>
+          </button>
+          <button onClick={() => applyImgLayout('right')} title="Текст слева" style={imgBtnStyle}>
+            <svg width="26" height="20" viewBox="0 0 26 20" fill="none">
+              <rect x="15" y="1" width="10" height="10" rx="2" fill={color.header}/>
+              <rect x="1" y="2" width="12" height="2" rx="1" fill={color.header} opacity=".5"/>
+              <rect x="3" y="6" width="10" height="2" rx="1" fill={color.header} opacity=".5"/>
+              <rect x="2" y="10" width="11" height="2" rx="1" fill={color.header} opacity=".5"/>
+              <rect x="1" y="14" width="24" height="2" rx="1" fill={color.header} opacity=".35"/>
+              <rect x="1" y="17" width="20" height="2" rx="1" fill={color.header} opacity=".35"/>
+            </svg>
+          </button>
+          <div style={{ width: 1, background: 'rgba(0,0,0,0.12)', margin: '2px 2px' }}/>
+          <button onClick={deleteSelectedImg} title="Удалить фото" style={{ ...imgBtnStyle, color: '#e53935' }}>✕</button>
+        </div>,
+        document.body
       )}
       {showHandles && !note.minimized && (
         <NoteHandles
