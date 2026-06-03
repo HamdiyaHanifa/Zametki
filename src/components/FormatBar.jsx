@@ -14,6 +14,7 @@ const HIGHLIGHT_COLORS = [
 ]
 
 export function FormatBar({ editorRef, savedRangeRef, textColor, onAddFreeImage }) {
+  const [showFull, setShowFull] = useState(false)
   const [showSizes, setShowSizes] = useState(false)
   const [showListDrop, setShowListDrop] = useState(false)
   const [showHighlight, setShowHighlight] = useState(false)
@@ -189,6 +190,13 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, onAddFreeImage 
     reader.readAsDataURL(file)
   }, [onAddFreeImage])
 
+  const toggleFull = useCallback(() => {
+    setShowFull(v => !v)
+    setShowSizes(false)
+    setShowListDrop(false)
+    setShowHighlight(false)
+  }, [])
+
   const s = { color: textColor }
 
   return (
@@ -197,126 +205,21 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, onAddFreeImage 
       style={{ borderColor: `${textColor}14`, background: `${textColor}07` }}
       onMouseDown={handleBarMouseDown}
     >
-      <button className={styles.btn} style={s} onClick={() => exec('bold')} title="Жирный"><b>B</b></button>
-      <button className={styles.btn} style={{ ...s, fontStyle: 'italic' }} onClick={() => exec('italic')} title="Курсив"><i>I</i></button>
-      <button className={styles.btn} style={{ ...s, textDecoration: 'underline' }} onClick={() => exec('underline')} title="Подчёркнутый">U</button>
-      <button className={styles.btn} style={{ ...s, textDecoration: 'line-through' }} onClick={() => exec('strikeThrough')} title="Зачёркнутый">S</button>
-      <button className={styles.btn} style={{ ...s, fontWeight: 700, fontSize: 14 }} onClick={toggleHeading} title="Заголовок">H</button>
+      {/* ── Toggle button — always visible ── */}
+      <button
+        className={`${styles.btn} ${showFull ? styles.btnActive : ''}`}
+        style={s}
+        onClick={toggleFull}
+        title={showFull ? 'Скрыть форматирование' : 'Форматирование'}
+      >
+        <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+          <line x1="1" y1="2" x2="13" y2="2"/>
+          <line x1="1" y1="6" x2="10" y2="6"/>
+          <line x1="1" y1="10" x2="11" y2="10"/>
+        </svg>
+      </button>
 
-      <span className={styles.sep} />
-
-      {/* List type dropdown */}
-      <div className={styles.sizeWrap} ref={listWrapRef}>
-        <button
-          className={styles.btn}
-          style={s}
-          onTouchStart={(e) => { e.preventDefault(); setShowListDrop(v => !v) }}
-          onClick={() => setShowListDrop(v => !v)}
-          title="Списки"
-        >
-          <svg width="13" height="11" viewBox="0 0 13 11" fill="currentColor">
-            <circle cx="1.5" cy="1.5" r="1.5"/>
-            <rect x="4" y="0.5" width="9" height="2" rx="1"/>
-            <circle cx="1.5" cy="5.5" r="1.5"/>
-            <rect x="4" y="4.5" width="9" height="2" rx="1"/>
-            <circle cx="1.5" cy="9.5" r="1.5"/>
-            <rect x="4" y="8.5" width="9" height="2" rx="1"/>
-          </svg>
-        </button>
-
-        {showListDrop && (
-          <div className={styles.sizeDrop} style={{ minWidth: 160 }} onMouseDown={(e) => e.preventDefault()}>
-            <button
-              className={styles.listOption}
-              style={{ color: textColor }}
-              onTouchStart={(e) => { e.preventDefault(); handleListOption('ul') }}
-              onClick={() => handleListOption('ul')}
-            >
-              <svg width="11" height="10" viewBox="0 0 11 10" fill="currentColor" style={{ flexShrink: 0 }}>
-                <circle cx="1.2" cy="1.5" r="1.2"/><rect x="3.5" y="0.5" width="7.5" height="2" rx="0.8"/>
-                <circle cx="1.2" cy="5" r="1.2"/><rect x="3.5" y="4" width="7.5" height="2" rx="0.8"/>
-                <circle cx="1.2" cy="8.5" r="1.2"/><rect x="3.5" y="7.5" width="7.5" height="2" rx="0.8"/>
-              </svg>
-              Список
-            </button>
-            <button
-              className={styles.listOption}
-              style={{ color: textColor }}
-              onTouchStart={(e) => { e.preventDefault(); handleListOption('ol') }}
-              onClick={() => handleListOption('ol')}
-            >
-              <svg width="11" height="10" viewBox="0 0 11 10" fill="currentColor" style={{ flexShrink: 0 }}>
-                <rect x="0.3" y="0" width="2" height="3" rx="0.6"/>
-                <rect x="3.5" y="0.5" width="7.5" height="2" rx="0.8"/>
-                <rect x="0.3" y="3.5" width="2" height="3" rx="0.6"/>
-                <rect x="3.5" y="4" width="7.5" height="2" rx="0.8"/>
-                <rect x="0.3" y="7" width="2" height="3" rx="0.6"/>
-                <rect x="3.5" y="7.5" width="7.5" height="2" rx="0.8"/>
-              </svg>
-              Нумерованный
-            </button>
-            <div className={styles.dropSep} />
-            <button
-              className={styles.listOption}
-              style={{ color: textColor }}
-              onTouchStart={(e) => { e.preventDefault(); handleListOption('todo') }}
-              onClick={() => handleListOption('todo')}
-            >
-              <svg width="11" height="10" viewBox="0 0 11 10" fill="none" style={{ flexShrink: 0 }}>
-                <rect x="0.6" y="0.6" width="2.3" height="2.3" rx="0.5" stroke="currentColor" strokeWidth="1.1"/>
-                <rect x="3.5" y="0.5" width="7.5" height="2" rx="0.8" fill="currentColor"/>
-                <rect x="0.6" y="3.8" width="2.3" height="2.3" rx="0.5" stroke="currentColor" strokeWidth="1.1"/>
-                <path d="M1.1 5l0.65 0.65 1.1-1.1" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-                <rect x="3.5" y="4" width="7.5" height="2" rx="0.8" fill="currentColor"/>
-                <rect x="0.6" y="7" width="2.3" height="2.3" rx="0.5" stroke="currentColor" strokeWidth="1.1"/>
-                <rect x="3.5" y="7.5" width="7.5" height="2" rx="0.8" fill="currentColor"/>
-              </svg>
-              Галочки
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Highlight color dropdown */}
-      <div className={styles.sizeWrap} ref={highlightWrapRef}>
-        <button
-          className={styles.btn}
-          style={s}
-          onTouchStart={(e) => { e.preventDefault(); setShowHighlight(v => !v) }}
-          onClick={() => setShowHighlight(v => !v)}
-          title="Выделение цветом"
-        >
-          <span className={styles.hlIcon}>
-            <span>A</span>
-            <span className={styles.hlBar} style={{ background: lastHighlight }} />
-          </span>
-        </button>
-
-        {showHighlight && (
-          <div className={styles.sizeDrop} onMouseDown={(e) => e.preventDefault()}>
-            <div className={styles.hlSwatches}>
-              {HIGHLIGHT_COLORS.map(color => (
-                <button
-                  key={color}
-                  className={styles.hlSwatch}
-                  style={{ background: color }}
-                  onTouchStart={(e) => { e.preventDefault(); applyHighlight(color) }}
-                  onClick={() => applyHighlight(color)}
-                />
-              ))}
-            </div>
-            <div className={styles.dropSep} />
-            <button
-              className={styles.listOption}
-              style={{ color: textColor }}
-              onTouchStart={(e) => { e.preventDefault(); applyHighlight('transparent') }}
-              onClick={() => applyHighlight('transparent')}
-            >Убрать выделение</button>
-          </div>
-        )}
-      </div>
-
-      {/* Photo insert button */}
+      {/* ── Photo button — always visible ── */}
       {onAddFreeImage && (
         <>
           <input
@@ -339,56 +242,182 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, onAddFreeImage 
         </>
       )}
 
-      <span className={styles.sep} />
+      {/* ── Expanded formatting buttons ── */}
+      {showFull && (
+        <>
+          <span className={styles.sep} />
 
-      {/* sizeWrap is the positioning anchor for the dropdown */}
-      <div className={styles.sizeWrap} ref={sizeWrapRef}>
-        <button
-          className={`${styles.btn} ${styles.sizeToggle}`}
-          style={s}
-          onTouchStart={(e) => { e.preventDefault(); handleOpenSizes() }}
-          onClick={handleOpenSizes}
-          title="Размер текста"
-        >
-          <span className={styles.aaIcon}>Аа</span>
-        </button>
+          <button className={styles.btn} style={s} onClick={() => exec('bold')} title="Жирный"><b>B</b></button>
+          <button className={styles.btn} style={{ ...s, fontStyle: 'italic' }} onClick={() => exec('italic')} title="Курсив"><i>I</i></button>
+          <button className={styles.btn} style={{ ...s, textDecoration: 'underline' }} onClick={() => exec('underline')} title="Подчёркнутый">U</button>
+          <button className={styles.btn} style={{ ...s, textDecoration: 'line-through' }} onClick={() => exec('strikeThrough')} title="Зачёркнутый">S</button>
+          <button className={styles.btn} style={{ ...s, fontWeight: 700, fontSize: 14 }} onClick={toggleHeading} title="Заголовок">H</button>
 
-        {showSizes && (
-          <div
-            className={styles.sizeDrop}
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <div className={styles.sizePresets}>
-              {SIZES.map(({ px, label }, i) => (
+          <span className={styles.sep} />
+
+          {/* List type dropdown */}
+          <div className={styles.sizeWrap} ref={listWrapRef}>
+            <button
+              className={styles.btn}
+              style={s}
+              onTouchStart={(e) => { e.preventDefault(); setShowListDrop(v => !v) }}
+              onClick={() => setShowListDrop(v => !v)}
+              title="Списки"
+            >
+              <svg width="13" height="11" viewBox="0 0 13 11" fill="currentColor">
+                <circle cx="1.5" cy="1.5" r="1.5"/>
+                <rect x="4" y="0.5" width="9" height="2" rx="1"/>
+                <circle cx="1.5" cy="5.5" r="1.5"/>
+                <rect x="4" y="4.5" width="9" height="2" rx="1"/>
+                <circle cx="1.5" cy="9.5" r="1.5"/>
+                <rect x="4" y="8.5" width="9" height="2" rx="1"/>
+              </svg>
+            </button>
+
+            {showListDrop && (
+              <div className={styles.sizeDrop} style={{ minWidth: 160 }} onMouseDown={(e) => e.preventDefault()}>
                 <button
-                  key={px}
-                  className={styles.presetBtn}
-                  style={{ color: textColor, fontSize: 9 + i * 2.5 }}
-                  onTouchStart={(e) => { e.preventDefault(); applyFontSize(px); setStepSize(px) }}
-                  onClick={() => { applyFontSize(px); setStepSize(px) }}
-                  title={`${px}px`}
-                >{label}</button>
-              ))}
-            </div>
-            <div className={styles.dropSep} />
-            <div className={styles.stepper}>
-              <button
-                className={styles.stepBtn}
-                style={{ color: textColor }}
-                onTouchStart={(e) => { e.preventDefault(); applyStep(-1) }}
-                onClick={() => applyStep(-1)}
-              >−</button>
-              <span className={styles.stepDisplay} style={{ color: textColor }}>{stepSize}px</span>
-              <button
-                className={styles.stepBtn}
-                style={{ color: textColor }}
-                onTouchStart={(e) => { e.preventDefault(); applyStep(+1) }}
-                onClick={() => applyStep(+1)}
-              >+</button>
-            </div>
+                  className={styles.listOption}
+                  style={{ color: textColor }}
+                  onTouchStart={(e) => { e.preventDefault(); handleListOption('ul') }}
+                  onClick={() => handleListOption('ul')}
+                >
+                  <svg width="11" height="10" viewBox="0 0 11 10" fill="currentColor" style={{ flexShrink: 0 }}>
+                    <circle cx="1.2" cy="1.5" r="1.2"/><rect x="3.5" y="0.5" width="7.5" height="2" rx="0.8"/>
+                    <circle cx="1.2" cy="5" r="1.2"/><rect x="3.5" y="4" width="7.5" height="2" rx="0.8"/>
+                    <circle cx="1.2" cy="8.5" r="1.2"/><rect x="3.5" y="7.5" width="7.5" height="2" rx="0.8"/>
+                  </svg>
+                  Список
+                </button>
+                <button
+                  className={styles.listOption}
+                  style={{ color: textColor }}
+                  onTouchStart={(e) => { e.preventDefault(); handleListOption('ol') }}
+                  onClick={() => handleListOption('ol')}
+                >
+                  <svg width="11" height="10" viewBox="0 0 11 10" fill="currentColor" style={{ flexShrink: 0 }}>
+                    <rect x="0.3" y="0" width="2" height="3" rx="0.6"/>
+                    <rect x="3.5" y="0.5" width="7.5" height="2" rx="0.8"/>
+                    <rect x="0.3" y="3.5" width="2" height="3" rx="0.6"/>
+                    <rect x="3.5" y="4" width="7.5" height="2" rx="0.8"/>
+                    <rect x="0.3" y="7" width="2" height="3" rx="0.6"/>
+                    <rect x="3.5" y="7.5" width="7.5" height="2" rx="0.8"/>
+                  </svg>
+                  Нумерованный
+                </button>
+                <div className={styles.dropSep} />
+                <button
+                  className={styles.listOption}
+                  style={{ color: textColor }}
+                  onTouchStart={(e) => { e.preventDefault(); handleListOption('todo') }}
+                  onClick={() => handleListOption('todo')}
+                >
+                  <svg width="11" height="10" viewBox="0 0 11 10" fill="none" style={{ flexShrink: 0 }}>
+                    <rect x="0.6" y="0.6" width="2.3" height="2.3" rx="0.5" stroke="currentColor" strokeWidth="1.1"/>
+                    <rect x="3.5" y="0.5" width="7.5" height="2" rx="0.8" fill="currentColor"/>
+                    <rect x="0.6" y="3.8" width="2.3" height="2.3" rx="0.5" stroke="currentColor" strokeWidth="1.1"/>
+                    <path d="M1.1 5l0.65 0.65 1.1-1.1" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                    <rect x="3.5" y="4" width="7.5" height="2" rx="0.8" fill="currentColor"/>
+                    <rect x="0.6" y="7" width="2.3" height="2.3" rx="0.5" stroke="currentColor" strokeWidth="1.1"/>
+                    <rect x="3.5" y="7.5" width="7.5" height="2" rx="0.8" fill="currentColor"/>
+                  </svg>
+                  Галочки
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+
+          {/* Highlight color dropdown */}
+          <div className={styles.sizeWrap} ref={highlightWrapRef}>
+            <button
+              className={styles.btn}
+              style={s}
+              onTouchStart={(e) => { e.preventDefault(); setShowHighlight(v => !v) }}
+              onClick={() => setShowHighlight(v => !v)}
+              title="Выделение цветом"
+            >
+              <span className={styles.hlIcon}>
+                <span>A</span>
+                <span className={styles.hlBar} style={{ background: lastHighlight }} />
+              </span>
+            </button>
+
+            {showHighlight && (
+              <div className={styles.sizeDrop} onMouseDown={(e) => e.preventDefault()}>
+                <div className={styles.hlSwatches}>
+                  {HIGHLIGHT_COLORS.map(color => (
+                    <button
+                      key={color}
+                      className={styles.hlSwatch}
+                      style={{ background: color }}
+                      onTouchStart={(e) => { e.preventDefault(); applyHighlight(color) }}
+                      onClick={() => applyHighlight(color)}
+                    />
+                  ))}
+                </div>
+                <div className={styles.dropSep} />
+                <button
+                  className={styles.listOption}
+                  style={{ color: textColor }}
+                  onTouchStart={(e) => { e.preventDefault(); applyHighlight('transparent') }}
+                  onClick={() => applyHighlight('transparent')}
+                >Убрать выделение</button>
+              </div>
+            )}
+          </div>
+
+          <span className={styles.sep} />
+
+          {/* Size dropdown */}
+          <div className={styles.sizeWrap} ref={sizeWrapRef}>
+            <button
+              className={`${styles.btn} ${styles.sizeToggle}`}
+              style={s}
+              onTouchStart={(e) => { e.preventDefault(); handleOpenSizes() }}
+              onClick={handleOpenSizes}
+              title="Размер текста"
+            >
+              <span className={styles.aaIcon}>Аа</span>
+            </button>
+
+            {showSizes && (
+              <div
+                className={styles.sizeDrop}
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                <div className={styles.sizePresets}>
+                  {SIZES.map(({ px, label }, i) => (
+                    <button
+                      key={px}
+                      className={styles.presetBtn}
+                      style={{ color: textColor, fontSize: 9 + i * 2.5 }}
+                      onTouchStart={(e) => { e.preventDefault(); applyFontSize(px); setStepSize(px) }}
+                      onClick={() => { applyFontSize(px); setStepSize(px) }}
+                      title={`${px}px`}
+                    >{label}</button>
+                  ))}
+                </div>
+                <div className={styles.dropSep} />
+                <div className={styles.stepper}>
+                  <button
+                    className={styles.stepBtn}
+                    style={{ color: textColor }}
+                    onTouchStart={(e) => { e.preventDefault(); applyStep(-1) }}
+                    onClick={() => applyStep(-1)}
+                  >−</button>
+                  <span className={styles.stepDisplay} style={{ color: textColor }}>{stepSize}px</span>
+                  <button
+                    className={styles.stepBtn}
+                    style={{ color: textColor }}
+                    onTouchStart={(e) => { e.preventDefault(); applyStep(+1) }}
+                    onClick={() => applyStep(+1)}
+                  >+</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }
