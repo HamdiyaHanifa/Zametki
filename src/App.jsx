@@ -41,6 +41,7 @@ function createCanvas(id, name) {
     order: [],
     nextNoteId: 1,
     viewport: { x: 0, y: 0, scale: 1 },
+    wordGoal: 0,
   }
 }
 
@@ -271,6 +272,10 @@ export default function App() {
   const renameCanvas = useCallback((id, name) => {
     setCanvases((prev) => prev.map((c) => c.id === id ? { ...c, name } : c))
   }, [])
+
+  const setWordGoal = useCallback((goal) => {
+    setCanvases((prev) => prev.map((c) => c.id === activeCanvasId ? { ...c, wordGoal: goal } : c))
+  }, [activeCanvasId])
 
   const duplicateCanvas = useCallback((id) => {
     const canvas = canvases.find(c => c.id === id)
@@ -790,6 +795,8 @@ export default function App() {
         focusActive={showFocusMode}
         onHome={openHome}
         canvasName={activeCanvas?.name}
+        wordGoal={activeCanvas?.wordGoal ?? 0}
+        onSetWordGoal={setWordGoal}
       />
       <FocusMode
         totalWords={notes.reduce((sum, n) => sum + noteWordCount(n), 0)}

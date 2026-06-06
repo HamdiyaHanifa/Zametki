@@ -3,15 +3,36 @@ import { noteWordCount, wordForm } from '../utils/wordCount'
 import { TAGS } from '../utils/tags'
 import styles from './Toolbar.module.css'
 
-export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName, exportTagCounts = {} }) {
+export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName, exportTagCounts = {}, wordGoal = 0, onSetWordGoal }) {
   const fileRef = useRef(null)
   const importRef = useRef(null)
   const panelRef = useRef(null)
   const exportMenuRef = useRef(null)
+  const goalInputRef = useRef(null)
 
   const [showWordPanel, setShowWordPanel] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
+  const [showGoalInput, setShowGoalInput] = useState(false)
+  const [goalDraft, setGoalDraft] = useState('')
+
+  const goalReached = wordGoal > 0 && totalWords >= wordGoal
+  const goalProgress = wordGoal > 0 ? Math.min(1, totalWords / wordGoal) : 0
+
+  const commitGoal = () => {
+    const n = parseInt(goalDraft, 10)
+    onSetWordGoal?.(n > 0 ? n : 0)
+    setShowGoalInput(false)
+  }
+
+  useEffect(() => {
+    if (!showGoalInput) return
+    const onDown = (e) => {
+      if (!goalInputRef.current?.contains(e.target)) setShowGoalInput(false)
+    }
+    const id = setTimeout(() => document.addEventListener('pointerdown', onDown), 0)
+    return () => { clearTimeout(id); document.removeEventListener('pointerdown', onDown) }
+  }, [showGoalInput])
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -68,16 +89,55 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
         <span className={styles.canvasName}>{canvasName}</span>
       </button>
       <span className={styles.scale}>{Math.round(scale * 100)}%</span>
-      {totalWords > 0 && (
-        <span className={styles.totalWordsWrap}>
-          <span className={styles.totalWords}>{totalWords} {wordForm(totalWords)}</span>
+      <div className={styles.goalSection}>
+        {(totalWords > 0 || wordGoal > 0) && (
+          <span className={`${styles.totalWords} ${goalReached ? styles.totalWordsGoal : ''}`}>
+            {totalWords} {wordForm(totalWords)}
+            {wordGoal > 0 && (
+              <span className={styles.goalFraction}> / {wordGoal}</span>
+            )}
+            {goalReached && <span className={styles.goalCheck}> ✓</span>}
+          </span>
+        )}
+        {wordGoal > 0 && !goalReached && (
+          <div className={styles.goalBar}>
+            <div className={styles.goalBarFill} style={{ width: `${goalProgress * 100}%` }} />
+          </div>
+        )}
+        {totalWords > 0 && (
+          <button className={styles.resetAllBtn} onClick={onResetAllWordCounts} title="Обнулить счётчик слов">↺</button>
+        )}
+        {showGoalInput ? (
+          <div className={styles.goalInputWrap} ref={goalInputRef}>
+            <input
+              type="number"
+              min="1"
+              className={styles.goalInput}
+              value={goalDraft}
+              onChange={(e) => setGoalDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') commitGoal(); if (e.key === 'Escape') setShowGoalInput(false) }}
+              placeholder="1000"
+              autoFocus
+            />
+            <button className={styles.goalConfirmBtn} onClick={commitGoal}>✓</button>
+            {wordGoal > 0 && (
+              <button className={styles.goalRemoveBtn} onClick={() => { onSetWordGoal?.(0); setShowGoalInput(false) }}>✕</button>
+            )}
+          </div>
+        ) : (
           <button
-            className={styles.resetAllBtn}
-            onClick={onResetAllWordCounts}
-            title="Обнулить счётчик слов на всём холсте"
-          >↺</button>
-        </span>
-      )}
+            className={`${styles.goalToggleBtn} ${wordGoal > 0 ? styles.goalToggleBtnActive : ''}`}
+            onClick={() => { setGoalDraft(wordGoal > 0 ? String(wordGoal) : ''); setShowGoalInput(true) }}
+            title={wordGoal > 0 ? 'Изменить цель слов' : 'Установить цель слов'}
+          >
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
+              <circle cx="7" cy="7" r="3" stroke="currentColor" strokeWidth="1.5"/>
+              <circle cx="7" cy="7" r="1" fill="currentColor"/>
+            </svg>
+          </button>
+        )}
+      </div>
       <div className={styles.wordBtnWrap} ref={panelRef}>
         <button
           className={styles.iconBtn}
