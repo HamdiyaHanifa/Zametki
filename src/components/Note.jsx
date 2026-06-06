@@ -48,7 +48,6 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
   const editorRef        = useRef(null)
   const savedRangeRef    = useRef(null)
   const freeImgWrapRef   = useRef(null)
-  const colorPickerRef   = useRef(null)
   const prevWordsRef     = useRef(countWords(note.htmlContent || ''))
   const [showHandles, setShowHandles] = useState(false)
   const hideTimerRef     = useRef(null)
@@ -408,24 +407,27 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
               style={{ background: c.header, outline: (!note.customColor && note.colorIndex === i) ? `2px solid ${c.text}` : 'none', outlineOffset: 2 }}
               onClick={() => { onUpdate(note.id, { colorIndex: i, customColor: null, customColorSat: null }); setShowPicker(false) }} />
           ))}
-          <input ref={colorPickerRef} type="color" style={{ display: 'none' }}
-            onChange={(e) => onUpdate(note.id, { customColor: e.target.value })} />
-          <button
+          <label
             className={styles.swatch}
             style={{
               background: note.customColor || 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)',
               outline: note.customColor ? '2px solid rgba(0,0,0,0.45)' : 'none',
               outlineOffset: 2,
               overflow: 'hidden',
-            }}
-            onClick={() => {
-              if (colorPickerRef.current) {
-                colorPickerRef.current.value = note.customColor || '#e8a4ae'
-                colorPickerRef.current.click()
-              }
+              position: 'relative',
+              cursor: 'pointer',
             }}
             title="Свой цвет"
-          />
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
+            <input
+              type="color"
+              style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', padding: 0, border: 'none' }}
+              value={note.customColor || '#e8a4ae'}
+              onChange={(e) => onUpdate(note.id, { customColor: e.target.value })}
+            />
+          </label>
           {note.customColor && (
             <div className={styles.pickerSatRow}>
               <input type="range" min="0.1" max="1" step="0.05"
