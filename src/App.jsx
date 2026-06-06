@@ -42,6 +42,8 @@ function createCanvas(id, name) {
     nextNoteId: 1,
     viewport: { x: 0, y: 0, scale: 1 },
     wordGoal: 0,
+    cumulativeWords: 0,
+    wordCountMode: 'live',
   }
 }
 
@@ -275,6 +277,20 @@ export default function App() {
 
   const setWordGoal = useCallback((goal) => {
     setCanvases((prev) => prev.map((c) => c.id === activeCanvasId ? { ...c, wordGoal: goal } : c))
+  }, [activeCanvasId])
+
+  const addCumulativeWords = useCallback((delta) => {
+    setCanvases((prev) => prev.map((c) => c.id === activeCanvasId
+      ? { ...c, cumulativeWords: (c.cumulativeWords || 0) + delta }
+      : c
+    ))
+  }, [activeCanvasId])
+
+  const toggleWordCountMode = useCallback(() => {
+    setCanvases((prev) => prev.map((c) => c.id === activeCanvasId
+      ? { ...c, wordCountMode: c.wordCountMode === 'cumulative' ? 'live' : 'cumulative' }
+      : c
+    ))
   }, [activeCanvasId])
 
   const duplicateCanvas = useCallback((id) => {
@@ -797,6 +813,9 @@ export default function App() {
         canvasName={activeCanvas?.name}
         wordGoal={activeCanvas?.wordGoal ?? 0}
         onSetWordGoal={setWordGoal}
+        wordCountMode={activeCanvas?.wordCountMode ?? 'live'}
+        cumulativeWords={activeCanvas?.cumulativeWords ?? 0}
+        onToggleWordCountMode={toggleWordCountMode}
       />
       <FocusMode
         totalWords={notes.reduce((sum, n) => sum + noteWordCount(n), 0)}
@@ -877,6 +896,7 @@ export default function App() {
                 scale={vpState.scale}
                 zIndex={order.indexOf(note.id) + 1}
                 onResetWordCount={resetNoteWordCount}
+                onCumulativeAdd={addCumulativeWords}
               />
             ) : (
               <Note
@@ -891,6 +911,7 @@ export default function App() {
                 scale={vpState.scale}
                 zIndex={order.indexOf(note.id) + 1}
                 onResetWordCount={resetNoteWordCount}
+                onCumulativeAdd={addCumulativeWords}
                 onTimerDangerActivity={handleTimerDangerActivity}
                 blindMode={timerBlindMode}
                 timerDangerResetSignal={timerDangerResetSignal}

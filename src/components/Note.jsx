@@ -31,7 +31,7 @@ function lastVisible(html, mode) {
   return text
 }
 
-export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, onOpenFocus, zIndex, scale, onResetWordCount, onTimerDangerActivity, blindMode = 'off', timerDangerResetSignal }) {
+export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, onOpenFocus, zIndex, scale, onResetWordCount, onCumulativeAdd, onTimerDangerActivity, blindMode = 'off', timerDangerResetSignal }) {
   const [showPicker, setShowPicker] = useState(false)
   const [showTagPicker, setShowTagPicker] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -46,6 +46,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
   const editorRef        = useRef(null)
   const savedRangeRef    = useRef(null)
   const freeImgWrapRef   = useRef(null)
+  const prevWordsRef     = useRef(countWords(note.htmlContent || ''))
   const [showHandles, setShowHandles] = useState(false)
   const hideTimerRef     = useRef(null)
   const resizingRef      = useRef(false)
@@ -53,6 +54,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
   useEffect(() => {
     if (!editorRef.current) return
     editorRef.current.innerHTML = note.htmlContent || ''
+    prevWordsRef.current = countWords(note.htmlContent || '')
   }, [note.id, note.minimized]) // eslint-disable-line
 
   useEffect(() => {
@@ -94,9 +96,14 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
   }, [])
 
   const handleInput = useCallback(() => {
-    onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
+    const html = editorRef.current?.innerHTML || ''
+    onUpdate(note.id, { htmlContent: html })
     onTimerDangerActivity?.()
-  }, [note.id, onUpdate, onTimerDangerActivity])
+    const newWords = countWords(html)
+    const delta = newWords - prevWordsRef.current
+    if (delta > 0) onCumulativeAdd?.(delta)
+    prevWordsRef.current = newWords
+  }, [note.id, onUpdate, onTimerDangerActivity, onCumulativeAdd])
 
   const handleEditorMouseDown = useCallback((e) => {
     e.stopPropagation()

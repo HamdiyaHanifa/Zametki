@@ -94,6 +94,36 @@
   transition: width 0.3s ease;
 }
 
+.modeToggleBtn {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.35);
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  padding: 1px 5px;
+  cursor: pointer;
+  line-height: 1.5;
+  transition: color 0.12s, background 0.12s, border-color 0.12s;
+  flex-shrink: 0;
+}
+
+.modeToggleBtn:hover {
+  color: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.modeToggleBtnActive {
+  color: #5c9e65;
+  border-color: #5c9e65;
+}
+
+.modeToggleBtnActive:hover {
+  color: #2e7d32;
+  border-color: #2e7d32;
+}
+
 .goalToggleBtn {
   width: 22px;
   height: 22px;

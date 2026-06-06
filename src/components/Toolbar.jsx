@@ -3,7 +3,7 @@ import { noteWordCount, wordForm } from '../utils/wordCount'
 import { TAGS } from '../utils/tags'
 import styles from './Toolbar.module.css'
 
-export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName, exportTagCounts = {}, wordGoal = 0, onSetWordGoal }) {
+export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName, exportTagCounts = {}, wordGoal = 0, onSetWordGoal, wordCountMode = 'live', cumulativeWords = 0, onToggleWordCountMode }) {
   const fileRef = useRef(null)
   const importRef = useRef(null)
   const panelRef = useRef(null)
@@ -16,8 +16,9 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
   const [showGoalInput, setShowGoalInput] = useState(false)
   const [goalDraft, setGoalDraft] = useState('')
 
-  const goalReached = wordGoal > 0 && totalWords >= wordGoal
-  const goalProgress = wordGoal > 0 ? Math.min(1, totalWords / wordGoal) : 0
+  const displayWords = wordCountMode === 'cumulative' ? cumulativeWords : totalWords
+  const goalReached = wordGoal > 0 && displayWords >= wordGoal
+  const goalProgress = wordGoal > 0 ? Math.min(1, displayWords / wordGoal) : 0
 
   const commitGoal = () => {
     const n = parseInt(goalDraft, 10)
@@ -90,9 +91,9 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
       </button>
       <span className={styles.scale}>{Math.round(scale * 100)}%</span>
       <div className={styles.goalSection}>
-        {(totalWords > 0 || wordGoal > 0) && (
+        {(displayWords > 0 || wordGoal > 0) && (
           <span className={`${styles.totalWords} ${goalReached ? styles.totalWordsGoal : ''}`}>
-            {totalWords} {wordForm(totalWords)}
+            {displayWords} {wordForm(displayWords)}
             {wordGoal > 0 && (
               <span className={styles.goalFraction}> / {wordGoal}</span>
             )}
@@ -104,7 +105,16 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
             <div className={styles.goalBarFill} style={{ width: `${goalProgress * 100}%` }} />
           </div>
         )}
-        {totalWords > 0 && (
+        {(totalWords > 0 || cumulativeWords > 0) && (
+          <button
+            className={`${styles.modeToggleBtn} ${wordCountMode === 'cumulative' ? styles.modeToggleBtnActive : ''}`}
+            onClick={onToggleWordCountMode}
+            title={wordCountMode === 'live' ? 'Живой счётчик (реагирует на удаление). Нажмите для накопительного' : 'Накопительный счётчик (только растёт). Нажмите для живого'}
+          >
+            {wordCountMode === 'live' ? 'Живой' : 'Накоп.'}
+          </button>
+        )}
+        {wordCountMode === 'live' && totalWords > 0 && (
           <button className={styles.resetAllBtn} onClick={onResetAllWordCounts} title="Обнулить счётчик слов">↺</button>
         )}
         {showGoalInput ? (

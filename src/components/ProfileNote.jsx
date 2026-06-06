@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 import { useDrag } from '../hooks/useDrag'
 import { PALETTE } from '../palette'
 import { NoteHandles } from './NoteHandles'
@@ -14,7 +14,7 @@ const DEFAULT_FIELDS = [
   { id: 4, label: 'Роль', value: '' },
 ]
 
-export function ProfileNote({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, onOpenFocus, zIndex, scale, onResetWordCount }) {
+export function ProfileNote({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, onOpenFocus, zIndex, scale, onResetWordCount, onCumulativeAdd }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
   const [showHandles, setShowHandles] = useState(false)
@@ -23,9 +23,17 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onDuplicate, onF
   const noteRef    = useRef(null)
   const hideTimerRef = useRef(null)
   const resizingRef  = useRef(false)
+  const fields = note.fields ?? DEFAULT_FIELDS
+  const prevWordsRef = useRef(
+    countWords(note.description || '') + fields.reduce((s, f) => s + countWords(f.value || ''), 0)
+  )
+
+  useEffect(() => {
+    const f = note.fields ?? DEFAULT_FIELDS
+    prevWordsRef.current = countWords(note.description || '') + f.reduce((s, f2) => s + countWords(f2.value || ''), 0)
+  }, [note.id]) // eslint-disable-line
 
   const w = note.width || 260
-  const fields = note.fields ?? DEFAULT_FIELDS
 
   const handlePositionChange = useCallback((dx, dy) => onMove(note.id, dx, dy), [note.id, onMove])
   const { onMouseDown: dragMouseDown, onTouchStart: dragTouchStart } = useDrag(handlePositionChange)
@@ -43,8 +51,15 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onDuplicate, onF
   }, [note.id, fields, onUpdate])
 
   const updateField = useCallback((fid, key, val) => {
-    onUpdate(note.id, { fields: fields.map(f => f.id === fid ? { ...f, [key]: val } : f) })
-  }, [note.id, fields, onUpdate])
+    const newFields = fields.map(f => f.id === fid ? { ...f, [key]: val } : f)
+    onUpdate(note.id, { fields: newFields })
+    if (key === 'value' && onCumulativeAdd) {
+      const newTotal = countWords(note.description || '') + newFields.reduce((s, f) => s + countWords(f.value || ''), 0)
+      const delta = newTotal - prevWordsRef.current
+      if (delta > 0) onCumulativeAdd(delta)
+      prevWordsRef.current = newTotal
+    }
+  }, [note.id, fields, note.description, onUpdate, onCumulativeAdd])
 
   const removeField = useCallback((fid) => {
     onUpdate(note.id, { fields: fields.filter(f => f.id !== fid) })
@@ -280,6 +295,12 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onDuplicate, onF
                 el.style.height = 'auto'
                 el.style.height = el.scrollHeight + 'px'
                 onUpdate(note.id, { description: e.target.value })
+                if (onCumulativeAdd) {
+                  const newTotal = countWords(e.target.value) + fields.reduce((s, f) => s + countWords(f.value || ''), 0)
+                  const delta = newTotal - prevWordsRef.current
+                  if (delta > 0) onCumulativeAdd(delta)
+                  prevWordsRef.current = newTotal
+                }
               }}
               onFocus={(e) => {
                 const el = e.target
