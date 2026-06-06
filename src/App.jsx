@@ -49,18 +49,14 @@ function createCanvas(id, name) {
   }
 }
 
-function hexToRgba(hex, alpha = 1) {
+function mixWithWhite(hex, t) {
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)
   const b = parseInt(hex.slice(5, 7), 16)
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
-
-function isDarkColor(hex) {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return (r * 299 + g * 587 + b * 114) / 1000 < 128
+  const rr = Math.round(255 + (r - 255) * t)
+  const gg = Math.round(255 + (g - 255) * t)
+  const bb = Math.round(255 + (b - 255) * t)
+  return { css: `rgb(${rr}, ${gg}, ${bb})`, isDark: (rr * 299 + gg * 587 + bb * 114) / 1000 < 128 }
 }
 
 const DEFAULT_NOTES = [
@@ -815,6 +811,11 @@ export default function App() {
     if (n.tag) exportTagCounts[n.tag] = (exportTagCounts[n.tag] || 0) + 1
   }))
 
+  const { css: canvasBgCss, isDark: canvasBgDark } = mixWithWhite(
+    activeCanvas?.bgColor ?? '#f0ece8',
+    activeCanvas?.bgOpacity ?? 1
+  )
+
   return (
     <div className={styles.canvas}>
       <Toolbar
@@ -897,8 +898,8 @@ export default function App() {
       <div
         ref={bgRef}
         className={`${styles.background} ${isDragOver ? styles.dragOver : ''}`}
-        data-dark={isDarkColor(activeCanvas?.bgColor ?? '#f0ece8') ? 'true' : undefined}
-        style={{ backgroundColor: hexToRgba(activeCanvas?.bgColor ?? '#f0ece8', activeCanvas?.bgOpacity ?? 1) }}
+        data-dark={canvasBgDark ? 'true' : undefined}
+        style={{ backgroundColor: canvasBgCss }}
         onMouseDown={handleBgMouseDown}
         onTouchStart={handleBgTouchStart}
         onDrop={handleDrop}

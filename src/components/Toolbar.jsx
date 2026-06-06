@@ -138,7 +138,7 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
               ))}
             </div>
             <div className={styles.bgOpacityRow}>
-              <span className={styles.bgOpacityLabel}>Прозрачность</span>
+              <span className={styles.bgOpacityLabel}>Насыщенность</span>
               <input
                 type="range"
                 min="0.1"
