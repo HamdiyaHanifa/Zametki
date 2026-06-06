@@ -46,6 +46,8 @@ function createCanvas(id, name) {
     wordCountMode: 'live',
     bgColor: '#f0ece8',
     bgOpacity: 1,
+    bgImage: null,
+    bgImageOpacity: 0.5,
   }
 }
 
@@ -311,6 +313,14 @@ export default function App() {
 
   const setBgOpacity = useCallback((opacity) => {
     setCanvases((prev) => prev.map((c) => c.id === activeCanvasId ? { ...c, bgOpacity: opacity } : c))
+  }, [activeCanvasId])
+
+  const setBgImage = useCallback((imageData) => {
+    setCanvases((prev) => prev.map((c) => c.id === activeCanvasId ? { ...c, bgImage: imageData } : c))
+  }, [activeCanvasId])
+
+  const setBgImageOpacity = useCallback((opacity) => {
+    setCanvases((prev) => prev.map((c) => c.id === activeCanvasId ? { ...c, bgImageOpacity: opacity } : c))
   }, [activeCanvasId])
 
   const duplicateCanvas = useCallback((id) => {
@@ -845,6 +855,10 @@ export default function App() {
         bgOpacity={activeCanvas?.bgOpacity ?? 1}
         onSetBgColor={setBgColor}
         onSetBgOpacity={setBgOpacity}
+        bgImage={activeCanvas?.bgImage ?? null}
+        bgImageOpacity={activeCanvas?.bgImageOpacity ?? 0.5}
+        onSetBgImage={setBgImage}
+        onSetBgImageOpacity={setBgImageOpacity}
       />
       <FocusMode
         totalWords={notes.reduce((sum, n) => sum + noteWordCount(n), 0)}
@@ -906,6 +920,13 @@ export default function App() {
         onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
         onDragLeave={() => setIsDragOver(false)}
       >
+        {activeCanvas?.bgImage && (
+          <div
+            className={styles.bgImageLayer}
+            style={{ backgroundImage: `url(${activeCanvas.bgImage})`, opacity: activeCanvas.bgImageOpacity ?? 0.5 }}
+          />
+        )}
+        <div className={styles.bgDots} />
         <div
           className={styles.world}
           style={{

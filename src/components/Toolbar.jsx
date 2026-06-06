@@ -18,7 +18,7 @@ const BG_COLORS = [
   { color: '#1e2d20', label: 'Лес' },
 ]
 
-export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName, exportTagCounts = {}, wordGoal = 0, onSetWordGoal, wordCountMode = 'live', cumulativeWords = 0, onToggleWordCountMode, bgColor = '#f0ece8', bgOpacity = 1, onSetBgColor, onSetBgOpacity }) {
+export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName, exportTagCounts = {}, wordGoal = 0, onSetWordGoal, wordCountMode = 'live', cumulativeWords = 0, onToggleWordCountMode, bgColor = '#f0ece8', bgOpacity = 1, onSetBgColor, onSetBgOpacity, bgImage = null, bgImageOpacity = 0.5, onSetBgImage, onSetBgImageOpacity }) {
   const fileRef = useRef(null)
   const importRef = useRef(null)
   const panelRef = useRef(null)
@@ -161,6 +161,44 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
                 className={styles.bgOpacitySlider}
               />
               <span className={styles.bgOpacityValue}>{Math.round(bgOpacity * 100)}%</span>
+            </div>
+            <div className={styles.bgDivider} />
+            <div className={styles.bgImageSection}>
+              {bgImage && (
+                <>
+                  <div className={styles.bgImagePreview} style={{ backgroundImage: `url(${bgImage})` }} />
+                  <div className={styles.bgOpacityRow}>
+                    <span className={styles.bgOpacityLabel}>Фото</span>
+                    <input
+                      type="range"
+                      min="0.05"
+                      max="1"
+                      step="0.05"
+                      value={bgImageOpacity}
+                      onChange={(e) => onSetBgImageOpacity?.(parseFloat(e.target.value))}
+                      className={styles.bgOpacitySlider}
+                    />
+                    <span className={styles.bgOpacityValue}>{Math.round(bgImageOpacity * 100)}%</span>
+                    <button className={styles.bgImageRemoveBtn} onClick={() => onSetBgImage?.(null)} title="Убрать фото">✕</button>
+                  </div>
+                </>
+              )}
+              <label className={styles.bgImageUploadBtn}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const reader = new FileReader()
+                    reader.onload = (ev) => onSetBgImage?.(ev.target.result)
+                    reader.readAsDataURL(file)
+                    e.target.value = ''
+                  }}
+                />
+                {bgImage ? '🔄 Заменить фото' : '📷 Фото фона'}
+              </label>
             </div>
           </div>
         )}

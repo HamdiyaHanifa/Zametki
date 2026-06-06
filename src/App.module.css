@@ -13,17 +13,35 @@
   overflow: hidden;
   cursor: grab;
   background-color: #f0ece8;
-  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
-  background-size: 32px 32px;
   transition: background-color 0.25s ease;
-}
-
-.background[data-dark="true"] {
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
 }
 
 .background:active {
   cursor: grabbing;
+}
+
+/* Photo layer — sits above solid color, below dot grid */
+.bgImageLayer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+/* Dot grid layer — always on top of photo, below notes */
+.bgDots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+.background[data-dark="true"] .bgDots {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
 }
 
 .world {
