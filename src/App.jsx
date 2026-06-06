@@ -44,7 +44,23 @@ function createCanvas(id, name) {
     wordGoal: 0,
     cumulativeWords: 0,
     wordCountMode: 'live',
+    bgColor: '#f0ece8',
+    bgOpacity: 1,
   }
+}
+
+function hexToRgba(hex, alpha = 1) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+function isDarkColor(hex) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return (r * 299 + g * 587 + b * 114) / 1000 < 128
 }
 
 const DEFAULT_NOTES = [
@@ -291,6 +307,14 @@ export default function App() {
       ? { ...c, wordCountMode: c.wordCountMode === 'cumulative' ? 'live' : 'cumulative' }
       : c
     ))
+  }, [activeCanvasId])
+
+  const setBgColor = useCallback((color) => {
+    setCanvases((prev) => prev.map((c) => c.id === activeCanvasId ? { ...c, bgColor: color } : c))
+  }, [activeCanvasId])
+
+  const setBgOpacity = useCallback((opacity) => {
+    setCanvases((prev) => prev.map((c) => c.id === activeCanvasId ? { ...c, bgOpacity: opacity } : c))
   }, [activeCanvasId])
 
   const duplicateCanvas = useCallback((id) => {
@@ -816,6 +840,10 @@ export default function App() {
         wordCountMode={activeCanvas?.wordCountMode ?? 'live'}
         cumulativeWords={activeCanvas?.cumulativeWords ?? 0}
         onToggleWordCountMode={toggleWordCountMode}
+        bgColor={activeCanvas?.bgColor ?? '#f0ece8'}
+        bgOpacity={activeCanvas?.bgOpacity ?? 1}
+        onSetBgColor={setBgColor}
+        onSetBgOpacity={setBgOpacity}
       />
       <FocusMode
         totalWords={notes.reduce((sum, n) => sum + noteWordCount(n), 0)}
@@ -869,6 +897,8 @@ export default function App() {
       <div
         ref={bgRef}
         className={`${styles.background} ${isDragOver ? styles.dragOver : ''}`}
+        data-dark={isDarkColor(activeCanvas?.bgColor ?? '#f0ece8') ? 'true' : undefined}
+        style={{ backgroundColor: hexToRgba(activeCanvas?.bgColor ?? '#f0ece8', activeCanvas?.bgOpacity ?? 1) }}
         onMouseDown={handleBgMouseDown}
         onTouchStart={handleBgTouchStart}
         onDrop={handleDrop}

@@ -3,18 +3,35 @@ import { noteWordCount, wordForm } from '../utils/wordCount'
 import { TAGS } from '../utils/tags'
 import styles from './Toolbar.module.css'
 
-export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName, exportTagCounts = {}, wordGoal = 0, onSetWordGoal, wordCountMode = 'live', cumulativeWords = 0, onToggleWordCountMode }) {
+const BG_COLORS = [
+  { color: '#f0ece8', label: 'Бежевый' },
+  { color: '#f5f5f2', label: 'Белый' },
+  { color: '#e8ecf0', label: 'Голубой' },
+  { color: '#e4f0e8', label: 'Мятный' },
+  { color: '#f0e8ec', label: 'Розовый' },
+  { color: '#ede8f0', label: 'Сиреневый' },
+  { color: '#f0f0e0', label: 'Жёлтый' },
+  { color: '#e8e8e8', label: 'Серый' },
+  { color: '#1e1e2e', label: 'Ночь' },
+  { color: '#1a1a1a', label: 'Чёрный' },
+  { color: '#2d2020', label: 'Гранат' },
+  { color: '#1e2d20', label: 'Лес' },
+]
+
+export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName, exportTagCounts = {}, wordGoal = 0, onSetWordGoal, wordCountMode = 'live', cumulativeWords = 0, onToggleWordCountMode, bgColor = '#f0ece8', bgOpacity = 1, onSetBgColor, onSetBgOpacity }) {
   const fileRef = useRef(null)
   const importRef = useRef(null)
   const panelRef = useRef(null)
   const exportMenuRef = useRef(null)
   const goalInputRef = useRef(null)
+  const bgColorRef = useRef(null)
 
   const [showWordPanel, setShowWordPanel] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [showGoalInput, setShowGoalInput] = useState(false)
   const [goalDraft, setGoalDraft] = useState('')
+  const [showBgPanel, setShowBgPanel] = useState(false)
 
   const displayWords = wordCountMode === 'cumulative' ? cumulativeWords : totalWords
   const goalReached = wordGoal > 0 && displayWords >= wordGoal
@@ -81,6 +98,15 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [showExportMenu])
 
+  useEffect(() => {
+    if (!showBgPanel) return
+    const onPointerDown = (e) => {
+      if (bgColorRef.current && !bgColorRef.current.contains(e.target)) setShowBgPanel(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [showBgPanel])
+
   return (
     <div className={styles.toolbar}>
       <button className={styles.backBtn} onClick={onHome} title="Все холсты">
@@ -90,6 +116,43 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
         <span className={styles.canvasName}>{canvasName}</span>
       </button>
       <span className={styles.scale}>{Math.round(scale * 100)}%</span>
+      <div className={styles.bgColorWrap} ref={bgColorRef}>
+        <button
+          className={`${styles.bgColorBtn} ${showBgPanel ? styles.bgColorBtnActive : ''}`}
+          onClick={() => setShowBgPanel(v => !v)}
+          title="Цвет фона холста"
+          style={{ background: bgColor }}
+        />
+        {showBgPanel && (
+          <div className={styles.bgPanel}>
+            <div className={styles.bgPanelTitle}>Фон холста</div>
+            <div className={styles.bgColorGrid}>
+              {BG_COLORS.map(({ color, label }) => (
+                <button
+                  key={color}
+                  className={`${styles.bgSwatch} ${bgColor === color ? styles.bgSwatchActive : ''}`}
+                  style={{ background: color }}
+                  onClick={() => { onSetBgColor?.(color); setShowBgPanel(false) }}
+                  title={label}
+                />
+              ))}
+            </div>
+            <div className={styles.bgOpacityRow}>
+              <span className={styles.bgOpacityLabel}>Прозрачность</span>
+              <input
+                type="range"
+                min="0.1"
+                max="1"
+                step="0.05"
+                value={bgOpacity}
+                onChange={(e) => onSetBgOpacity?.(parseFloat(e.target.value))}
+                className={styles.bgOpacitySlider}
+              />
+              <span className={styles.bgOpacityValue}>{Math.round(bgOpacity * 100)}%</span>
+            </div>
+          </div>
+        )}
+      </div>
       <div className={styles.goalSection}>
         {(displayWords > 0 || wordGoal > 0) && (
           <span className={`${styles.totalWords} ${goalReached ? styles.totalWordsGoal : ''}`}>

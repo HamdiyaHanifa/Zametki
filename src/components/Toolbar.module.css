@@ -94,6 +94,115 @@
   transition: width 0.3s ease;
 }
 
+/* ── Canvas background color picker ── */
+.bgColorWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.bgColorBtn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s, border-color 0.12s;
+  flex-shrink: 0;
+  display: block;
+}
+
+.bgColorBtn:hover {
+  transform: scale(1.15);
+  border-color: rgba(0, 0, 0, 0.35);
+}
+
+.bgColorBtnActive {
+  border-color: rgba(0, 0, 0, 0.5) !important;
+  transform: scale(1.1);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
+}
+
+.bgPanel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  background: rgba(255, 250, 246, 0.98);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.13);
+  width: 194px;
+  padding: 10px;
+  z-index: 9999;
+}
+
+.bgPanelTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.bgColorGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.bgSwatch {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s, border-color 0.12s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.bgSwatch:hover {
+  transform: scale(1.1);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.bgSwatchActive {
+  border-color: rgba(0, 0, 0, 0.55) !important;
+  transform: scale(1.08);
+}
+
+.bgOpacityRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bgOpacityLabel {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bgOpacitySlider {
+  flex: 1;
+  height: 3px;
+  accent-color: #5c9e65;
+  cursor: pointer;
+}
+
+.bgOpacityValue {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+  font-variant-numeric: tabular-nums;
+  min-width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
 .modeToggleBtn {
   font-size: 10px;
   font-weight: 600;
