@@ -3,6 +3,7 @@ import { useDrag } from '../hooks/useDrag'
 import { PALETTE } from '../palette'
 import { NoteHandles } from './NoteHandles'
 import { countWords, wordForm, noteWordCount } from '../utils/wordCount'
+import { paletteFromHex } from '../palette'
 import styles from './ProfileNote.module.css'
 
 const MIN_W = 220
@@ -18,11 +19,14 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onDuplicate, onF
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
   const [showHandles, setShowHandles] = useState(false)
-  const color = PALETTE[note.colorIndex % PALETTE.length]
-  const fileRef    = useRef(null)
-  const noteRef    = useRef(null)
-  const hideTimerRef = useRef(null)
-  const resizingRef  = useRef(false)
+  const color = note.customColor
+    ? paletteFromHex(note.customColor, note.customColorSat ?? 1)
+    : PALETTE[note.colorIndex % PALETTE.length]
+  const fileRef        = useRef(null)
+  const noteRef        = useRef(null)
+  const hideTimerRef   = useRef(null)
+  const resizingRef    = useRef(false)
+  const colorPickerRef = useRef(null)
   const fields = note.fields ?? DEFAULT_FIELDS
   const prevWordsRef = useRef(
     countWords(note.description || '') + fields.reduce((s, f) => s + countWords(f.value || ''), 0)
@@ -194,9 +198,36 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onDuplicate, onF
           onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
           {PALETTE.map((c, i) => (
             <button key={i} className={styles.swatch}
-              style={{ background: c.header, outline: note.colorIndex === i ? `2px solid ${c.text}` : 'none', outlineOffset: 2 }}
-              onClick={() => { onUpdate(note.id, { colorIndex: i }); setShowPicker(false) }} />
+              style={{ background: c.header, outline: (!note.customColor && note.colorIndex === i) ? `2px solid ${c.text}` : 'none', outlineOffset: 2 }}
+              onClick={() => { onUpdate(note.id, { colorIndex: i, customColor: null, customColorSat: null }); setShowPicker(false) }} />
           ))}
+          <input ref={colorPickerRef} type="color" style={{ display: 'none' }}
+            onChange={(e) => onUpdate(note.id, { customColor: e.target.value })} />
+          <button
+            className={styles.swatch}
+            style={{
+              background: note.customColor || 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)',
+              outline: note.customColor ? '2px solid rgba(0,0,0,0.45)' : 'none',
+              outlineOffset: 2,
+              overflow: 'hidden',
+            }}
+            onClick={() => {
+              if (colorPickerRef.current) {
+                colorPickerRef.current.value = note.customColor || '#a8c4bc'
+                colorPickerRef.current.click()
+              }
+            }}
+            title="Свой цвет"
+          />
+          {note.customColor && (
+            <div className={styles.pickerSatRow}>
+              <input type="range" min="0.1" max="1" step="0.05"
+                value={note.customColorSat ?? 1}
+                className={styles.pickerSatSlider}
+                onChange={(e) => onUpdate(note.id, { customColorSat: parseFloat(e.target.value) })} />
+              <span className={styles.pickerSatValue}>{Math.round((note.customColorSat ?? 1) * 100)}%</span>
+            </div>
+          )}
         </div>
       )}
 

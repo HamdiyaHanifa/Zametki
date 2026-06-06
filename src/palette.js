@@ -13,3 +13,20 @@ export const PALETTE = [
   { header: '#A09098', body: '#E0D4D8', text: '#302030' }, // мокко
   { header: '#D4A8B0', body: '#F8E4E8', text: '#3a1825' }, // румяный
 ]
+
+// Derive header/body/text from a custom hex color and saturation (0–1)
+export function paletteFromHex(hex, sat = 1) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  const s = Math.max(0, Math.min(1, sat))
+  const hr = Math.round(255 + (r - 255) * s)
+  const hg = Math.round(255 + (g - 255) * s)
+  const hb = Math.round(255 + (b - 255) * s)
+  const header = `rgb(${hr}, ${hg}, ${hb})`
+  const bs = s * 0.18
+  const body = `rgb(${Math.round(255 + (r - 255) * bs)}, ${Math.round(255 + (g - 255) * bs)}, ${Math.round(255 + (b - 255) * bs)})`
+  const lum = (hr * 299 + hg * 587 + hb * 114) / 1000
+  const text = lum < 140 ? '#f0f0ee' : '#2a1818'
+  return { header, body, text }
+}

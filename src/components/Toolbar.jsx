@@ -25,6 +25,7 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
   const exportMenuRef = useRef(null)
   const goalInputRef = useRef(null)
   const bgColorRef = useRef(null)
+  const bgColorInputRef = useRef(null)
 
   const [showWordPanel, setShowWordPanel] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
@@ -136,6 +137,18 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
                   title={label}
                 />
               ))}
+              <input ref={bgColorInputRef} type="color" style={{ display: 'none' }}
+                onChange={(e) => onSetBgColor?.(e.target.value)} />
+              <button
+                className={`${styles.bgSwatch} ${styles.bgSwatchRainbow} ${!BG_COLORS.some(c => c.color === bgColor) ? styles.bgSwatchActive : ''}`}
+                onClick={() => {
+                  if (bgColorInputRef.current) {
+                    bgColorInputRef.current.value = !BG_COLORS.some(c => c.color === bgColor) ? bgColor : '#f0ece8'
+                    bgColorInputRef.current.click()
+                  }
+                }}
+                title="Свой цвет"
+              />
             </div>
             <div className={styles.bgOpacityRow}>
               <span className={styles.bgOpacityLabel}>Насыщенность</span>

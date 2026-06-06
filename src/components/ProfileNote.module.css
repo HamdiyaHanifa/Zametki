@@ -137,6 +137,28 @@
 
 .swatch:hover { transform: scale(1.2); }
 
+.pickerSatRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.pickerSatSlider {
+  flex: 1;
+  cursor: pointer;
+  accent-color: rgba(0, 0, 0, 0.4);
+}
+
+.pickerSatValue {
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.4);
+  min-width: 28px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Body ── */
 .body {
   position: relative;
