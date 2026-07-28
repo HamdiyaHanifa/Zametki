@@ -1,0 +1,355 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 59000;
+  background: rgba(0, 0, 0, 0.18);
+  animation: fadeIn 0.18s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to   { opacity: 1 }
+}
+
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 300px;
+  max-width: 90vw;
+  background: rgba(255, 250, 246, 0.97);
+  backdrop-filter: blur(14px);
+  z-index: 60000;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.14);
+  animation: slideIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%) }
+  to   { transform: translateX(0) }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.heading {
+  font-size: 15px;
+  font-weight: 700;
+  color: #3a2828;
+}
+
+.closeBtn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(0, 0, 0, 0.07);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  color: #3a2828;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.closeBtn:hover { background: rgba(0, 0, 0, 0.14); }
+
+.focusHint {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.38);
+  padding: 0 16px 6px;
+  margin: 0;
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cardRow {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.cardRow .card {
+  flex: 1;
+}
+
+.currentRow .card {
+  cursor: default;
+}
+
+.addBtn {
+  width: 34px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: filter 0.15s, transform 0.1s;
+  opacity: 0.75;
+}
+
+.addBtn:hover { filter: brightness(0.88); opacity: 1; transform: scale(1.05); }
+
+.empty {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+  margin-top: 40px;
+}
+
+.card {
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-left: 4px solid transparent;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.card:hover { filter: brightness(0.95); transform: translateX(-2px); }
+.card:active { transform: scale(0.98); }
+
+.cardSelected {
+  box-shadow: 0 0 0 2px currentColor, 0 2px 12px rgba(0, 0, 0, 0.12);
+  transform: translateX(-3px);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.profileIcon {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.cardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge {
+  font-size: 10px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.hint {
+  font-size: 10px;
+  opacity: 0.55;
+  flex-shrink: 0;
+  font-style: italic;
+}
+
+.preview {
+  font-size: 12px;
+  opacity: 0.7;
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+}
+
+.thumb {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-top: 2px;
+}
+
+/* ── Rename button (pencil, hover-reveal) ── */
+.renameBtn {
+  width: 28px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0);
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s, background 0.12s;
+}
+
+.cardRow:hover .renameBtn { color: rgba(0, 0, 0, 0.28); }
+.renameBtn:hover { color: rgba(0, 0, 0, 0.65) !important; background: rgba(0, 0, 0, 0.06); }
+
+/* ── Rename input row ── */
+.renameInput {
+  flex: 1;
+  border: 1.5px solid rgba(0, 0, 0, 0.22);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  font-family: inherit;
+  background: #fff;
+  min-width: 0;
+}
+
+.renameInput:focus { border-color: rgba(0, 0, 0, 0.45); }
+
+.renameOkBtn {
+  width: 30px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(50, 160, 80, 0.12);
+  color: #2a8a3a;
+  font-size: 14px;
+  cursor: pointer;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+
+.renameOkBtn:hover { background: rgba(50, 160, 80, 0.22); }
+
+.renameCancelBtn {
+  width: 30px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.07);
+  color: rgba(0, 0, 0, 0.4);
+  font-size: 11px;
+  cursor: pointer;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+
+.renameCancelBtn:hover { background: rgba(0, 0, 0, 0.13); }
+
+/* ── Delete button ── */
+.delBtn {
+  width: 30px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.22);
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s, background 0.12s;
+}
+
+.delBtn:hover {
+  color: #e05060;
+  background: rgba(224, 80, 96, 0.09);
+}
+
+.delConfirmBtn {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: #e53935;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 9px;
+  cursor: pointer;
+  align-self: stretch;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: filter 0.12s;
+}
+
+.delConfirmBtn:hover { filter: brightness(0.88); }
+
+.delCancelBtn {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.07);
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0 9px;
+  cursor: pointer;
+  align-self: stretch;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+
+.delCancelBtn:hover { background: rgba(0, 0, 0, 0.12); }
+
+/* ── Add buttons bar (above list) ── */
+.addBar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  flex-shrink: 0;
+}
+
+.footerBtn {
+  flex: 1;
+  border: 1.5px dashed rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+  padding: 9px 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.42);
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.footerBtn:hover {
+  border-color: rgba(0, 0, 0, 0.32);
+  color: rgba(0, 0, 0, 0.68);
+  background: rgba(0, 0, 0, 0.03);
+}

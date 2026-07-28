@@ -1,0 +1,508 @@
+.panel {
+  position: fixed;
+  top: 64px;
+  right: 20px;
+  width: 230px;
+  user-select: none;
+  cursor: grab;
+  background: rgba(255, 250, 246, 0.97);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 20px;
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.14);
+  padding: 18px 18px 20px;
+  z-index: 52000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.panel:active { cursor: grabbing; }
+
+.closeBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(0, 0, 0, 0.07);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.45);
+  transition: background 0.12s;
+}
+
+.closeBtn:hover { background: rgba(0, 0, 0, 0.14); color: #3a2828; }
+
+/* ── Mini chip (collapsed / hidden while active) ── */
+.miniChip {
+  position: fixed;
+  top: 64px;
+  right: 20px;
+  background: rgba(255, 250, 246, 0.97);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.13);
+  padding: 8px 10px 11px 14px;
+  z-index: 52000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: grab;
+  user-select: none;
+  overflow: hidden;
+}
+
+.miniChip:active { cursor: grabbing; }
+
+.miniChipBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.miniChipBarFill {
+  height: 100%;
+}
+
+.miniChipDanger {
+  border-color: rgba(244, 67, 54, 0.3);
+  background: rgba(255, 245, 244, 0.97);
+}
+
+.miniChipIcon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.miniChipTime {
+  font-size: 18px;
+  font-weight: 700;
+  color: #3a2828;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+}
+
+.miniChipStop {
+  background: rgba(224, 80, 96, 0.1);
+  border: none;
+  border-radius: 9px;
+  padding: 5px 9px;
+  font-size: 11px;
+  cursor: pointer;
+  color: #c03040;
+  transition: background 0.12s;
+  line-height: 1;
+}
+
+.miniChipStop:hover { background: rgba(224, 80, 96, 0.22); }
+
+/* ── Setup ── */
+.title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #3a2828;
+  padding-right: 24px;
+  align-self: flex-start;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.4);
+  align-self: flex-start;
+  margin-top: -10px;
+}
+
+.presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+.preset {
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  padding: 7px 4px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #3a2828;
+  font-family: inherit;
+  transition: background 0.12s, transform 0.1s;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+}
+
+.preset:hover { background: rgba(0, 0, 0, 0.11); }
+.preset:active { transform: scale(0.95); }
+
+.presetActive {
+  background: #E8A4AE;
+  color: #4a1f28;
+}
+
+.presetActive:hover { background: #d9939d; }
+
+.presetUnit {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.65;
+}
+
+.customRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.customInput {
+  flex: 1;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  background: transparent;
+  outline: none;
+  color: #3a2828;
+  min-width: 0;
+}
+
+.customInput:focus { border-color: #E8A4AE; }
+.customInput::placeholder { color: rgba(0, 0, 0, 0.25); }
+
+.customUnit {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.startBtn {
+  width: 100%;
+  padding: 10px;
+  background: #E8A4AE;
+  color: #4a1f28;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: filter 0.12s, transform 0.1s;
+}
+
+.startBtn:hover { filter: brightness(0.92); }
+.startBtn:active { transform: scale(0.97); }
+.startBtn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Active ── */
+.ringWrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.ring { display: block; }
+
+.timerOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timerDisplay {
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #3a2828;
+  letter-spacing: 1px;
+}
+
+.wordsBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.wordsNum {
+  font-size: 28px;
+  font-weight: 700;
+  color: #3a2828;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.wordsLabel {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+.pauseBtn {
+  flex: 1;
+  padding: 9px;
+  background: rgba(0, 0, 0, 0.07);
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.12s;
+  color: #3a2828;
+}
+
+.pauseBtn:hover { background: rgba(0, 0, 0, 0.13); }
+
+.stopBtn {
+  padding: 9px 14px;
+  background: rgba(224, 80, 96, 0.12);
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #c03040;
+  transition: background 0.12s;
+}
+
+.stopBtn:hover { background: rgba(224, 80, 96, 0.22); }
+
+/* ── Done ── */
+.doneTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #3a2828;
+  text-align: center;
+}
+
+.doneStats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  justify-content: center;
+}
+
+.doneStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.doneNum {
+  font-size: 30px;
+  font-weight: 700;
+  color: #3a2828;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.doneLabel {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.doneDivider {
+  width: 1px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.doneControls {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+}
+
+.closeOutlineBtn {
+  width: 100%;
+  padding: 9px;
+  background: transparent;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.5);
+  font-family: inherit;
+  transition: background 0.12s;
+}
+
+.closeOutlineBtn:hover { background: rgba(0, 0, 0, 0.05); }
+
+/* ── Danger mode setup ── */
+.dangerSection {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dangerToggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dangerCheckbox {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: #f44336;
+  flex-shrink: 0;
+}
+
+.dangerToggleLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3a2828;
+}
+
+.dangerHint {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.45);
+  line-height: 1.4;
+}
+
+.dangerHint2 {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.45);
+  margin-top: -4px;
+}
+
+.dangerTimeRow {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.dangerTimeBtn {
+  border: 1.5px solid rgba(0, 0, 0, 0.14);
+  background: transparent;
+  border-radius: 8px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  color: #3a2828;
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  transition: background 0.12s;
+}
+
+.dangerTimeBtn:hover { background: rgba(0, 0, 0, 0.06); }
+
+.dangerTimeBtnActive {
+  background: #f44336 !important;
+  color: #fff !important;
+  border-color: #f44336 !important;
+}
+
+.dangerTimeBtnUnit {
+  font-size: 9px;
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+.startBtnDanger {
+  background: #f44336;
+  color: #fff;
+}
+
+.startBtnDanger:hover { filter: brightness(0.9); }
+
+/* ── Active danger progress ── */
+.dangerProgressWrap {
+  width: 100%;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.dangerProgressBar {
+  height: 100%;
+  border-radius: 2px;
+}
+
+/* ── Blind mode setup ── */
+.blindSection {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.blindSectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3a2828;
+}
+
+.blindOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.blindOption {
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  background: transparent;
+  border-radius: 9px;
+  padding: 6px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  color: #3a2828;
+  transition: background 0.12s;
+  text-align: center;
+}
+
+.blindOption:hover { background: rgba(0, 0, 0, 0.05); }
+
+.blindOptionActive {
+  background: #7986CB !important;
+  color: #fff !important;
+  border-color: #7986CB !important;
+}
+
+.blindHint {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+  line-height: 1.4;
+}
+
+/* ── Done danger ── */
+.dangerFailMsg {
+  font-size: 12px;
+  color: rgba(200, 50, 50, 0.75);
+  text-align: center;
+  margin-top: -8px;
+}

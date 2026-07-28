@@ -1,0 +1,200 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 3px 6px;
+  border-bottom: 1px solid;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.btn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+  padding: 0;
+  font-family: Georgia, serif;
+  flex-shrink: 0;
+}
+
+.btn:hover { background: rgba(0, 0, 0, 0.09); }
+.btnActive { background: rgba(0, 0, 0, 0.09); }
+
+.sep {
+  width: 1px;
+  height: 16px;
+  background: rgba(0, 0, 0, 0.15);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+/* ── Size dropdown ── */
+
+/* Position anchor for the dropdown — sits inside .bar */
+.sizeWrap {
+  position: relative;
+}
+
+.sizeToggle {
+  width: 32px;
+  font-family: inherit;
+}
+
+.aaIcon {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: Georgia, serif;
+  letter-spacing: -0.5px;
+}
+
+/* Centered below the Аа button */
+.sizeDrop {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 8px;
+  border-radius: 12px;
+  background: rgba(255, 250, 246, 0.98);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.07);
+  z-index: 200;
+  min-width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sizePresets {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.presetBtn {
+  flex: 1;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: Georgia, serif;
+  transition: background 0.1s;
+  padding: 0;
+  line-height: 1;
+}
+
+.presetBtn:hover { background: rgba(0, 0, 0, 0.09); }
+
+.dropSep {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 0 -2px;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.stepBtn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(0, 0, 0, 0.07);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.stepBtn:hover { background: rgba(0, 0, 0, 0.14); }
+
+.stepDisplay {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+/* ── Highlight color ── */
+.hlIcon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+.hlIcon > span:first-child {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: Georgia, serif;
+}
+
+.hlBar {
+  width: 14px;
+  height: 3px;
+  border-radius: 1.5px;
+  flex-shrink: 0;
+}
+
+.hlSwatches {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  padding: 3px 2px;
+}
+
+.hlSwatch {
+  width: 28px;
+  height: 22px;
+  border: 1.5px solid rgba(0, 0, 0, 0.13);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s, border-color 0.1s;
+}
+
+.hlSwatch:hover {
+  transform: scale(1.12);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.listOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.listOption:hover { background: rgba(0, 0, 0, 0.09); }

@@ -1,0 +1,420 @@
+.note {
+  position: absolute;
+  min-width: 180px;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
+}
+
+.note:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.noteSelected {
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14), 0 0 0 2.5px currentColor;
+}
+
+.selectBtn {
+  position: absolute;
+  top: -9px;
+  left: -9px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.selectBtnActive {
+  /* filled state applied via inline style */
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  cursor: grab;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.header:active { cursor: grabbing; }
+
+/* Dedicated drag grip — explicit large touch target */
+.dragGrip {
+  flex-shrink: 0;
+  width: 20px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  margin-left: -2px;
+  touch-action: none;
+}
+
+.dragGrip:active { cursor: grabbing; }
+
+.titleInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: inherit;
+  min-width: 0;
+}
+
+.titleInput::placeholder { color: rgba(0, 0, 0, 0.3); }
+.titleInput:focus { cursor: text; }
+
+.controls {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.btn {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  cursor: pointer;
+  transition: filter 0.12s;
+  line-height: 1;
+  padding: 0;
+}
+
+.btnIcon:hover { filter: brightness(0.85); }
+
+.btnClose {
+  background: #e05060;
+  color: #fff;
+}
+
+.btnClose:hover { background: #c03040; }
+
+.confirmRow {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.btnConfirm {
+  width: auto;
+  padding: 0 7px;
+  border-radius: 11px;
+  font-size: 10px;
+  font-weight: 700;
+  height: 22px;
+}
+
+.btnCancel {
+  width: auto;
+  padding: 0 7px;
+  border-radius: 11px;
+  font-size: 10px;
+  font-weight: 600;
+  height: 22px;
+}
+
+.btnConfirm:hover { filter: brightness(0.88); }
+.btnCancel:hover  { filter: brightness(0.88); }
+
+/* ── Palette picker ── */
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.12s;
+  padding: 0;
+}
+
+.swatch:hover { transform: scale(1.2); }
+
+.pickerSatRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.pickerSatSlider {
+  flex: 1;
+  cursor: pointer;
+  accent-color: rgba(0, 0, 0, 0.4);
+}
+
+.pickerSatValue {
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.4);
+  min-width: 28px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Body ── */
+.body {
+  position: relative;
+}
+
+/* Text editor */
+.editor {
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  line-height: 1.65;
+  font-family: inherit;
+  overflow-y: auto;
+  word-break: break-word;
+  cursor: text;
+  display: block;
+  box-sizing: border-box;
+}
+
+.editor:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+.editor h3 { font-size: 17px; font-weight: 700; margin: 4px 0 2px; line-height: 1.35; }
+.editor b, .editor strong { font-weight: 700; }
+.editor i,  .editor em    { font-style: italic; }
+.editor u                  { text-decoration: underline; }
+.editor s, .editor strike  { text-decoration: line-through; }
+
+.editor ol,
+.editor ul:not([data-todo]) { padding-left: 20px; margin: 2px 0; }
+
+.editor ul[data-todo] { list-style: none; padding-left: 4px; margin: 2px 0; }
+
+.editor ul[data-todo] > li {
+  position: relative;
+  padding-left: 20px;
+  min-height: 1.4em;
+  cursor: text;
+}
+
+.editor ul[data-todo] > li::before {
+  content: '☐';
+  position: absolute;
+  left: 1px;
+  top: 0;
+  font-size: 13px;
+  line-height: inherit;
+  cursor: pointer;
+  user-select: none;
+}
+
+.editor ul[data-todo] > li[data-checked="true"]::before { content: '☑'; }
+
+.editor ul[data-todo] > li[data-checked="true"] {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  cursor: default;
+}
+
+.editor img[data-freeimg] {
+  cursor: pointer;
+}
+
+.editor img[data-freeimg]:hover {
+  outline: 2px solid rgba(0,0,0,0.25);
+  outline-offset: 1px;
+}
+
+/* Image */
+.image {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  user-select: none;
+}
+
+/* Thumbnail in header when minimized */
+.thumb {
+  width: 26px;
+  height: 26px;
+  object-fit: cover;
+  border-radius: 5px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.wordCountRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  padding: 2px 28px 4px 8px;
+  font-size: 10px;
+  opacity: 0.45;
+  user-select: none;
+}
+
+.resetWordBtn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+  line-height: 1;
+  border-radius: 3px;
+  transition: opacity 0.12s, background 0.12s;
+  opacity: 0.6;
+}
+
+.resetWordBtn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* ── Tags ── */
+.tagRow {
+  display: flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-bottom: 1px solid;
+  min-height: 24px;
+}
+
+.tagChip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.6;
+  transition: filter 0.1s, opacity 0.15s;
+}
+
+.tagChip:hover { filter: brightness(0.88); }
+
+.tagChipEmpty {
+  opacity: 0;
+  color: rgba(0,0,0,0.4) !important;
+  border-color: rgba(0,0,0,0.14) !important;
+  background: transparent !important;
+}
+
+.note:hover .tagChipEmpty,
+.note:focus-within .tagChipEmpty {
+  opacity: 1;
+}
+
+.tagPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 7px 8px;
+  border-bottom: 1px solid;
+}
+
+.tagPickerBtn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1.5px solid;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: filter 0.1s;
+}
+
+.tagPickerBtn:hover { filter: brightness(0.88); }
+
+.tagRemoveBtn {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: transparent;
+  color: rgba(0,0,0,0.35);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.tagRemoveBtn:hover { background: rgba(0,0,0,0.06); }
+
+/* ── Blind mode reveal ── */
+.blindReveal {
+  padding: 4px 12px 5px;
+  font-size: 12px;
+  font-style: italic;
+  border-top: 1px solid;
+  min-height: 22px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.65;
+}
+
+.blindRevealHint {
+  opacity: 0.45;
+}
+
+/* ── Corner resize handle ── */
+.resizeCorner {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  cursor: nwse-resize;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 4px;
+}
+
+.resizeCorner::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-right: 2.5px solid var(--rc, rgba(0, 0, 0, 0.25));
+  border-bottom: 2.5px solid var(--rc, rgba(0, 0, 0, 0.25));
+  border-radius: 0 0 3px 0;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.resizeCorner:hover::after { opacity: 1; }
