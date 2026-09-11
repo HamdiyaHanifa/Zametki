@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { Note } from './components/Note'
 import { ProfileNote } from './components/ProfileNote'
 import { Toolbar } from './components/Toolbar'
@@ -9,6 +9,8 @@ import { TAGS_MAP } from './utils/tags'
 import { NotesPanel } from './components/NotesPanel'
 import { HomeScreen } from './components/HomeScreen'
 import { TrashScreen } from './components/TrashScreen'
+import { CloudBar } from './components/CloudBar'
+import { useCloudSync } from './cloud/useCloudSync'
 import styles from './App.module.css'
 
 const COLORS_COUNT = 12
@@ -121,6 +123,21 @@ export default function App() {
     (saved?.trash ?? []).filter(item => Date.now() - item.deletedAt < TRASH_TTL)
   )
   const trashRef = useRef(trash)
+
+  // ── Облако (Supabase) ──────────────────────────────────────
+  // Всё, что уходит в облако, — это те же данные, что лежат в localStorage.
+  const cloudData = useMemo(
+    () => ({ canvases, nextCanvasId: nextCanvasIdRef.current, trash }),
+    [canvases, trash]
+  )
+  const applyCloudData = useCallback((d) => {
+    if (!d || !Array.isArray(d.canvases)) return
+    setCanvases(d.canvases)
+    setTrash(d.trash ?? [])
+    nextCanvasIdRef.current =
+      d.nextCanvasId ?? Math.max(1, ...d.canvases.map((c) => c.id)) + 1
+  }, [])
+  const cloud = useCloudSync({ data: cloudData, applyData: applyCloudData })
 
   const [activeCanvasId, setActiveCanvasId] = useState(null)
   const [showTrash, setShowTrash] = useState(false)
@@ -801,7 +818,8 @@ export default function App() {
       )
     }
     return (
-      <HomeScreen
+      <>
+        <HomeScreen
         canvases={canvases}
         onCreate={createNewCanvas}
         onOpen={openCanvas}
@@ -810,7 +828,9 @@ export default function App() {
         onDuplicate={duplicateCanvas}
         trashCount={trash.length}
         onOpenTrash={() => setShowTrash(true)}
-      />
+        />
+        <CloudBar cloud={cloud} />
+      </>
     )
   }
 
@@ -978,6 +998,7 @@ export default function App() {
           <div className={styles.empty}>Нет заметок. Нажмите «+ Заметка» или перетащите фото.</div>
         )}
       </div>
+      <CloudBar cloud={cloud} />
     </div>
   )
 }
