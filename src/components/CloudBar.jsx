@@ -101,7 +101,8 @@ export function CloudBar({ cloud }) {
               <>
                 <h2 className={styles.title}>Письмо отправлено</h2>
                 <p className={styles.text}>
-                  Проверьте почту {email} и нажмите ссылку в письме. Пароль не нужен.
+                  Откройте письмо на {email} и нажмите ссылку — на этом же устройстве,
+                  где открыто приложение. Если писем несколько, годится только самое новое.
                 </p>
                 <div className={styles.row}>
                   <button className={styles.btn} onClick={() => { setSent(false); setOpen(false) }}>Закрыть</button>
@@ -112,6 +113,7 @@ export function CloudBar({ cloud }) {
                 <h2 className={styles.title}>Вход в облако</h2>
                 <p className={styles.text}>
                   Введите почту — придёт ссылка для входа. Пароль придумывать не надо.
+                  Нажимайте кнопку один раз: новое письмо отменяет ссылку из предыдущего.
                 </p>
                 <form onSubmit={handleSignIn}>
                   <input
