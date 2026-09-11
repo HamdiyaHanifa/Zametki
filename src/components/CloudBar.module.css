@@ -6,19 +6,48 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  border: none;
-  background: rgba(255, 250, 246, 0.92);
-  backdrop-filter: blur(12px);
+  background: #fffdfa;
+  border: 1px solid rgba(74, 64, 56, 0.22);
   border-radius: 18px;
-  padding: 7px 14px;
+  padding: 9px 16px;
   font: inherit;
-  font-size: 13px;
-  color: #4a4038;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3c332b;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.18);
 }
 
-.chip:hover { background: rgba(255, 250, 246, 1); }
+.chip:hover { background: #fff; border-color: rgba(74, 64, 56, 0.4); }
+
+/* Пока в облако не вошли — плашку хорошо видно.
+   После входа она снова становится спокойной и не мешает. */
+.chipAttention {
+  background: #6b5745;
+  color: #fff7ee;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 10px 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+}
+
+.chipAttention:hover { background: #7d6553; }
+
+.chipAttention .dot {
+  width: 10px;
+  height: 10px;
+  background: #ffd9a0;
+  animation: cloudPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes cloudPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.75); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chipAttention .dot { animation: none; }
+}
 
 .dot {
   width: 8px;

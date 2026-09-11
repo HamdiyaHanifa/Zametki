@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import styles from './CloudBar.module.css'
 
+// Подпись всегда начинается со слова «Облако» — так плашку легче найти глазами.
 const LABELS = {
   'signed-out': 'Облако: не вошли',
   loading: 'Облако: проверяю…',
-  saving: 'Сохраняю в облако…',
-  saved: 'Сохранено в облаке',
-  conflict: 'Нужно выбрать версию',
-  error: 'Ошибка облака',
+  saving: 'Облако: сохраняю…',
+  saved: 'Облако: сохранено',
+  conflict: 'Облако: выбери версию',
+  error: 'Облако: ошибка',
 }
 
 const DOTS = {
@@ -46,7 +47,10 @@ export function CloudBar({ cloud }) {
 
   return (
     <>
-      <button className={styles.chip} onClick={() => setOpen(true)}>
+      <button
+        className={`${styles.chip} ${status === 'signed-out' ? styles.chipAttention : ''}`}
+        onClick={() => setOpen(true)}
+      >
         <span className={`${styles.dot} ${DOTS[status] ?? ''}`} />
         {LABELS[status] ?? 'Облако'}
       </button>
