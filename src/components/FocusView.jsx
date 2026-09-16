@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect, useState } from 'react'
-import { PALETTE } from '../palette'
+import { PALETTE, paletteFromHex } from '../palette'
 import { FormatBar } from './FormatBar'
 import { FloatingNote } from './FloatingNote'
 import { ImageResizer } from './ImageResizer'
@@ -41,7 +41,9 @@ export function FocusView({
   timerDangerResetSignal,
   blindMode = 'off',
 }) {
-  const color = PALETTE[note.colorIndex % PALETTE.length]
+  const color = note.customColor
+    ? paletteFromHex(note.customColor, note.customColorSat ?? 1)
+    : PALETTE[note.colorIndex % PALETTE.length]
   const isProfile = note.noteType === 'profile'
   const isImage = !isProfile && Boolean(note.imageUrl)
   const editorRef     = useRef(null)
