@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import styles from './FormatBar.module.css'
+import { fileToSmallDataUrl } from '../utils/image'
 
 const SIZES = [
   { px: 11, label: 'S' },
@@ -181,13 +182,13 @@ export function FormatBar({ editorRef, savedRangeRef, textColor, onAddFreeImage 
     applyFontSize(next)
   }, [stepSize, applyFontSize])
 
-  const handlePhotoChange = useCallback((e) => {
+  const handlePhotoChange = useCallback(async (e) => {
     const file = e.target.files?.[0]
-    if (!file || !onAddFreeImage) return
     e.target.value = ''
-    const reader = new FileReader()
-    reader.onload = (ev) => onAddFreeImage(ev.target.result)
-    reader.readAsDataURL(file)
+    if (!file || !onAddFreeImage) return
+    try {
+      onAddFreeImage(await fileToSmallDataUrl(file))
+    } catch { /* не картинка — молча пропускаем */ }
   }, [onAddFreeImage])
 
   const toggleFull = useCallback(() => {

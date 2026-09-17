@@ -5,6 +5,7 @@ import { NoteHandles } from './NoteHandles'
 import { countWords, wordForm, noteWordCount } from '../utils/wordCount'
 import { paletteFromHex } from '../palette'
 import styles from './ProfileNote.module.css'
+import { fileToSmallDataUrl } from '../utils/image'
 
 const MIN_W = 220
 
@@ -68,13 +69,13 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onDuplicate, onF
     onUpdate(note.id, { fields: fields.filter(f => f.id !== fid) })
   }, [note.id, fields, onUpdate])
 
-  const handlePhotoChange = useCallback((e) => {
+  const handlePhotoChange = useCallback(async (e) => {
     const file = e.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => onUpdate(note.id, { imageUrl: ev.target.result })
-    reader.readAsDataURL(file)
     e.target.value = ''
+    if (!file) return
+    try {
+      onUpdate(note.id, { imageUrl: await fileToSmallDataUrl(file) })
+    } catch { /* не картинка — молча пропускаем */ }
   }, [note.id, onUpdate])
 
   const scheduleHide = useCallback(() => {
