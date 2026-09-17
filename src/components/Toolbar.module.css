@@ -785,7 +785,9 @@
   .photoBtn   { order: -4; }
   .profileBtn { order: -3; }
   .searchBtn  { order: -2; }
-  .focusBtn   { order: -1; }
+  /* margin-left: auto у «Фокуса» прижимает правую группу к краю, когда всё
+     в одну строку. В двухстрочном режиме от этого посреди строки щель. */
+  .focusBtn   { order: -1; margin-left: 0; }
 
   /* Панельки не должны вылезать за экран */
   .bgPanel, .wordPanel, .exportMenu {
