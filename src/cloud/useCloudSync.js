@@ -1,15 +1,40 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, cloudConfigured } from './supabase'
+import { signature, countNotes, decideSync } from './compare'
 
 const TABLE = 'zametki_state'
 const SAVE_DELAY = 3000        // ждём 3 секунды после последней правки
 const SIZE_WARN = 15 * 1024 * 1024
+const MARK_KEY = 'zametki_sync'
+
+// ── Точка синхронизации ──────────────────────────────────────
+// Запоминаем отпечаток, на котором местные заметки и облако в последний раз
+// совпали. По нему видно, кто менялся с тех пор: это устройство, облако или оба.
+// Без такой отметки пришлось бы спрашивать человека при любом различии.
+
+function loadMark(userId) {
+  try {
+    const mark = JSON.parse(localStorage.getItem(MARK_KEY))
+    return mark?.userId === userId ? mark : null   // сменился вход — отметка чужая
+  } catch {
+    return null
+  }
+}
+
+function saveMark(userId, changes) {
+  try {
+    const prev = loadMark(userId) ?? {}
+    localStorage.setItem(MARK_KEY, JSON.stringify({ ...prev, userId, ...changes }))
+  } catch { /* storage full */ }
+}
 
 /**
  * Синхронизация заметок с облаком Supabase.
  *
- * Правило безопасности: облако никогда не затирает локальные заметки само.
- * Если версии разошлись — статус становится 'conflict', и выбирает человек.
+ * Правило безопасности: облако само затирает местные заметки только тогда,
+ * когда на этом устройстве с прошлой синхронизации ничего не меняли — то есть
+ * терять нечего. Если менялись обе версии, статус становится 'conflict'
+ * и выбирает человек.
  *
  * status: off | signed-out | loading | conflict | saving | saved | error
  */
@@ -22,7 +47,7 @@ export function useCloudSync({ data, applyData }) {
 
   const dataRef = useRef(data)
   dataRef.current = data
-  const lastSentRef = useRef(null)
+  const lastSentSigRef = useRef(null)
 
   // Следим за входом и выходом
   useEffect(() => {
@@ -57,12 +82,15 @@ export function useCloudSync({ data, applyData }) {
       setError(e.message)
       return
     }
-    lastSentRef.current = text
+    // Отправили — теперь местное и облако совпадают
+    const sig = signature(body)
+    lastSentSigRef.current = sig
+    saveMark(session.user.id, { sig })
     setError(null)
     setStatus('saved')
   }, [session])
 
-  // При входе — сверяем локальное с облачным
+  // При входе — сверяем местное с облачным
   useEffect(() => {
     if (!cloudConfigured) { setStatus('off'); return }
     if (!session) { setStatus('signed-out'); setReady(false); setConflict(null); return }
@@ -86,32 +114,56 @@ export function useCloudSync({ data, applyData }) {
         return
       }
 
-      const localText = JSON.stringify(dataRef.current)
-      const cloudText = JSON.stringify(row.data)
-      if (localText === cloudText) {
-        lastSentRef.current = cloudText
-        setStatus('saved')
-        setReady(true)
-        return
+      const localSig = signature(dataRef.current)
+      const cloudSig = signature(row.data)
+      const mark = loadMark(session.user.id)
+
+      switch (decideSync({ localSig, cloudSig, markSig: mark?.sig ?? null })) {
+        // Содержимое одинаковое — спрашивать не о чем
+        case 'same':
+          lastSentSigRef.current = localSig
+          saveMark(session.user.id, { sig: localSig })
+          setStatus('saved')
+          setReady(true)
+          return
+
+        // Меняли только на этом устройстве — отправляем молча
+        case 'push':
+          await push(dataRef.current)
+          if (alive) setReady(true)
+          return
+
+        // Меняли только в облаке (на другом устройстве) — забираем молча.
+        // Здесь ничего не теряется: местная версия — просто старая копия облачной.
+        case 'pull':
+          applyData(row.data)
+          lastSentSigRef.current = cloudSig
+          saveMark(session.user.id, { sig: cloudSig })
+          setStatus('saved')
+          setReady(true)
+          return
       }
 
-      // Версии разные — спрашиваем человека, ничего не трогаем
+      // Менялись обе версии — это настоящий конфликт, выбирает человек
       setConflict({
         cloudData: row.data,
         cloudAt: row.updated_at,
         cloudNotes: countNotes(row.data),
         localNotes: countNotes(dataRef.current),
+        localAt: mark?.editedAt ?? null,
+        firstTime: !mark,            // отметки нет — сравнить по времени не с чем
       })
       setStatus('conflict')
     })()
     return () => { alive = false }
-  }, [session, push])
+  }, [session, push, applyData])
 
   // Автосохранение с задержкой
   useEffect(() => {
     if (!ready || !session || conflict) return
-    const text = JSON.stringify(data)
-    if (text === lastSentRef.current) return
+    const sig = signature(data)
+    if (sig === lastSentSigRef.current) return
+    saveMark(session.user.id, { editedAt: Date.now() })   // когда правили на этом устройстве
     const t = setTimeout(() => { push(data) }, SAVE_DELAY)
     return () => clearTimeout(t)
   }, [data, ready, session, conflict, push])
@@ -120,14 +172,16 @@ export function useCloudSync({ data, applyData }) {
     if (!conflict) return
     if (choice === 'cloud') {
       applyData(conflict.cloudData)
-      lastSentRef.current = JSON.stringify(conflict.cloudData)
+      const sig = signature(conflict.cloudData)
+      lastSentSigRef.current = sig
+      if (session) saveMark(session.user.id, { sig })
       setStatus('saved')
     } else {
       await push(dataRef.current)
     }
     setConflict(null)
     setReady(true)
-  }, [conflict, applyData, push])
+  }, [conflict, applyData, push, session])
 
   const signIn = useCallback(async (email) => {
     if (!supabase) return { error: 'Облако не настроено' }
@@ -142,7 +196,7 @@ export function useCloudSync({ data, applyData }) {
     if (!supabase) return
     await supabase.auth.signOut()
     setReady(false)
-    lastSentRef.current = null
+    lastSentSigRef.current = null
   }, [])
 
   return {
@@ -151,10 +205,4 @@ export function useCloudSync({ data, applyData }) {
     signIn, signOut, resolveConflict,
     saveNow: () => push(dataRef.current),
   }
-}
-
-function countNotes(data) {
-  try {
-    return (data.canvases ?? []).reduce((sum, c) => sum + (c.notes?.length ?? 0), 0)
-  } catch { return 0 }
 }

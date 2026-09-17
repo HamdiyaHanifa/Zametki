@@ -18,12 +18,13 @@ const DOTS = {
   conflict: styles.dotError,
 }
 
-function when(iso) {
+function when(value) {
+  if (!value) return null
   try {
-    return new Date(iso).toLocaleString('ru-RU', {
+    return new Date(value).toLocaleString('ru-RU', {
       day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
     })
-  } catch { return '' }
+  } catch { return null }
 }
 
 export function CloudBar({ cloud }) {
@@ -60,10 +61,21 @@ export function CloudBar({ cloud }) {
         <div className={styles.backdrop}>
           <div className={styles.dialog}>
             <h2 className={styles.title}>Какую версию оставить?</h2>
-            <p className={styles.text}>
-              В облаке лежат заметки от {when(conflict.cloudAt)} — {conflict.cloudNotes} шт.
-              На этом устройстве — {conflict.localNotes} шт. Они различаются.
+            <p className={`${styles.text} ${styles.textLead}`}>
+              {conflict.firstTime
+                ? 'Это первая сверка на этом устройстве, поэтому непонятно, какая версия новее:'
+                : 'Заметки меняли и здесь, и на другом устройстве, поэтому выбрать нужно самой:'}
             </p>
+            <ul className={styles.list}>
+              <li>
+                В облаке — {conflict.cloudNotes} шт.
+                {when(conflict.cloudAt) ? `, изменено ${when(conflict.cloudAt)}` : ''}
+              </li>
+              <li>
+                На этом устройстве — {conflict.localNotes} шт.
+                {when(conflict.localAt) ? `, изменено ${when(conflict.localAt)}` : ''}
+              </li>
+            </ul>
             <div className={styles.row}>
               <button className={`${styles.btn} ${styles.btnMain}`} onClick={() => cloud.resolveConflict('cloud')}>
                 Взять из облака

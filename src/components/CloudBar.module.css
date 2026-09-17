@@ -84,6 +84,20 @@
   color: #5c5147;
 }
 
+/* Подводка перед списком версий — отступ меньше, список идёт сразу за ней */
+.textLead {
+  margin-bottom: 8px;
+}
+
+/* Список версий в диалоге выбора */
+.list {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 16px;
+  padding-left: 20px;
+  color: #5c5147;
+}
+
 .input {
   width: 100%;
   box-sizing: border-box;
