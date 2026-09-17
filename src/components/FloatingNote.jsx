@@ -5,6 +5,7 @@ import { FreeImage } from './FreeImage'
 import { NoteHandles } from './NoteHandles'
 import { PALETTE } from '../palette'
 import styles from './FloatingNote.module.css'
+import { fileToSmallDataUrl } from '../utils/image'
 
 const MIN_W = 240
 const MIN_H = 150
@@ -72,13 +73,13 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
     onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
   }, [note.id, onUpdate])
 
-  const handlePhotoChange = useCallback((e) => {
+  const handlePhotoChange = useCallback(async (e) => {
     const file = e.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => onUpdate(note.id, { imageUrl: ev.target.result })
-    reader.readAsDataURL(file)
     e.target.value = ''
+    if (!file) return
+    try {
+      onUpdate(note.id, { imageUrl: await fileToSmallDataUrl(file) })
+    } catch { /* не картинка — молча пропускаем */ }
   }, [note.id, onUpdate])
 
   const addField = useCallback(() => {

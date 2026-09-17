@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react'
 import { noteWordCount, wordForm } from '../utils/wordCount'
 import { TAGS } from '../utils/tags'
 import styles from './Toolbar.module.css'
+import { fileToSmallDataUrl } from '../utils/image'
 
 const BG_COLORS = [
   { color: '#f0ece8', label: 'Бежевый' },
@@ -188,13 +189,13 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
                   type="file"
                   accept="image/*"
                   style={{ display: 'none' }}
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files?.[0]
-                    if (!file) return
-                    const reader = new FileReader()
-                    reader.onload = (ev) => onSetBgImage?.(ev.target.result)
-                    reader.readAsDataURL(file)
                     e.target.value = ''
+                    if (!file) return
+                    try {
+                      onSetBgImage?.(await fileToSmallDataUrl(file))
+                    } catch { /* не картинка — молча пропускаем */ }
                   }}
                 />
                 {bgImage ? '🔄 Заменить фото' : '📷 Фото фона'}

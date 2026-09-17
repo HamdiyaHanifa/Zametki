@@ -12,6 +12,7 @@ import { TrashScreen } from './components/TrashScreen'
 import { CloudBar } from './components/CloudBar'
 import { useCloudSync } from './cloud/useCloudSync'
 import styles from './App.module.css'
+import { fileToSmallDataUrl } from './utils/image'
 
 const COLORS_COUNT = 12
 const MIN_SCALE = 0.1
@@ -406,9 +407,14 @@ export default function App() {
     height: 150,
   }), [spawnNote])
 
-  const loadImageFile = useCallback((file, worldX, worldY) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
+  const loadImageFile = useCallback(async (file, worldX, worldY) => {
+    let dataUrl
+    try {
+      dataUrl = await fileToSmallDataUrl(file)
+    } catch {
+      return  // не картинка
+    }
+    {
       const vp = vpRef.current
       const x = worldX ?? (window.innerWidth / 2 - vp.x) / vp.scale - 150
       const y = worldY ?? (window.innerHeight / 2 - vp.y) / vp.scale - 100
@@ -417,7 +423,7 @@ export default function App() {
         const note = {
           ...createNote(id, id % COLORS_COUNT),
           title: file.name.replace(/\.[^.]+$/, ''),
-          imageUrl: e.target.result,
+          imageUrl: dataUrl,
           width: 300,
           height: 220,
           x,
@@ -426,7 +432,6 @@ export default function App() {
         return { ...c, notes: [...c.notes, note], order: [...c.order, id], nextNoteId: id + 1 }
       })
     }
-    reader.readAsDataURL(file)
   }, [patchCanvas])
 
   const updateNote = useCallback((id, patch) => {

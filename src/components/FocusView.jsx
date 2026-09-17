@@ -7,6 +7,7 @@ import { FreeImage } from './FreeImage'
 import { countWords, wordForm } from '../utils/wordCount'
 import { TAGS, TAGS_MAP } from '../utils/tags'
 import styles from './FocusView.module.css'
+import { fileToSmallDataUrl } from '../utils/image'
 
 const DEFAULT_FIELDS = [
   { id: 1, label: 'Имя', value: '' },
@@ -203,13 +204,13 @@ export function FocusView({
     onTimerDangerActivity?.()
   }, [onTimerDangerActivity])
 
-  const handlePhotoChange = useCallback((e) => {
+  const handlePhotoChange = useCallback(async (e) => {
     const file = e.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => onUpdate(note.id, { imageUrl: ev.target.result })
-    reader.readAsDataURL(file)
     e.target.value = ''
+    if (!file) return
+    try {
+      onUpdate(note.id, { imageUrl: await fileToSmallDataUrl(file) })
+    } catch { /* не картинка — молча пропускаем */ }
   }, [note.id, onUpdate])
 
   const addField = useCallback(() => {
@@ -233,7 +234,7 @@ export function FocusView({
     }
   }, [note.id, onAddFloating])
 
-  const handlePaste = useCallback((e) => {
+  const handlePaste = useCallback(async (e) => {
     const items = Array.from(e.clipboardData?.items || [])
     const imgItem = items.find(i => i.type.startsWith('image/'))
     if (!imgItem) return
@@ -241,9 +242,13 @@ export function FocusView({
     e.stopPropagation()
     const file = imgItem.getAsFile()
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const dataUrl = ev.target.result
+    let dataUrl
+    try {
+      dataUrl = await fileToSmallDataUrl(file)
+    } catch {
+      return  // не картинка
+    }
+    {
       if (isImage || isProfile) {
         onUpdate(note.id, { imageUrl: dataUrl })
       } else if (editorRef.current) {
@@ -267,7 +272,6 @@ export function FocusView({
         editorRef.current.dispatchEvent(new Event('input', { bubbles: true }))
       }
     }
-    reader.readAsDataURL(file)
   }, [note.id, onUpdate, isImage, isProfile, editorRef])
 
   const titlePlaceholder = isProfile ? 'Имя персонажа...' : isImage ? 'Подпись...' : 'Заголовок...'
