@@ -68,6 +68,20 @@
 - `.github/workflows/deploy.yml` — автосборка и деплой при пуше в `main`
 - В настройках репо: Settings → Pages → Source → **GitHub Actions**
 
+### 8. Чистка HTML (DOMPurify)
+- `src/utils/sanitize.js` — `cleanHtml(html)` и `handleHtmlPaste(e, editorEl)`
+- Зачем: текст заметки хранится как HTML и возвращается в редактор через `innerHTML`.
+  Вставленный с чужого сайта `<img src=x onerror="...">` или ссылка `javascript:`
+  исполнились бы в браузере и получили доступ к сессии Supabase
+- Подключено **при вставке** (Ctrl+V) и **при отрисовке** в редактор:
+  `Note.jsx`, `FloatingNote.jsx`, `FocusView.jsx`
+- Оформление не страдает: `<font color size>`, `style`, `data-freeimg`,
+  `data-todo`, `data-checked`, картинки `data:` — всё разрешено
+- Внешние ссылки получают `target="_blank" rel="noopener noreferrer"`
+- Чистка на отрисовке лечит и старые заметки, если в них уже попал вредный код
+- Проверено в браузере: `onerror`, `javascript:`, `onclick`, `<script>` и `<svg onbegin>`
+  вырезаются, жирный/курсив/цвет/чекбоксы остаются
+
 ---
 
 ## Ключевые технические решения
@@ -78,6 +92,7 @@
 | `input[type="color"]` с `display:none` не открывается | Overlay pattern: `opacity:0; position:absolute; inset:0` внутри `<label>` |
 | Точечная сетка поверх фото не работала | Вынесена из CSS `background-image` в отдельный `<div className={styles.bgDots}>` |
 | FocusView не показывал кастомный цвет | Добавлен `paletteFromHex` в `FocusView.jsx` строка 45–47 |
+| Вставка чужого HTML могла принести исполняемый код | `DOMPurify` при вставке и при отрисовке (`src/utils/sanitize.js`) |
 
 ---
 

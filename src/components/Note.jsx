@@ -8,6 +8,7 @@ import { FreeImage } from './FreeImage'
 import { NoteHandles } from './NoteHandles'
 import { countWords, wordForm, noteWordCount } from '../utils/wordCount'
 import { TAGS, TAGS_MAP } from '../utils/tags'
+import { cleanHtml, handleHtmlPaste } from '../utils/sanitize'
 import styles from './Note.module.css'
 
 const DEFAULT_W_TEXT = 280
@@ -55,14 +56,14 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
 
   useEffect(() => {
     if (!editorRef.current) return
-    editorRef.current.innerHTML = note.htmlContent || ''
+    editorRef.current.innerHTML = cleanHtml(note.htmlContent)
     prevWordsRef.current = countWords(note.htmlContent || '')
   }, [note.id, note.minimized]) // eslint-disable-line
 
   useEffect(() => {
     if (!editorRef.current) return
     if (document.activeElement !== editorRef.current) {
-      editorRef.current.innerHTML = note.htmlContent || ''
+      editorRef.current.innerHTML = cleanHtml(note.htmlContent)
     }
   }, [note.htmlContent])
 
@@ -70,10 +71,10 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
   useEffect(() => {
     if (!timerDangerResetSignal || !editorRef.current) return
     if (timerDangerResetSignal.noteId === note.id) {
-      editorRef.current.innerHTML = timerDangerResetSignal.htmlContent
+      editorRef.current.innerHTML = cleanHtml(timerDangerResetSignal.htmlContent)
     } else if (timerDangerResetSignal.noteId === null && timerDangerResetSignal.allNotes) {
       const snap = timerDangerResetSignal.allNotes.find(n => n.id === note.id)
-      if (snap) editorRef.current.innerHTML = snap.htmlContent
+      if (snap) editorRef.current.innerHTML = cleanHtml(snap.htmlContent)
     }
   }, [timerDangerResetSignal, note.id])
 
@@ -106,6 +107,11 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
     if (delta > 0) onCumulativeAdd?.(delta)
     prevWordsRef.current = newWords
   }, [note.id, onUpdate, onTimerDangerActivity, onCumulativeAdd])
+
+  // Вставка из буфера: чужой HTML чистим, обычный текст вставляет браузер сам
+  const handlePaste = useCallback((e) => {
+    handleHtmlPaste(e, editorRef.current)
+  }, [])
 
   const handleEditorMouseDown = useCallback((e) => {
     e.stopPropagation()
@@ -454,6 +460,7 @@ export function Note({ note, onUpdate, onMove, onDelete, onDuplicate, onFocus, o
                   style={{ color: blindMode !== 'off' ? 'transparent' : color.text, caretColor: color.text, height: '100%' }}
                   contentEditable suppressContentEditableWarning
                   onInput={handleInput}
+                  onPaste={handlePaste}
                   onMouseDown={handleEditorMouseDown}
                   onTouchStart={handleEditorTouchStart}
                   onMouseUp={saveRange} onKeyUp={saveRange} onTouchEnd={saveRange} onBlur={saveRange}

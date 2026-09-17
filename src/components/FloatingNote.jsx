@@ -6,6 +6,7 @@ import { NoteHandles } from './NoteHandles'
 import { PALETTE } from '../palette'
 import styles from './FloatingNote.module.css'
 import { fileToSmallDataUrl } from '../utils/image'
+import { cleanHtml, handleHtmlPaste } from '../utils/sanitize'
 
 const MIN_W = 240
 const MIN_H = 150
@@ -40,12 +41,12 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
   useEffect(() => { sizeRef.current = size }, [size])
 
   useEffect(() => {
-    if (!isProfile && !isImage && editorRef.current) editorRef.current.innerHTML = note.htmlContent || ''
+    if (!isProfile && !isImage && editorRef.current) editorRef.current.innerHTML = cleanHtml(note.htmlContent)
   }, []) // eslint-disable-line
 
   useEffect(() => {
     if (!isProfile && !isImage && editorRef.current && document.activeElement !== editorRef.current) {
-      editorRef.current.innerHTML = note.htmlContent || ''
+      editorRef.current.innerHTML = cleanHtml(note.htmlContent)
     }
   }, [note.htmlContent, isProfile, isImage])
 
@@ -72,6 +73,11 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
   const handleInput = useCallback(() => {
     onUpdate(note.id, { htmlContent: editorRef.current?.innerHTML || '' })
   }, [note.id, onUpdate])
+
+  // Вставка из буфера: чужой HTML чистим, обычный текст вставляет браузер сам
+  const handlePaste = useCallback((e) => {
+    handleHtmlPaste(e, editorRef.current)
+  }, [])
 
   const handlePhotoChange = useCallback(async (e) => {
     const file = e.target.files[0]
@@ -325,6 +331,7 @@ export function FloatingNote({ note, onUpdate, onClose, initialX, initialY, init
               contentEditable
               suppressContentEditableWarning
               onInput={handleInput}
+              onPaste={handlePaste}
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
               onMouseUp={saveRange}

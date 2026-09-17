@@ -8,6 +8,7 @@ import { countWords, wordForm } from '../utils/wordCount'
 import { TAGS, TAGS_MAP } from '../utils/tags'
 import styles from './FocusView.module.css'
 import { fileToSmallDataUrl } from '../utils/image'
+import { cleanHtml, handleHtmlPaste } from '../utils/sanitize'
 
 const DEFAULT_FIELDS = [
   { id: 1, label: 'Имя', value: '' },
@@ -93,7 +94,7 @@ export function FocusView({
     setDangerPhase('off')
     setDangerInactiveFor(0)
     if (!save) {
-      const restored = dangerStartContentRef.current
+      const restored = cleanHtml(dangerStartContentRef.current)
       if (editorRef.current) editorRef.current.innerHTML = restored
       onUpdate(note.id, { htmlContent: restored })
     }
@@ -118,7 +119,7 @@ export function FocusView({
   useEffect(() => {
     if (dangerPhase !== 'dying') return
     const t = setTimeout(() => {
-      const restored = dangerStartContentRef.current
+      const restored = cleanHtml(dangerStartContentRef.current)
       if (editorRef.current) editorRef.current.innerHTML = restored
       onUpdate(note.id, { htmlContent: restored })
       dangerPhaseRef.current = 'off'
@@ -135,14 +136,14 @@ export function FocusView({
   useEffect(() => {
     if (!timerDangerResetSignal) return
     if (timerDangerResetSignal.noteId !== note.id) return
-    if (editorRef.current) editorRef.current.innerHTML = timerDangerResetSignal.htmlContent
+    if (editorRef.current) editorRef.current.innerHTML = cleanHtml(timerDangerResetSignal.htmlContent)
   }, [timerDangerResetSignal, note.id])
 
   const fields = note.fields ?? DEFAULT_FIELDS
 
   useEffect(() => {
     if (editorRef.current) {
-      editorRef.current.innerHTML = note.htmlContent || ''
+      editorRef.current.innerHTML = cleanHtml(note.htmlContent)
       editorRef.current.focus()
     }
   }, [note.id])
@@ -237,7 +238,11 @@ export function FocusView({
   const handlePaste = useCallback(async (e) => {
     const items = Array.from(e.clipboardData?.items || [])
     const imgItem = items.find(i => i.type.startsWith('image/'))
-    if (!imgItem) return
+    if (!imgItem) {
+      // Не картинка: чужой HTML чистим, обычный текст вставляет браузер сам
+      handleHtmlPaste(e, editorRef.current)
+      return
+    }
     e.preventDefault()
     e.stopPropagation()
     const file = imgItem.getAsFile()
