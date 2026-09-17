@@ -181,21 +181,28 @@
   background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red) !important;
 }
 
+/* Подпись и проценты — первой строкой, сам ползунок — второй.
+   Причина: input[type=range] не сжимается меньше своей «естественной»
+   ширины (~129px), и в одну строку с подписью он не влезал в панельку
+   шириной 194px — вылезал за её правый край. */
 .bgOpacityRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px 8px;
 }
 
 .bgOpacityLabel {
   font-size: 11px;
   color: rgba(0, 0, 0, 0.45);
   white-space: nowrap;
-  flex-shrink: 0;
+  flex: 1 1 auto;
 }
 
 .bgOpacitySlider {
-  flex: 1;
+  flex: 1 1 100%;   /* целая строка под себя */
+  order: 2;
+  min-width: 0;     /* без этого ползунок отказывается сжиматься */
   height: 3px;
   accent-color: #5c9e65;
   cursor: pointer;
@@ -208,6 +215,7 @@
   min-width: 30px;
   text-align: right;
   flex-shrink: 0;
+  order: 1;
 }
 
 .bgDivider {

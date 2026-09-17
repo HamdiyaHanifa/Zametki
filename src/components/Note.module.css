@@ -165,6 +165,7 @@
 
 .pickerSatSlider {
   flex: 1;
+  min-width: 0;   /* input[type=range] иначе не сжимается и вылезает за окошко */
   cursor: pointer;
   accent-color: rgba(0, 0, 0, 0.4);
 }
