@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './HomeScreen.module.css'
 
-export function HomeScreen({ canvases, onCreate, onOpen, onDelete, onRename, onDuplicate, trashCount, onOpenTrash }) {
+export function HomeScreen({ canvases, onCreate, onOpen, onDelete, onRename, onDuplicate, trashCount, onOpenTrash, onOpenSearch }) {
   const [editingId, setEditingId] = useState(null)
   const [editingName, setEditingName] = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
@@ -30,6 +30,9 @@ export function HomeScreen({ canvases, onCreate, onOpen, onDelete, onRename, onD
       <div className={styles.header}>
         <span className={styles.logo}>📝</span>
         <h1 className={styles.title}>Заметки</h1>
+        <button className={styles.searchBtn} onClick={onOpenSearch} title="Поиск по всем холстам (Ctrl+F)">
+          🔍 Поиск
+        </button>
       </div>
 
       <p className={styles.subtitle}>Ваши холсты</p>

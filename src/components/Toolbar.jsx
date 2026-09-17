@@ -19,7 +19,7 @@ const BG_COLORS = [
   { color: '#1e2d20', label: 'Лес' },
 ]
 
-export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName, exportTagCounts = {}, wordGoal = 0, onSetWordGoal, wordCountMode = 'live', cumulativeWords = 0, onToggleWordCountMode, bgColor = '#f0ece8', bgOpacity = 1, onSetBgColor, onSetBgOpacity, bgImage = null, bgImageOpacity = 0.5, onSetBgImage, onSetBgImageOpacity }) {
+export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, onImport, onTogglePanel, onOpenSearch, noteCount, totalWords, notes, onResetAllWordCounts, onResetNoteWordCount, onToggleFocus, focusActive, onHome, canvasName, exportTagCounts = {}, wordGoal = 0, onSetWordGoal, wordCountMode = 'live', cumulativeWords = 0, onToggleWordCountMode, bgColor = '#f0ece8', bgOpacity = 1, onSetBgColor, onSetBgOpacity, bgImage = null, bgImageOpacity = 0.5, onSetBgImage, onSetBgImageOpacity }) {
   const fileRef = useRef(null)
   const importRef = useRef(null)
   const panelRef = useRef(null)
@@ -373,6 +373,9 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
           </div>
         )}
       </div>
+      <button className={styles.panelBtn} onClick={onOpenSearch} title="Поиск по всем холстам (Ctrl+F)">
+        🔍 Поиск
+      </button>
       <button className={styles.panelBtn} onClick={onTogglePanel} title="Список заметок">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
           <rect x="1" y="2" width="13" height="2.5" rx="1.2" fill="currentColor"/>

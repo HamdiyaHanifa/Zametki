@@ -109,6 +109,7 @@ export function ProfileNote({ note, onUpdate, onMove, onDelete, onDuplicate, onF
     <div
       ref={noteRef}
       className={styles.note}
+      data-note-id={note.id}
       style={{ left: note.x, top: note.y, zIndex, width: w }}
       onMouseDown={(e) => { e.stopPropagation(); onFocus(note.id) }}
       onTouchStart={(e) => { e.stopPropagation(); onFocus(note.id) }}

@@ -27,6 +27,25 @@
   letter-spacing: -0.3px;
 }
 
+/* Кнопка поиска в шапке — прижата к правому краю */
+.searchBtn {
+  margin-left: auto;
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 17px;
+  background: rgba(0, 0, 0, 0.06);
+  color: #3a2828;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.searchBtn:hover { background: rgba(0, 0, 0, 0.12); }
+.searchBtn:active { transform: scale(0.96); }
+
 .subtitle {
   font-size: 13px;
   color: rgba(0, 0, 0, 0.4);

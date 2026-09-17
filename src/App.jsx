@@ -10,6 +10,7 @@ import { NotesPanel } from './components/NotesPanel'
 import { HomeScreen } from './components/HomeScreen'
 import { TrashScreen } from './components/TrashScreen'
 import { CloudBar } from './components/CloudBar'
+import { SearchOverlay } from './components/SearchOverlay'
 import { useCloudSync } from './cloud/useCloudSync'
 import styles from './App.module.css'
 import { fileToSmallDataUrl } from './utils/image'
@@ -17,6 +18,7 @@ import { fileToSmallDataUrl } from './utils/image'
 const COLORS_COUNT = 12
 const MIN_SCALE = 0.1
 const MAX_SCALE = 4
+const TOP_BAR_H = 52   // высота верхней панели: холст начинается под ней
 const STORAGE_KEY = 'zametki_v2'
 const LEGACY_KEY = 'zametki_v1'
 const TRASH_TTL = 30 * 24 * 60 * 60 * 1000 // 30 days
@@ -144,6 +146,8 @@ export default function App() {
   const [showTrash, setShowTrash] = useState(false)
   const [focusedNoteId, setFocusedNoteId] = useState(null)
   const [showPanel, setShowPanel] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
+  const [pendingNoteId, setPendingNoteId] = useState(null)  // к какой заметке прыгнуть после открытия холста
   const [navigating, setNavigating] = useState(false)
   const [showFocusMode, setShowFocusMode] = useState(false)
   const [timerDangerProgress, setTimerDangerProgress] = useState(0)
@@ -561,17 +565,59 @@ export default function App() {
     const note = notes.find((n) => n.id === id)
     if (!note) return
     const vp = vpRef.current
-    const PANEL_W = 300
-    const w = note.width || 280
-    const h = note.height || 150
+    const PANEL_W = showPanel ? 300 : 0   // панель закрыта — центрируем по всему экрану
+    // У заметки в памяти height — это высота текстового поля, без шапки и полосы
+    // форматирования. Поэтому берём настоящий размер карточки со страницы.
+    // offsetWidth/offsetTop не зависят от прокрутки холста, так что считать просто.
+    const card = document.querySelector(`[data-note-id="${id}"]`)
+    const w = card?.offsetWidth ?? (note.width || 280)
+    const h = card?.offsetHeight ?? (note.height || 150)
+    const x = card?.offsetLeft ?? note.x
+    const y = card?.offsetTop ?? note.y
+    // Холст начинается под верхней панелью (52 пикселя), поэтому цель считаем
+    // внутри самого холста: середина видимой части, без высоты панели.
     const visibleCx = (window.innerWidth - PANEL_W) / 2
-    const visibleCy = (window.innerHeight - 52) / 2 + 52
-    const newVp = { ...vp, x: visibleCx - (note.x + w / 2) * vp.scale, y: visibleCy - (note.y + h / 2) * vp.scale }
+    const visibleCy = (window.innerHeight - TOP_BAR_H) / 2
+    const newVp = { ...vp, x: visibleCx - (x + w / 2) * vp.scale, y: visibleCy - (y + h / 2) * vp.scale }
     vpRef.current = newVp
     setNavigating(true)
     setVpState(newVp)
     setTimeout(() => setNavigating(false), 500)
-  }, [notes])
+  }, [notes, showPanel])
+
+  // ── Поиск по всем холстам ──────────────────────────────────────
+
+  // Ctrl+F (на маке ⌘F) — своё окно поиска вместо браузерного
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'а')) {  // «а» — та же клавиша в русской раскладке
+        e.preventDefault()
+        setShowSearch(true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  // Клик по находке: открываем нужный холст и центрируем заметку
+  const goToSearchResult = useCallback((canvasId, noteId) => {
+    setShowSearch(false)
+    setShowTrash(false)
+    if (canvasId !== activeCanvasId) {
+      openCanvas(canvasId)
+      setPendingNoteId(noteId)   // заметки нового холста появятся не сразу — доедем следующим шагом
+      return
+    }
+    if (noteId !== null) navigateToNote(noteId)
+  }, [activeCanvasId, openCanvas, navigateToNote])
+
+  // Холст открылся — теперь заметка на месте, можно к ней прыгнуть
+  useEffect(() => {
+    if (pendingNoteId === null) return
+    if (!notes.some((n) => n.id === pendingNoteId)) return
+    navigateToNote(pendingNoteId)
+    setPendingNoteId(null)
+  }, [pendingNoteId, notes, navigateToNote])
 
   // ── Floating notes ─────────────────────────────────────────────
 
@@ -833,8 +879,12 @@ export default function App() {
         onDuplicate={duplicateCanvas}
         trashCount={trash.length}
         onOpenTrash={() => setShowTrash(true)}
+        onOpenSearch={() => setShowSearch(true)}
         />
         <CloudBar cloud={cloud} />
+        {showSearch && (
+          <SearchOverlay canvases={canvases} onGo={goToSearchResult} onClose={() => setShowSearch(false)} />
+        )}
       </>
     )
   }
@@ -870,6 +920,7 @@ export default function App() {
         onToggleFocus={() => setShowFocusMode(v => !v)}
         focusActive={showFocusMode}
         onHome={openHome}
+        onOpenSearch={() => setShowSearch(true)}
         canvasName={activeCanvas?.name}
         wordGoal={activeCanvas?.wordGoal ?? 0}
         onSetWordGoal={setWordGoal}
@@ -1004,6 +1055,9 @@ export default function App() {
         )}
       </div>
       <CloudBar cloud={cloud} />
+      {showSearch && (
+        <SearchOverlay canvases={canvases} onGo={goToSearchResult} onClose={() => setShowSearch(false)} />
+      )}
     </div>
   )
 }
