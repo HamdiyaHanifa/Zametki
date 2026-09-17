@@ -18,7 +18,7 @@ import { fileToSmallDataUrl } from './utils/image'
 const COLORS_COUNT = 12
 const MIN_SCALE = 0.1
 const MAX_SCALE = 4
-const TOP_BAR_H = 52   // высота верхней панели: холст начинается под ней
+const TOP_BAR_H_DEFAULT = 52   // высота верхней панели, пока её не измерили
 const STORAGE_KEY = 'zametki_v2'
 const LEGACY_KEY = 'zametki_v1'
 const TRASH_TTL = 30 * 24 * 60 * 60 * 1000 // 30 days
@@ -147,6 +147,7 @@ export default function App() {
   const [focusedNoteId, setFocusedNoteId] = useState(null)
   const [showPanel, setShowPanel] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
+  const topBarRef = useRef(TOP_BAR_H_DEFAULT)   // настоящая высота панели (на телефоне она в две строки)
   const [pendingNoteId, setPendingNoteId] = useState(null)  // к какой заметке прыгнуть после открытия холста
   const [navigating, setNavigating] = useState(false)
   const [showFocusMode, setShowFocusMode] = useState(false)
@@ -577,13 +578,34 @@ export default function App() {
     // Холст начинается под верхней панелью (52 пикселя), поэтому цель считаем
     // внутри самого холста: середина видимой части, без высоты панели.
     const visibleCx = (window.innerWidth - PANEL_W) / 2
-    const visibleCy = (window.innerHeight - TOP_BAR_H) / 2
+    const visibleCy = (window.innerHeight - topBarRef.current) / 2
     const newVp = { ...vp, x: visibleCx - (x + w / 2) * vp.scale, y: visibleCy - (y + h / 2) * vp.scale }
     vpRef.current = newVp
     setNavigating(true)
     setVpState(newVp)
     setTimeout(() => setNavigating(false), 500)
   }, [notes, showPanel])
+
+  // Панель сверху бывает разной высоты: на телефоне кнопки переносятся
+  // на две строки. Измеряем её и отдаём высоту в CSS (--top-bar-h) и в расчёт
+  // перехода к заметке, чтобы холст не оказался под панелью.
+  useEffect(() => {
+    const bar = document.querySelector('[data-toolbar]')
+    if (!bar) {
+      topBarRef.current = TOP_BAR_H_DEFAULT
+      document.documentElement.style.removeProperty('--top-bar-h')
+      return
+    }
+    const apply = () => {
+      const h = bar.offsetHeight || TOP_BAR_H_DEFAULT
+      topBarRef.current = h
+      document.documentElement.style.setProperty('--top-bar-h', `${h}px`)
+    }
+    apply()
+    const ro = new ResizeObserver(apply)
+    ro.observe(bar)
+    return () => ro.disconnect()
+  }, [activeCanvasId])
 
   // ── Поиск по всем холстам ──────────────────────────────────────
 

@@ -109,7 +109,7 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
   }, [showBgPanel])
 
   return (
-    <div className={styles.toolbar}>
+    <div className={styles.toolbar} data-toolbar="1">
       <button className={styles.backBtn} onClick={onHome} title="Все холсты">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -373,8 +373,8 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
           </div>
         )}
       </div>
-      <button className={styles.panelBtn} onClick={onOpenSearch} title="Поиск по всем холстам (Ctrl+F)">
-        🔍 Поиск
+      <button className={`${styles.panelBtn} ${styles.searchBtn}`} onClick={onOpenSearch} title="Поиск по всем холстам (Ctrl+F)">
+        🔍<span className={styles.btnText}> Поиск</span>
       </button>
       <button className={styles.panelBtn} onClick={onTogglePanel} title="Список заметок">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
@@ -389,16 +389,16 @@ export function Toolbar({ onAdd, onAddProfile, onUploadImage, scale, onExport, o
         onClick={onToggleFocus}
         title="Режим фокуса"
       >
-        ⏱ Фокус
+        ⏱<span className={styles.btnText}> Фокус</span>
       </button>
       <button className={styles.photoBtn} onClick={() => fileRef.current?.click()} title="Добавить фото">
-        📷 Фото
+        📷<span className={styles.btnText}> Фото</span>
       </button>
       <button className={styles.profileBtn} onClick={onAddProfile} title="Анкета персонажа">
-        👤 Анкета
+        👤<span className={styles.btnText}> Анкета</span>
       </button>
       <button className={styles.addBtn} onClick={onAdd} title="Новая заметка">
-        + Заметка
+        +<span className={styles.btnText}> Заметка</span>
       </button>
     </div>
   )
