@@ -70,7 +70,7 @@
   font-weight: 600;
   cursor: inherit;
   min-width: 0;
-  font-family: inherit;
+  font-family: var(--font-note, inherit);
 }
 
 .titleInput::placeholder { color: rgba(0, 0, 0, 0.3); }
@@ -250,7 +250,7 @@
   font-size: 12px;
   font-weight: 700;
   opacity: 0.55;
-  font-family: inherit;
+  font-family: var(--font-note, inherit);
   min-width: 0;
 }
 
@@ -269,7 +269,7 @@
   outline: none;
   font-size: 13px;
   padding-bottom: 2px;
-  font-family: inherit;
+  font-family: var(--font-note, inherit);
   min-width: 0;
   resize: none;
   overflow: hidden;
@@ -327,7 +327,7 @@
   font-size: 12px;
   line-height: 1.55;
   padding: 7px 8px;
-  font-family: inherit;
+  font-family: var(--font-note, inherit);
   resize: none;
   overflow: hidden;
   box-sizing: border-box;

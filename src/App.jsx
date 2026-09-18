@@ -11,6 +11,7 @@ import { HomeScreen } from './components/HomeScreen'
 import { TrashScreen } from './components/TrashScreen'
 import { CloudBar } from './components/CloudBar'
 import { SearchOverlay } from './components/SearchOverlay'
+import { applyTheme, getTheme, loadThemeId, saveThemeId } from './themes'
 import { useCloudSync } from './cloud/useCloudSync'
 import styles from './App.module.css'
 import { fileToSmallDataUrl } from './utils/image'
@@ -147,6 +148,7 @@ export default function App() {
   const [focusedNoteId, setFocusedNoteId] = useState(null)
   const [showPanel, setShowPanel] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
+  const [themeId, setThemeId] = useState(loadThemeId)   // тема оформления (src/themes.js)
   const topBarRef = useRef(TOP_BAR_H_DEFAULT)   // настоящая высота панели (на телефоне она в две строки)
   const [pendingNoteId, setPendingNoteId] = useState(null)  // к какой заметке прыгнуть после открытия холста
   const [navigating, setNavigating] = useState(false)
@@ -607,6 +609,13 @@ export default function App() {
     return () => ro.disconnect()
   }, [activeCanvasId])
 
+  // Тема применяется сразу и запоминается на этом устройстве
+  const pickTheme = useCallback((id) => {
+    applyTheme(id)
+    saveThemeId(id)
+    setThemeId(id)
+  }, [])
+
   // ── Поиск по всем холстам ──────────────────────────────────────
 
   // Ctrl+F (на маке ⌘F) — своё окно поиска вместо браузерного
@@ -902,6 +911,8 @@ export default function App() {
         trashCount={trash.length}
         onOpenTrash={() => setShowTrash(true)}
         onOpenSearch={() => setShowSearch(true)}
+        theme={getTheme(themeId)}
+        onPickTheme={pickTheme}
         />
         <CloudBar cloud={cloud} />
         {showSearch && (

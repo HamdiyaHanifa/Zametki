@@ -1,274 +1,334 @@
+/* Главный экран. Все цвета и шрифты — из темы (src/themes.js),
+   через CSS-переменные --app-*, --hero-*, --card-*, --surface-* и т.д. */
+
 .home {
-  min-height: 100vh;
-  background-color: #f0ece8;
-  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
-  background-size: 32px 32px;
-  padding: 0 24px 60px;
+  /* body не прокручивается (overflow: hidden — так нужно холсту),
+     поэтому главный экран листается сам */
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  background: var(--app-bg);
+  color: var(--app-ink);
+  font-family: var(--font-ui);
+  padding-bottom: 90px;          /* место под плашку облака */
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* ── Шапка ── */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--hero-bg);
+  color: var(--hero-ink);
+  padding: 72px 20px 30px;
+}
+
+.heroBand {
+  min-height: 220px;
+  border-radius: 0 0 40px 40px;
+  display: flex;
+  align-items: flex-end;
   box-sizing: border-box;
 }
 
-.header {
+.heroInner {
+  position: relative;          /* поверх рисунков */
+  width: 100%;
+  max-width: 860px;             /* = ширина карточек ниже: заголовок стоит ровно над ними */
+  margin: 0 auto;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 36px 0 4px;
-}
-
-.logo {
-  font-size: 30px;
-  line-height: 1;
+  align-items: flex-end;
+  gap: 12px;
 }
 
 .title {
-  font-size: 26px;
-  font-weight: 800;
-  color: #2a1f1f;
   margin: 0;
-  letter-spacing: -0.3px;
+  font-family: var(--font-title);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.5px;
 }
 
-/* Кнопка поиска в шапке — прижата к правому краю */
-.searchBtn {
-  margin-left: auto;
-  height: 34px;
-  padding: 0 14px;
-  border: none;
-  border-radius: 17px;
-  background: rgba(0, 0, 0, 0.06);
-  color: #3a2828;
-  font: inherit;
-  font-size: 13px;
+.stats {
+  margin: 10px 0 0;
+  font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
 }
 
-.searchBtn:hover { background: rgba(0, 0, 0, 0.12); }
-.searchBtn:active { transform: scale(0.96); }
+.heroButtons {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
 
-.subtitle {
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.4);
-  margin: 0 0 20px;
-  font-weight: 500;
+.heroBtn {
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 26px;
+  background: var(--hero-btn-bg);
+  color: var(--hero-btn-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+  transition: transform 0.12s;
+}
+
+.heroBtn:hover { transform: translateY(-2px); }
+.heroBtn:active { transform: scale(0.95); }
+
+/* Рисунки в шапке */
+.waves {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.sun   { position: absolute; right: 14px; top: 12px; }
+.spark1 { position: absolute; left: 26px; top: 30px; }
+.spark2 { position: absolute; left: 68px; top: 64px; }
+.spark3 { position: absolute; right: 120px; top: 36px; }
+/* Облака живут в верхней полосе, а заголовок — под ними: облака того же
+   кремового цвета, что и буквы, и на облаке слово «Заметки» пропадало. */
+.heroClouds { padding-top: 124px; }
+.cloudA { position: absolute; left: -30px; top: 10px; }
+.cloudB { position: absolute; right: 96px; top: 46px; }
+.cloudC { position: absolute; left: 40%; top: 4px; }
+
+/* ── Содержимое ── */
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 20px 0;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.sectionTitle h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--app-ink);
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 14px;
-  max-width: 860px;
+  gap: 12px;
 }
 
-/* ── Canvas card ── */
+/* ── Карточка холста ── */
 .card {
-  background: rgba(255, 250, 246, 0.97);
-  border-radius: 16px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.06);
-  cursor: pointer;
+  --tone-bg: var(--card-0-bg);
+  --tone-ink: var(--card-0-ink);
+  --tone-btn: var(--card-0-btn);
+  position: relative;
+  min-height: 192px;
+  padding: 14px;
+  border-radius: 26px;
+  background: var(--tone-bg);
+  color: var(--tone-ink);
   overflow: hidden;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  min-height: 130px;
-  transition: transform 0.15s, box-shadow 0.15s;
+  cursor: pointer;
   user-select: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s, box-shadow 0.15s;
 }
+
+.card[data-tone="1"] { --tone-bg: var(--card-1-bg); --tone-ink: var(--card-1-ink); --tone-btn: var(--card-1-btn); }
+.card[data-tone="2"] { --tone-bg: var(--card-2-bg); --tone-ink: var(--card-2-ink); --tone-btn: var(--card-2-btn); }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-3px) rotate(-0.4deg);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.14);
 }
+
+/* Рисунок выглядывает из-за угла карточки */
+.doodle {
+  position: absolute;
+  right: -18px;
+  top: -16px;
+  pointer-events: none;
+  transition: transform 0.25s;
+}
+
+.card:hover .doodle { transform: rotate(14deg) scale(1.05); }
 
 .cardBody {
-  flex: 1;
-  padding: 18px 16px 10px;
+  position: relative;
+  margin-top: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
 }
 
+/* Не больше двух строк: длинное название иначе заезжает на рисунок
+   в углу, и буквы на нём теряются. Целиком оно видно в подсказке и на холсте. */
 .name {
-  font-size: 15px;
+  font-family: var(--font-note);
+  font-size: 17px;
   font-weight: 700;
-  color: #2a1f1f;
+  line-height: 1.2;
   word-break: break-word;
-  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .nameInput {
-  font-size: 15px;
+  font-family: var(--font-note);
+  font-size: 16px;
   font-weight: 700;
-  color: #2a1f1f;
-  background: rgba(0, 0, 0, 0.05);
-  border: 1.5px solid rgba(0, 0, 0, 0.18);
-  border-radius: 7px;
-  padding: 3px 7px;
+  color: var(--tone-ink);
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid var(--tone-ink);
+  border-radius: 10px;
+  padding: 5px 8px;
   outline: none;
   width: 100%;
   box-sizing: border-box;
-  font-family: inherit;
 }
 
 .count {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.38);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .cardFooter {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 5px 8px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(0, 0, 0, 0.018);
+  gap: 6px;
+  margin-top: 10px;
   min-height: 36px;
 }
 
-.editBtn,
-.duplicateBtn,
-.deleteBtn {
-  width: 26px;
-  height: 26px;
+.cardBtn {
+  width: 36px;
+  height: 36px;
   border: none;
-  background: transparent;
-  border-radius: 7px;
-  cursor: pointer;
-  font-size: 13px;
-  display: flex;
+  border-radius: 18px;
+  background: var(--tone-btn);
+  color: var(--tone-ink);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: rgba(0, 0, 0, 0.3);
-  transition: background 0.12s, color 0.12s;
-  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.12s, filter 0.12s;
 }
 
-.editBtn:hover {
-  background: rgba(0, 0, 0, 0.08);
-  color: #3a2828;
-}
-
-.duplicateBtn:hover {
-  background: rgba(0, 0, 0, 0.08);
-  color: #3a2828;
-}
-
-.deleteBtn:hover {
-  background: rgba(220, 60, 60, 0.1);
-  color: #b83232;
-}
+.cardBtn:hover { transform: scale(1.08); filter: brightness(0.95); }
 
 .confirmText {
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.5);
-  flex: 1;
-}
-
-.confirmYes {
-  padding: 3px 10px;
-  background: #E8A4AE;
-  color: #4a1f28;
-  border: none;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: filter 0.12s;
-}
-
-.confirmYes:hover { filter: brightness(0.9); }
-
-.confirmNo {
-  padding: 3px 10px;
-  background: rgba(0, 0, 0, 0.07);
-  color: #333;
-  border: none;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: filter 0.12s;
-}
-
-.confirmNo:hover { filter: brightness(0.9); }
-
-/* ── Trash bar ── */
-.trashBar {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  max-width: 860px;
-  margin-top: 22px;
-  padding: 10px 16px;
-  background: rgba(0, 0, 0, 0.04);
-  border: 1.5px dashed rgba(0, 0, 0, 0.14);
-  border-radius: 12px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.14s, border-color 0.14s;
-  width: 100%;
-  box-sizing: border-box;
-  text-align: left;
-}
-
-.trashBar:hover {
-  background: rgba(0, 0, 0, 0.07);
-  border-color: rgba(0, 0, 0, 0.22);
-}
-
-.trashBarIcon {
-  font-size: 16px;
-  opacity: 0.45;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.trashBarLabel {
   font-size: 13px;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.45);
-}
-
-.trashBarCount {
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.3);
-  font-weight: 500;
+  font-weight: 700;
   flex: 1;
 }
 
-.trashBarArrow {
-  color: rgba(0, 0, 0, 0.22);
-  flex-shrink: 0;
+.confirmYes,
+.confirmNo {
+  height: 32px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 16px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
-/* ── New canvas card ── */
+.confirmYes { background: #D8341C; color: #FFFFFF; }
+.confirmNo  { background: var(--tone-btn); color: var(--tone-ink); }
+
+/* ── «Новый холст» ── */
 .newCard {
+  min-height: 192px;
+  border: 3px dashed var(--new-line);
+  border-radius: 26px;
   background: transparent;
-  border: 2px dashed rgba(0, 0, 0, 0.18);
-  border-radius: 16px;
-  cursor: pointer;
-  min-height: 130px;
+  color: var(--new-ink);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  transition: border-color 0.15s, background 0.15s;
+  gap: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.15s, background 0.15s;
 }
 
-.newCard:hover {
-  border-color: rgba(0, 0, 0, 0.36);
-  background: rgba(255, 255, 255, 0.45);
-}
+.newCard:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.18); }
 
-.plus {
-  font-size: 30px;
-  line-height: 1;
-  color: rgba(0, 0, 0, 0.28);
+.newCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: var(--new-circle-bg);
+  color: var(--new-circle-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .newLabel {
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.38);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ── Корзина ── */
+.trashBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 54px;
+  margin-top: 16px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 20px;
+  background: var(--surface-bg);
+  color: var(--surface-ink);
+  font-family: inherit;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-align: left;
+  transition: filter 0.14s;
+}
+
+.trashBar:hover { filter: brightness(0.97); }
+
+.trashLabel { font-size: 15px; font-weight: 700; }
+.trashCount { font-size: 13px; color: var(--surface-muted); }
+.trashArrow { margin-left: auto; display: inline-flex; }
+
+.footerArt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 0 6px;
+}
+
+/* ── Телефон ── */
+@media (max-width: 520px) {
+  .hero { padding: 64px 16px 26px; }
+  .heroClouds { padding-top: 118px; }
+  .heroBand { min-height: 210px; }
+  .title { font-size: 34px; }
+  .content { padding: 20px 16px 0; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sun { transform: scale(0.85); transform-origin: top right; }
 }

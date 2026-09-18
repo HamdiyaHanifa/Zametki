@@ -4,24 +4,27 @@
   padding: 0;
 }
 
+/* Браузер даёт кнопкам и полям свой шрифт (обычно Arial), а не шрифт страницы.
+   Пусть берут шрифт темы, как всё остальное. Где нужен другой шрифт — например,
+   в заголовке заметки, — он задан классом и главнее этого правила. */
+button, input, textarea, select {
+  font-family: inherit;
+}
+
+/* Цвета и шрифты задаёт тема (src/themes.js): при запуске она кладёт
+   переменные --app-*, --font-* и другие прямо на <html>. Здесь только
+   запасные значения — на случай, если тема почему-то не применилась. */
 :root {
-  --bg: #1a1a2e;
-  --surface: #16213e;
-  --note-bg: #0f3460;
-  --note-header: #533483;
-  --accent: #e94560;
-  --accent2: #f5a623;
-  --text: #e0e0e0;
-  --text-dim: #9090a0;
-  --border: rgba(255,255,255,0.1);
-  --shadow: 0 8px 32px rgba(0,0,0,0.5);
-  --radius: 12px;
+  --app-bg: #FFF4DE;
+  --app-ink: #1F1A3D;
+  --font-ui: 'Segoe UI', system-ui, sans-serif;
+  --font-note: 'Segoe UI', system-ui, sans-serif;
 }
 
 body {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  font-family: var(--font-ui);
+  background: var(--app-bg);
+  color: var(--app-ink);
   height: 100vh;
   overflow: hidden;
   user-select: none;

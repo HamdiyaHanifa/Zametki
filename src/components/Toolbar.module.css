@@ -602,8 +602,8 @@
 
 .addBtn {
   padding: 8px 16px;
-  background: #E8A4AE;
-  color: #4a1f28;
+  background: var(--accent, #E8A4AE);   /* цвет темы */
+  color: var(--accent-ink, #4a1f28);
   border: none;
   border-radius: 20px;
   font-size: 13px;
